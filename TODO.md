@@ -4,14 +4,10 @@
 * BUG? Activating `-rectypes` at the end of `Client.ml` causes `make main` to
   fail at line 275 of `Generalization.ml`.
 
+* Improve the `Makefile`.
+
 * Think about the treatment of unreachable type variables. Could it
   be simplified? Do we really need a let form that binds several names at once?
-
-* License.
-
-* Headers.
-
-* Working `Makefile`.
 
 * The unifier could be more abstract: it doesn't need to know that the ranks
   are integers, does it? It could be just (abstract type of ranks, abstract
