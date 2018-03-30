@@ -1,18 +1,39 @@
-.PHONY: all clean main
+.PHONY: all clean check install uninstall
 
-OCAMLBUILD := ocamlbuild -classic-display -use-ocamlfind -use-menhir -cflags "-g" -lflags "-g"
+OCAMLBUILD := ocamlbuild -classic-display -use-ocamlfind -cflags "-g" -lflags "-g"
 
 all:
-# First build the library alone, so as to make sure it is stand-alone.
-	$(OCAMLBUILD) -build-dir _build1 -I lib                   SolverHi.native
-# Then, build the sample client.
-	$(OCAMLBUILD) -build-dir _build2 -I lib -I client         Main.native
-# Also build the miscellaneous tests that we may have on the side.
-	$(OCAMLBUILD) -build-dir _build3 -I lib -I client -I test TestUnionFind.native
+	$(OCAMLBUILD) -I lib inferno.cma inferno.cmxa inferno.cmxs
 
-main: all
-	time _build2/client/Main.native
+check:
+	$(OCAMLBUILD) -I lib -I client client/Main.native
+	time ./Main.native
+	$(OCAMLBUILD) -I lib -I client test/TestUnionFind.native
+	time ./TestUnionFind.native
 
 clean:
-	rm -f {lib,client,test}/*~
-	rm -rf _build1 _build2 _build3
+	rm -f {lib,client,test}/*~ *~
+	rm -rf _build
+
+EXPORTED_SOURCES := $(wildcard lib/*.mli)
+
+install: uninstall
+	@ if [ x$(PREFIX) = x ]; then                                                           \
+	  echo "Selecting OPAM based install.";                                                 \
+	  echo "Specify PREFIX=... for system-wide install.";                                   \
+	  ocamlfind install inferno META _build/lib/inferno.cm* $(EXPORTED_SOURCES);                  \
+	else                                                                                    \
+	  echo "Selecting system-wide install. PREFIX is $(PREFIX)";                            \
+	  ocamlfind install -destdir $(PREFIX)/lib inferno META $(EXPORTED_SOURCES)             \
+            _build/lib/inferno.cm* ;                                                                  \
+	fi
+
+uninstall:
+	@ if [ x$(PREFIX) = x ]; then                                                           \
+	  echo "Selecting OPAM based install.";                                                 \
+	  echo "Specify PREFIX=... for system-wide install.";                                   \
+	  ocamlfind remove inferno;                                                             \
+	else                                                                                    \
+	  echo "Selecting system-wide install. PREFIX is $(PREFIX)";                            \
+	  ocamlfind remove -destdir $(PREFIX)/lib inferno;                                      \
+	fi
