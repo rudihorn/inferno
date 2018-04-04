@@ -1,13 +1,4 @@
-.PHONY: all install clean check
+.PHONY: all install uninstall reinstall clean check
 
-all:
-	$(MAKE) -C src all
-
-install:
-	$(MAKE) -C src install
-
-check:
-	$(MAKE) -C src check
-
-clean:
-	$(MAKE) -C src clean
+all install uninstall reinstall clean check:
+	$(MAKE) -C src $@
