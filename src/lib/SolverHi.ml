@@ -155,8 +155,8 @@ let (--) v1 v2 =
   fun env -> ()
 (* END EQ *)
 
-let (---) =
-  lift (--)
+let (---) v t =
+  lift (--) v t
 
 (* If [construct_] was not exposed, [lift] could also be defined (outside this
    module) in terms of [exist_] and [---], as follows. This definition seems
@@ -311,4 +311,3 @@ let solve rectypes (rc, k) =
 (* END SOLVE *)
 
 end
-
