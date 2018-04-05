@@ -56,12 +56,12 @@ package:
 
 export:
 # Check if everything has been committed.
-	@ if [ -n "$(git status --porcelain)" ] ; then \
-	    echo "Now making a release..." ; \
-	  else \
+	@ if [ -n "$$(git status --porcelain)" ] ; then \
 	    echo "Error: there remain uncommitted changes." ; \
 	    git status ; \
 	    exit 1 ; \
+	  else \
+	    echo "Now making a release..." ; \
 	  fi
 # Create a git tag.
 	@ git tag -a $(DATE) -m "Release $(DATE)."
