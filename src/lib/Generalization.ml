@@ -218,7 +218,7 @@ let make_scheme (is_generic : U.variable -> bool) (body : U.variable) : scheme =
     (* If this variable is not generic or has been discovered already, then
        we must stop. *)
 
-    if not (is_generic v) || U.VarMap.mem visited v then 
+    if not (is_generic v) || U.VarMap.mem visited v then
       quantifiers
     else begin
 
@@ -267,7 +267,7 @@ let exit rectypes state roots =
      and walking through empty buckets (in the loop that follows) should
      cost almost nothing. So we adopt this approach, even though it violates
      the complexity claim of the paper. *)
-  let sorted : U.variable list array = Array.create (state.young + 1) [] in
+  let sorted : U.variable list array = Array.make (state.young + 1) [] in
 
   (* Initialize these data structures. *)
   List.iter (fun v ->
