@@ -1,10 +1,5 @@
-* Apparently, the code builds with ocaml 4.04.0, but not 4.05.0 or later.
-  Find out why.
-
 * BUG? Activating `-rectypes` at the end of `Client.ml` causes `make main` to
   fail at line 275 of `Generalization.ml`.
-
-* Improve the `Makefile`. Make an `opam` package.
 
 * Think about the treatment of unreachable type variables. Could it
   be simplified? Do we really need a let form that binds several names at once?
