@@ -1,11 +1,11 @@
-.PHONY: all clean check install uninstall reinstall
+.PHONY: all clean test install uninstall reinstall
 
 OCAMLBUILD := ocamlbuild -classic-display -use-ocamlfind -cflags "-g" -lflags "-g"
 
 all:
 	$(OCAMLBUILD) -I lib inferno.cma inferno.cmxa inferno.cmxs
 
-check:
+test:
 	$(OCAMLBUILD) -I lib -I client client/Main.native
 	time ./Main.native
 	$(OCAMLBUILD) -I lib -I client test/TestUnionFind.native
