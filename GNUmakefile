@@ -5,7 +5,7 @@
 SHELL := bash
 export CDPATH=
 
-.PHONY: package check export tag opam pin unpin
+.PHONY: package export tag opam pin unpin
 
 # -------------------------------------------------------------------------
 
@@ -26,78 +26,48 @@ MD5SUM  := $(shell if command -v md5 >/dev/null 2>/dev/null ; \
 # unless DATE is defined on the command line.
 DATE     := $(shell /bin/date +%Y%m%d)
 
+# The project name.
 PROJECT  := inferno
-PACKAGE  := $(PROJECT)-$(DATE)
-CURRENT  := $(shell pwd)
-TARBALL  := $(CURRENT)/$(PACKAGE).tar.gz
+# The repository URL (https).
+REPO     := https://gitlab.inria.fr/fpottier/$(PROJECT)
+# The archive URL (https).
+ARCHIVE  := $(REPO)/repository/$(DATE)/archive.tar.gz
+# The local repository directory.
+PWD      := $(shell pwd)
 
 # -------------------------------------------------------------------------
 
-# A list of files to copy without changes to the package.
-#
-# This does not include the src/ directory, which requires
-# special treatment.
-
-DISTRIBUTED_FILES := AUTHORS LICENSE Makefile README.md
-
-# -------------------------------------------------------------------------
-
-# Creating a tarball for distribution.
+# Prepare a release.
 
 package:
-# Make sure the correct version is installed.
+# Make sure the correct version can be installed.
 	@ make -C src reinstall
-# Create a directory to store the distributed files temporarily.
-	@ rm -rf $(PACKAGE)
-	@ mkdir -p $(PACKAGE)/src/lib
-	@ cp $(DISTRIBUTED_FILES) $(PACKAGE)
-	@ cp src/Makefile src/META src/_tags $(PACKAGE)/src
-	@ cp src/lib/*.{ml,mli,mlpack} $(PACKAGE)/src/lib
-# Set the version number into the files that mention it.
+# Update the version number in src/META.
 	@ echo "Setting version to $(DATE)."
-	@ echo version = \"$(DATE)\" >> $(PACKAGE)/src/META
-# Create the tarball.
-	@ echo "Creating a tarball."
-	tar --exclude-from=.gitignore -cvz -f $(TARBALL) $(PACKAGE)
-	@ echo "The package $(PACKAGE).tar.gz is ready."
+	@ mv src/META src/META.bak
+	@ grep -v version src/META.bak > src/META
+	@ echo version = \"$(DATE)\" >> src/META
+	@ rm -f src/META.bak
+	@ git commit -m "Update the version number." src/META
 
 # -------------------------------------------------------------------------
 
-# Checking the tarball that was created above.
-
-check:
-	@ echo "Checking the package ..."
-# Create a temporary directory; extract, build, and install.
-	@ TEMPDIR=`mktemp -d /tmp/$(PROJECT)-test.XXXXXX` && { \
-	echo "   * Extracting. " && \
-	(cd $$TEMPDIR && tar xfz $(TARBALL)) && \
-	echo "   * Compiling and installing." && \
-	(cd $$TEMPDIR/$(PACKAGE) && make reinstall \
-	) > $$TEMPDIR/install.log 2>&1 \
-		|| (cat $$TEMPDIR/install.log; exit 1) && \
-	echo "   * Uninstalling." && \
-	(cd $$TEMPDIR/$(PACKAGE) && make uninstall \
-	) > $$TEMPDIR/uninstall.log 2>&1 \
-		|| (cat $$TEMPDIR/uninstall.log; exit 1) && \
-	rm -rf $$TEMPDIR ; }
-	@ echo "The package $(PACKAGE) seems ready for distribution!"
-
-# -------------------------------------------------------------------------
-
-# Copying the tarball to my Web site.
-
-RSYNC   := scp -p -C
-TARGET  := yquem.inria.fr:public_html/$(PROJECT)/
+# Publish a release. (Remember to commit everything first!)
 
 export:
-	$(RSYNC) $(TARBALL) $(TARGET)
-
-# -------------------------------------------------------------------------
-
-# Creating a git tag.
-
-tag:
-	git tag -a $(DATE) -m "Release $(DATE)."
+# Check if everything has been committed.
+	@ if [ -n "$(git status --porcelain)" ] ; then \
+	    echo "Now making a release..." ; \
+	  else \
+	    echo "Error: there remain uncommitted changes." ; \
+	    git status ; \
+	    exit 1 ; \
+	  fi
+# Create a git tag.
+	@ git tag -a $(DATE) -m "Release $(DATE)."
+# Upload. (This automatically makes a .tar.gz archive available on gitlab.)
+	@ git push
+	@ git push --tags
 
 # -------------------------------------------------------------------------
 
@@ -107,9 +77,11 @@ tag:
 # run on the same day.
 
 OPAM := $(HOME)/dev/opam-repository
-CSUM  = $(shell $(MD5SUM) $(PROJECT)-$(DATE).tar.gz | cut -d ' ' -f 1)
+CSUM  = $(shell $(MD5SUM) $(PWD)/archive.tar.gz | cut -d ' ' -f 1)
 
 opam:
+# Get the .tar.gz archive, so as to compute its checksum.
+	@ wget $(ARCHIVE)
 # Update my local copy of the opam repository.
 	@ echo "Updating local opam repository..."
 	@ cd $(OPAM) && \
@@ -122,7 +94,7 @@ opam:
 # Update the file "url".
 	@ cd $(OPAM)/packages/$(PROJECT)/$(PROJECT).$(DATE) && \
 	  rm url && \
-	  echo 'archive: "http://gallium.inria.fr/~fpottier/$(PROJECT)/$(PROJECT)-$(DATE).tar.gz"' >> url && \
+	  echo 'archive: "$(ARCHIVE)"' >> url && \
 	  echo 'checksum: "$(CSUM)"' >> url
 # Copy the file "opam" from $(PROJECT)'s repository to opam's.
 	@ cp -f opam $(OPAM)/packages/$(PROJECT)/$(PROJECT).$(DATE)
