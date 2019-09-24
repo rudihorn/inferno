@@ -52,9 +52,6 @@ pin:
 unpin:
 	opam pin remove $(THIS)
 
-# This requires a version of headache that supports UTF-8; please use
-# https://github.com/fpottier/headache
-
 HEADACHE := headache
 LIBHEAD  := $(shell pwd)/headers/library-header
 FIND     := $(shell if command -v gfind >/dev/null ; then echo gfind ; else echo find ; fi)
