@@ -1,3 +1,14 @@
+(******************************************************************************)
+(*                                                                            *)
+(*                                  Inferno                                   *)
+(*                                                                            *)
+(*                       François Pottier, Inria Paris                        *)
+(*                                                                            *)
+(*  Copyright Inria. All rights reserved. This file is distributed under the  *)
+(*  terms of the MIT License, as described in the file LICENSE.               *)
+(*                                                                            *)
+(******************************************************************************)
+
 (* This file defines the input and output signatures of the functor
    [Unifier.Make]. *)
 

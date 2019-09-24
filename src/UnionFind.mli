@@ -1,3 +1,14 @@
+(******************************************************************************)
+(*                                                                            *)
+(*                                  Inferno                                   *)
+(*                                                                            *)
+(*                       François Pottier, Inria Paris                        *)
+(*                                                                            *)
+(*  Copyright Inria. All rights reserved. This file is distributed under the  *)
+(*  terms of the MIT License, as described in the file LICENSE.               *)
+(*                                                                            *)
+(******************************************************************************)
+
 (** This module implements a simple and efficient union/find algorithm.
     See Robert E. Tarjan, ``Efficiency of a Good But Not Linear Set
     Union Algorithm'', JACM 22(2), 1975. *)

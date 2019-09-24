@@ -1,3 +1,14 @@
+(******************************************************************************)
+(*                                                                            *)
+(*                                  Inferno                                   *)
+(*                                                                            *)
+(*                       François Pottier, Inria Paris                        *)
+(*                                                                            *)
+(*  Copyright Inria. All rights reserved. This file is distributed under the  *)
+(*  terms of the MIT License, as described in the file LICENSE.               *)
+(*                                                                            *)
+(******************************************************************************)
+
 (* This module provides a simple-minded of transactional reference cells.
    Like ordinary references, these references be created, read, and
    written. In addition, they support a notion of transaction. All writes must

@@ -1,3 +1,14 @@
+(******************************************************************************)
+(*                                                                            *)
+(*                                  Inferno                                   *)
+(*                                                                            *)
+(*                       François Pottier, Inria Paris                        *)
+(*                                                                            *)
+(*  Copyright Inria. All rights reserved. This file is distributed under the  *)
+(*  terms of the MIT License, as described in the file LICENSE.               *)
+(*                                                                            *)
+(******************************************************************************)
+
 (* Every cell records both its current (possibly uncommitted) value
    and its last committed value. A cell is considered stable when
    these two values are (physically) equal, and unstable otherwise. *)
