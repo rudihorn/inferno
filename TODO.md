@@ -1,6 +1,3 @@
-* BUG? Activating `-rectypes` at the end of `Client.ml` causes `make main` to
-  fail at line 275 of `Generalization.ml`.
-
 * Think about the treatment of unreachable type variables. Could it
   be simplified? Do we really need a let form that binds several names at once?
 
