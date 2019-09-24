@@ -22,6 +22,10 @@ ARCHIVE  := $(REPO)/repository/$(DATE)/archive.tar.gz
 all:
 	dune build -p $(THIS)
 
+.PHONY: test
+test:
+	dune runtest
+
 .PHONY: install
 install: all
 	dune install -p $(THIS)

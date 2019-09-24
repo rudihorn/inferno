@@ -1,3 +1,5 @@
+open Inferno
+
 let postincrement r =
   let v = !r in
   r := v + 1;
@@ -25,7 +27,7 @@ let testUF n k =
     time "Initialization" (fun () -> Array.init n UnionFind.fresh)
   in
   time "UnionFind" (fun () ->
-    for op = 1 to k do
+    for _op = 1 to k do
       if random() mod 2 = 0 then begin
         (* Union. *)
         let i = random()
@@ -51,7 +53,7 @@ let testTUF n k =
   in
   time "TUnionFind" (fun () ->
     TRef.tentatively (fun t ->
-    for op = 1 to k do
+    for _op = 1 to k do
       if random() mod 2 = 0 then begin
         (* Union. *)
         let i = random()
@@ -71,5 +73,6 @@ let testTUF n k =
 
 let () =
   Random.self_init();
+  Printf.printf "Running the UnionFind benchmarks...\n%!";
   testUF  1000000 10000000;
-  testTUF 1000000 10000000;
+  testTUF 1000000 10000000

@@ -1,4 +1,4 @@
 *~
 inferno.install
-src/.merlin
+.merlin
 _build
