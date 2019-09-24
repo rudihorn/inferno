@@ -239,6 +239,7 @@ let pairs = [
 ]
 
 let () =
+  Printf.printf "Preparing to type-check a bunch of randomly-generated terms...\n%!";
   Random.init 0;
   let c = ref 0 in
   let d = ref 0 in
@@ -255,4 +256,3 @@ let () =
   ) pairs;
   Printf.printf "In total, %d out of %d terms were considered well-typed.\n%!" !c !d;
   Printf.printf "No problem detected.\n%!"
-

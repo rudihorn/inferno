@@ -86,7 +86,7 @@ end
 (* Instantiate the solver. *)
 
 module Solver =
-  SolverHi.Make(struct include String type tevar = t end)(S)(O)
+  Inferno.SolverHi.Make(struct include String type tevar = t end)(S)(O)
 
 open Solver
 
@@ -209,7 +209,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
              have type [codomain]. *)
           def x v1 (hastype u v2)
         )
-      ) <$$> fun (ty1, (ty2, ((), u'))) ->
+      ) <$$> fun (ty1, (_ty2, ((), u'))) ->
       (* Once these constraints are solved, we obtain the translated function
          body [u']. There remains to construct an explicitly-typed abstraction
          in the target calculus. *)
@@ -222,7 +222,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
       exist (fun v ->
         lift hastype t1 (arrow v w) ^&
         hastype t2 v
-      ) <$$> fun (ty, (t1', t2')) ->
+      ) <$$> fun (_ty, (t1', t2')) ->
       F.App (t1', t2')
 
     (* Generalization. *)
