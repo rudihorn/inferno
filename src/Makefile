@@ -16,7 +16,7 @@ clean:
 	rm -rf _build
 
 EXPORTED_SOURCES := $(wildcard lib/*.mli) $(wildcard lib/*Sig.ml)
-INSTALLED_FILES  := META $(wildcard _build/lib/inferno.cm*) $(EXPORTED_SOURCES)
+INSTALLED_FILES  := META $(wildcard _build/lib/inferno.*) $(EXPORTED_SOURCES)
 
 install:
 	@ if [ x$(PREFIX) = x ]; then                                                           \
