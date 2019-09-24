@@ -16,6 +16,7 @@
   - Possibly implement several solvers with different strategies.
   - Possibly continue after a unification error (just not unifying this
     particular pair of types) and report a list of mismatches at the end.
+  - Compute a minimal type error slice?
 
 * Test families of terms of increasing size.
 
