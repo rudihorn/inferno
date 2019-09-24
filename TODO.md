@@ -18,7 +18,7 @@
     particular pair of types) and report a list of mismatches at the end.
   - Compute a minimal type error slice?
 
-* Test families of terms of increasing size.
+* Add a proper test suite, including positive and negative tests!
 
 * Possible extensions:
   - support universal quantification
