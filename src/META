@@ -1,7 +1,0 @@
-name="inferno"
-description="A library for constraint-based Hindley-Milner type inference."
-requires=""
-archive(byte)="inferno.cma"
-archive(native)="inferno.cmxa"
-archive(native,plugin)="inferno.cmxs"
-version = "20180405"

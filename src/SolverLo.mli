@@ -16,8 +16,8 @@ module Make
   (* The type [tevar] of term variables is provided by [X]. *)
   open X
 
-  (* The type ['a structure] of shallow types is provided by [S]. *)
-  open S
+  (* The type ['a structure] of shallow types is provided by [S]
+     (and repeated by [O]). *)
 
   (* The types [tyvar] and [ty] of decoded type variables and decoded types
      are provided by the module [O]. *)
@@ -119,4 +119,3 @@ module Make
 (* END *)
 end
 (* END LOW *)
-

@@ -98,7 +98,8 @@ let union f point1 point2 =
           point1 := Link point2;
           point2 := Info (weight1 + weight2, f desc1 desc2)
         end
-    | _, _ ->
+    | Link _, _
+    | _, Link _ ->
         assert false (* [repr] guarantees that [link] matches [Info _]. *)
 
 (** [equivalent point1 point2] tells whether [point1] and [point2]
@@ -114,4 +115,3 @@ let is_representative point =
       false
   | Info _ ->
       true
-

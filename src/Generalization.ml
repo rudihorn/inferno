@@ -132,10 +132,10 @@ let init () = {
 
 (* Accessors for type schemes. *)
 
-let quantifiers { quantifiers } =
+let quantifiers { quantifiers; _ } =
   quantifiers
 
-let body { body } =
+let body { body; _ } =
   body
 
 (* -------------------------------------------------------------------------- *)
@@ -151,7 +151,7 @@ let trivial body =
    a valid positive rank, and registers [v] by inserting it into the appropriate
    pool. *)
 
-let register_at_rank ({ pool } as state) v =
+let register_at_rank ({ pool; _ } as state) v =
   let rank = U.rank v in
   assert (0 < rank && rank <= state.young);
   InfiniteArray.set pool rank (v :: InfiniteArray.get pool rank)

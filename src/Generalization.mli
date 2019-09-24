@@ -25,7 +25,7 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
 
   (* We maintain a piece of private state, which can be abstractly thought of
      as a representation of a constraint context of the following form:
-     
+
      cctx := hole
      | cctx[let exists vs. hole in ...]
 
@@ -46,6 +46,10 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
      This state is mutable. *)
 
   type state
+
+  (* A debugging utility. *)
+
+  val show_state: string -> state -> unit
 
   (* The initial state corresponds to the empty constraint context. *)
 
@@ -121,4 +125,3 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
   val instantiate: state -> scheme -> variable list * variable
 
 end
-

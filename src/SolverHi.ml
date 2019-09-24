@@ -55,7 +55,7 @@ type 'a co =
 (* BEGIN PURE *)
 let pure a =
   CTrue,
-  fun env -> a
+  fun _env -> a
 (* END PURE *)
 
 (* BEGIN PAIR *)
@@ -152,7 +152,7 @@ let lift f v1 t2 =
 (* BEGIN EQ *)
 let (--) v1 v2 =
   CEq (v1, v2),
-  fun env -> ()
+  fun _env -> ()
 (* END EQ *)
 
 let (---) v t =
@@ -265,6 +265,9 @@ let let0 c1 =
    course, we could accept any old constraint from the user and silently wrap
    it in [let0], but then, what would we do with the toplevel quantifiers? *)
 
+include struct
+  [@@@warning "-4"] (* yes, I know the following pattern matching is fragile *)
+
 let ok rc =
   match rc with
   | CLet (_, _, CTrue, _) ->
@@ -272,6 +275,8 @@ let ok rc =
       true
   | _ ->
       false
+
+end
 
 (* Solving, or running, a constraint. *)
 

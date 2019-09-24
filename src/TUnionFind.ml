@@ -78,6 +78,6 @@ let union t f point1 point2 =
           TRef.set t point1 (Link point2);
           TRef.set t point2 (Info (weight1 + weight2, f desc1 desc2))
         end
-    | _, _ ->
+    | _, Link _
+    | Link _, _ ->
         assert false (* cannot happen *)
-
