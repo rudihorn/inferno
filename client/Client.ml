@@ -5,6 +5,18 @@
 
 (* The unifier will use the following type structure. *)
 
+module ML = struct
+  type tevar = string
+  type term =
+    | Var of tevar
+    | Abs of tevar * term
+    | App of term * term
+    | Let of tevar * term * term
+    (* END ML *)
+    | Pair of term * term
+    | Proj of int * term
+end
+
 module S = struct
 
   type 'a structure =

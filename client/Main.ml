@@ -1,3 +1,5 @@
+open Client
+
 let verbose =
   false
 
