@@ -1,5 +1,7 @@
-(test
+(executable
   (name Main)
+  (public_name client)
+  (package inferno)
   (libraries unix pprint inferno)
   (flags "-w" "@1..66-4-44")
 )
