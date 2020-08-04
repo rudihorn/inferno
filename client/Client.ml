@@ -5,18 +5,6 @@
 
 (* The unifier will use the following type structure. *)
 
-module ML = struct
-  type tevar = string
-  type term =
-    | Var of tevar
-    | Abs of tevar * term
-    | App of term * term
-    | Let of tevar * term * term
-    (* END ML *)
-    | Pair of term * term
-    | Proj of int * term
-end
-
 module S = struct
 
   type 'a structure =
@@ -91,6 +79,19 @@ module O = struct
   type scheme =
     tyvar list * ty
 
+end
+
+module ML = struct
+  type ty = O.scheme
+  type tevar = string
+  type term =
+    | Var of tevar
+    | Abs of tevar * ty option * term
+    | App of term * term
+    | Let of tevar * ty option * term * term
+    (* END ML *)
+    | Pair of term * term
+    | Proj of int * term
 end
 
 (* -------------------------------------------------------------------------- *)
@@ -204,7 +205,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
       F.ftyapp (F.Var x) tys
 
     (* Abstraction. *)
-  | ML.Abs (x, u) ->
+  | ML.Abs (x, _, u) -> (* JSTOLAREK: type annotation ignored *)
 
       (* We do not know a priori what the domain and codomain of this function
          are, so we must infer them. We introduce two type variables to stand
@@ -238,7 +239,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
       F.App (t1', t2')
 
     (* Generalization. *)
-  | ML.Let (x, t, u) ->
+  | ML.Let (x, _, t, u) -> (* JSTOLAREK: type annotation ignored *)
 
       (* Construct a ``let'' constraint. *)
       let1 x (hastype t)
