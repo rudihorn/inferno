@@ -10,6 +10,7 @@ module S = struct
   type 'a structure =
     | TyArrow of 'a * 'a
     | TyProduct of 'a * 'a
+    | TyForall of 'a list * 'a
 
   let map f t =
     match t with
@@ -21,6 +22,10 @@ module S = struct
         let t1 = f t1 in
         let t2 = f t2 in
         TyProduct (t1, t2)
+    | TyForall (qs, t) ->
+        let qs = List.map f qs in
+        let t  = f t in
+        TyForall (qs, t)
 
   let fold f t accu =
     match t with
@@ -28,6 +33,10 @@ module S = struct
     | TyProduct (t1, t2) ->
         let accu = f t1 accu in
         let accu = f t2 accu in
+        accu
+    | TyForall (qs, t) ->
+        let accu = List.fold_left f accu qs in
+        let accu = f t accu in
         accu
 
   let iter f t =
@@ -42,6 +51,9 @@ module S = struct
     | TyProduct (t1, t2), TyProduct (u1, u2) ->
         f t1 u1;
         f t2 u2
+    | TyForall (qs1, t1), TyForall (qs2, t2) ->
+        List.iter2 f qs1 qs2;
+        f t1 t2
     | _, _ ->
         raise Iter2
 
@@ -72,6 +84,22 @@ module O = struct
         F.TyArrow (t1, t2)
     | S.TyProduct (t1, t2) ->
         F.TyProduct (t1, t2)
+    (* JSTOLAREK: RESUME HERE.  Read the paper to learn more about the O module.
+       (I belive this is Output module in the paper.)  Not sure what the
+       structure of System F type should be, in particular when it comes to the
+       body *)
+(*
+    | S.TyForall ([], t) ->
+        structure t
+    | S.TyForall ([q], t) ->
+        F.TyForall (q, t)
+    | S.TyForall (q :: qs, t) ->
+        F.TyForall (q, structure (S.TyForall (qs, t)))
+*)
+(*
+    | S.TyForall (qs, t) ->
+       List.fold_right (fun q t -> F.TyForall (q, t)) qs t
+*)
 
   let mu x t =
     F.TyMu (x, t)
