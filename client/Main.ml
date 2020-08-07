@@ -49,6 +49,8 @@ let rec random_ml_term k n =
 let rec size accu = function
   | ML.Var _ ->
       accu
+  | ML.FrozenVar _ ->
+      accu
   | ML.Abs (_, _, t)
   | ML.Proj (_, t)
     -> size (accu + 1) t

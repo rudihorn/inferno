@@ -86,6 +86,7 @@ module ML = struct
   type tevar = string
   type term =
     | Var of tevar
+    | FrozenVar of tevar
     | Abs of tevar * ty option * term
     | App of term * term
     | Let of tevar * ty option * term * term
@@ -201,6 +202,12 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
 
       (* [w] must be an instance of the type scheme associated with [x]. *)
       instance x w <$$> fun tys ->
+      (* The translation makes the type application explicit. *)
+      F.ftyapp (F.Var x) tys
+
+    (* Frozen variable. *)
+  | ML.FrozenVar x ->
+      assert false (* JSTOLAREK: implement this *) <$$> fun tys ->
       (* The translation makes the type application explicit. *)
       F.ftyapp (F.Var x) tys
 
