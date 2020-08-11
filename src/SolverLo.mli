@@ -73,6 +73,9 @@ module Make
        witnesses. This list indicates how the type scheme was instantiated. *)
   | CInstance of tevar * variable * variable list WriteOnceRef.t
 
+    (* JSTOLAREK: document this *)
+  | CFrozen of tevar * variable
+
     (* A trivial type scheme definition, [def x = v in C]. This binds [x] to
        the monomorphic type scheme [v] in the constraint [C]. In other words,
        an instantiation constraint [x w] will be satisfied by unifying [v] and

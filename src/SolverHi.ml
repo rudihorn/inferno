@@ -197,6 +197,12 @@ let instance x v =
     List.map decode (WriteOnceRef.get witnesses)
 (* END INSTANCE *)
 
+let frozen_instance x v =
+  (* In the constraint construction phase, create a write-once reference,
+     and stick it into the constraint, for the solver to fill. *)
+  CFrozen (x, v), fun _env -> ()
+
+
 (* -------------------------------------------------------------------------- *)
 
 (* Constraint abstractions. *)

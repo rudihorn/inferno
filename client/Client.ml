@@ -223,9 +223,9 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
 
     (* Frozen variable. *)
   | ML.FrozenVar x ->
-      assert false (* JSTOLAREK: implement this *) <$$> fun tys ->
+      frozen_instance x w <$$> fun () ->
       (* The translation makes the type application explicit. *)
-      F.ftyapp (F.Var x) tys
+      F.Var x
 
     (* Abstraction. *)
   | ML.Abs (x, _, u) -> (* JSTOLAREK: type annotation ignored *)

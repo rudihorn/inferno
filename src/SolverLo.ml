@@ -67,6 +67,7 @@ type rawco =
   | CEq of variable * variable
   | CExist of variable * rawco
   | CInstance of tevar * variable * variable list WriteOnceRef.t
+  | CFrozen   of tevar * variable
   | CDef of tevar * variable * rawco
   | CLet of (tevar * variable * ischeme WriteOnceRef.t) list
         * rawco
@@ -120,6 +121,11 @@ let solve (rectypes : bool) (c : rawco) : unit =
         let witnesses, v = G.instantiate state s in
         WriteOnceRef.set witnesses_hook witnesses;
         U.unify v w
+    | CFrozen (x, _w) ->
+        let s = try XMap.find x env with Not_found -> raise (Unbound x) in
+        let _qs = List.map U.id (G.quantifiers s) in
+
+        assert false
     | CDef (x, v, c) ->
         solve (XMap.add x (G.trivial v) env) c
     | CLet (xvss, c1, c2, generalizable_hook) ->
