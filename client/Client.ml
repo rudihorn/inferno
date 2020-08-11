@@ -7,10 +7,16 @@
 
 module S = struct
 
+  (* JSTOLAREK: HACK.  Quantifiers are stored as a list of integers.  This
+     should be parameterized, i.e. we should define the structrue of types as
+     `('a, 'b) structure` and then TyForall stores quantifiers as 'b list.  This
+     has a huge knock-on effect in the rest of the code, in particular the
+     unifier) so for the purpose of hacking I avoid this for now.  *)
+
   type 'a structure =
     | TyArrow of 'a * 'a
     | TyProduct of 'a * 'a
-    | TyForall of 'a list * 'a
+    | TyForall of int list * 'a
 
   let map f t =
     match t with
@@ -23,7 +29,6 @@ module S = struct
         let t2 = f t2 in
         TyProduct (t1, t2)
     | TyForall (qs, t) ->
-        let qs = List.map f qs in
         let t  = f t in
         TyForall (qs, t)
 
@@ -34,10 +39,8 @@ module S = struct
         let accu = f t1 accu in
         let accu = f t2 accu in
         accu
-    | TyForall (qs, t) ->
-        let accu = List.fold_left f accu qs in
-        let accu = f t accu in
-        accu
+    | TyForall (_qs, t) ->
+        f t accu
 
   let iter f t =
     let _ = map f t in
@@ -51,8 +54,7 @@ module S = struct
     | TyProduct (t1, t2), TyProduct (u1, u2) ->
         f t1 u1;
         f t2 u2
-    | TyForall (qs1, t1), TyForall (qs2, t2) ->
-        List.iter2 f qs1 qs2;
+    | TyForall (_qs1, t1), TyForall (_qs2, t2) ->
         f t1 t2
     | _, _ ->
         raise Iter2
@@ -84,22 +86,8 @@ module O = struct
         F.TyArrow (t1, t2)
     | S.TyProduct (t1, t2) ->
         F.TyProduct (t1, t2)
-    (* JSTOLAREK: RESUME HERE.  Read the paper to learn more about the O module.
-       (I belive this is Output module in the paper.)  Not sure what the
-       structure of System F type should be, in particular when it comes to the
-       body *)
-(*
-    | S.TyForall ([], t) ->
-        structure t
-    | S.TyForall ([q], t) ->
-        F.TyForall (q, t)
-    | S.TyForall (q :: qs, t) ->
-        F.TyForall (q, structure (S.TyForall (qs, t)))
-*)
-(*
     | S.TyForall (qs, t) ->
        List.fold_right (fun q t -> F.TyForall (q, t)) qs t
-*)
 
   let mu x t =
     F.TyMu (x, t)
