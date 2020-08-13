@@ -2,5 +2,4 @@
   (name inferno)
   (public_name inferno)
   (synopsis "A library for constraint-based Hindley-Milner type inference")
-  (flags "-w" "@1..66")
 )
