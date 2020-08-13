@@ -484,7 +484,7 @@ let copy state v =
 (* Instantiation amounts to copying a fragment of a graph. The fragment that
    must be copied is determined by inspecting the rank -- [generic] means
    copy, a positive rank means don't copy. *)
-
 let instantiate state { quantifiers; body } =
   List.map (copy state) quantifiers, copy state body
+
 end

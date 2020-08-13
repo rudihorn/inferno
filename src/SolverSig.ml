@@ -28,7 +28,7 @@ module type TEVAR = sig
   val compare: tevar -> tevar -> int
 
 (* END *)
-end  
+end
 (* END TEVAR *)
 
 (* -------------------------------------------------------------------------- *)
