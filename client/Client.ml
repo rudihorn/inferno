@@ -11,7 +11,10 @@ module S = struct
      should be parameterized, i.e. we should define the structrue of types as
      `('a, 'b) structure` and then TyForall stores quantifiers as 'b list.  This
      has a huge knock-on effect in the rest of the code, in particular the
-     unifier) so for the purpose of hacking I avoid this for now.  *)
+     unifier) so for the purpose of hacking I avoid this for now.
+
+     EDIT: or maybe not a hack.  Unifier stores variable ids as quantifiers, so
+     when we freeze a variable we really need ints.  *)
 
   type 'a structure =
     | TyArrow of 'a * 'a
@@ -54,6 +57,10 @@ module S = struct
     | TyProduct (t1, t2), TyProduct (u1, u2) ->
         f t1 u1;
         f t2 u2
+    (* JSTOLAREK: this might be very important for unification of qualified
+       types - cf. Unifier.unify_structures.  For now this is a placeholder, but
+       this place likely needs to implement logic of FreezeML unification of
+       qualified types. *)
     | TyForall (_qs1, t1), TyForall (_qs2, t2) ->
         f t1 t2
     | _, _ ->
