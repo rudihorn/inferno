@@ -123,8 +123,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
         U.unify v w
     | CFrozen (x, w) ->
         let s  = try XMap.find x env with Not_found -> raise (Unbound x) in
-        let qs = List.map (G.copy state) (G.quantifiers s) in
-        let v  = G.copy state (G.body s) in
+        let qs, v = G.instantiate state s in
         U.set_structure v (Some (S.forall qs v));
         U.unify v w
     | CDef (x, v, c) ->
