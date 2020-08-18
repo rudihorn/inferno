@@ -123,8 +123,9 @@ let solve (rectypes : bool) (c : rawco) : unit =
         U.unify v w
     | CFrozen (x, w) ->
         let s  = try XMap.find x env with Not_found -> raise (Unbound x) in
-        let qs, v = G.instantiate state s in
-        U.set_structure v (Some (S.forall qs v));
+        let qs, body = G.instantiate state s in
+        let v = fresh (Some (S.forall qs body)) in
+        G.register state v;
         U.unify v w
     | CDef (x, v, c) ->
         solve (XMap.add x (G.trivial v) env) c
