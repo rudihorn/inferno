@@ -438,7 +438,11 @@ let exit rectypes state roots =
 
 (* -------------------------------------------------------------------------- *)
 
-let copy state v =
+(* Instantiation amounts to copying a fragment of a graph. The fragment that
+   must be copied is determined by inspecting the rank -- [generic] means
+   copy, a positive rank means don't copy. *)
+
+let instantiate state { quantifiers; body } =
 
   (* Prepare to mark which variables have been visited and record their copy. *)
   let visited : U.variable U.VarMap.t = U.VarMap.create 128 in
@@ -448,7 +452,7 @@ let copy state v =
      then [copy v] returns [v]. Only one copy per variable is created, even if
      a variable is encountered several times during the traversal. *)
 
-  let rec go v =
+  let rec copy v =
 
     (* If this variable has positive rank, then it is not generic: we must
        stop. *)
@@ -459,32 +463,27 @@ let copy state v =
     (* If a copy of this variable has been created already, return it. *)
 
     else begin
-        assert (U.rank v = generic);
+      assert (U.rank v = generic);
 
-        try
-          U.VarMap.find visited v
-        with Not_found ->
+      try
+        U.VarMap.find visited v
+      with Not_found ->
 
-          (* The variable must be copied, and has not been copied yet. Create a
-         new variable, register it, and update the mapping. Then, copy its
-         descendants. Note that the mapping must be updated before making a
-         recursive call to [copy], so as to guarantee termination in the
-         presence of cyclic terms. *)
+        (* The variable must be copied, and has not been copied yet. Create a
+           new variable, register it, and update the mapping. Then, copy its
+           descendants. Note that the mapping must be updated before making a
+           recursive call to [copy], so as to guarantee termination in the
+           presence of cyclic terms. *)
 
-          let v' = U.fresh None state.young in
-          register_at_rank state v';
-          U.VarMap.add visited v v';
-          U.set_structure v' (Option.map (S.map go) (U.structure v));
-          v'
-      end
+        let v' = U.fresh None state.young in
+        register_at_rank state v';
+        U.VarMap.add visited v v';
+        U.set_structure v' (Option.map (S.map copy) (U.structure v));
+        v'
 
-  in go v
+    end
 
-
-(* Instantiation amounts to copying a fragment of a graph. The fragment that
-   must be copied is determined by inspecting the rank -- [generic] means
-   copy, a positive rank means don't copy. *)
-let instantiate state { quantifiers; body } =
-  List.map (copy state) quantifiers, copy state body
+  in
+  List.map copy quantifiers, copy body
 
 end

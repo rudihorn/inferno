@@ -135,6 +135,4 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
 
   val instantiate: state -> scheme -> variable list * variable
 
-  val copy: state -> variable -> variable
-
 end
