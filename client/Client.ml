@@ -19,7 +19,7 @@ module S = struct
   type 'a structure =
     | TyArrow of 'a * 'a
     | TyProduct of 'a * 'a
-    | TyForall of int list * 'a
+    | TyForall of 'a list * 'a
 
   let map f t =
     match t with
@@ -32,6 +32,7 @@ module S = struct
         let t2 = f t2 in
         TyProduct (t1, t2)
     | TyForall (qs, t) ->
+        let qs = List.map f qs in
         let t  = f t in
         TyForall (qs, t)
 
@@ -42,7 +43,8 @@ module S = struct
         let accu = f t1 accu in
         let accu = f t2 accu in
         accu
-    | TyForall (_qs, t) ->
+    | TyForall (qs, t) ->
+        let accu = List.fold_left (fun accu q -> f q accu) accu qs in
         f t accu
 
   let iter f t =
@@ -57,11 +59,9 @@ module S = struct
     | TyProduct (t1, t2), TyProduct (u1, u2) ->
         f t1 u1;
         f t2 u2
-    (* JSTOLAREK: this might be very important for unification of qualified
-       types - cf. Unifier.unify_structures.  For now this is a placeholder, but
-       this place likely needs to implement logic of FreezeML unification of
-       qualified types. *)
-    | TyForall (_qs1, t1), TyForall (_qs2, t2) ->
+    | TyForall (qs1, t1), TyForall (qs2, t2) ->
+       (* S-Decompose-Forall *)
+       List.iter2 f qs1 qs2;
         f t1 t2
     | _, _ ->
         raise Iter2
@@ -93,14 +93,22 @@ module O = struct
         F.TyArrow (t1, t2)
     | S.TyProduct (t1, t2) ->
         F.TyProduct (t1, t2)
-    | S.TyForall (qs, t) ->
+    | S.TyForall (qs, t) -> assert false
+(*
+      JSTOLAREK: handle this case after making sure that everything else works
+
        List.fold_right (fun q t -> F.TyForall (q, t)) qs t
+*)
 
   let mu x t =
     F.TyMu (x, t)
 
   type scheme =
     tyvar list * ty
+
+  (* JSTOLAREK: possibly redundant? *)
+  let forall qs t =
+    S.TyForall (qs, t)
 
 end
 

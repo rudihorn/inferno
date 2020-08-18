@@ -69,6 +69,10 @@ module type OUTPUT = sig
      and one may wish to decode and display them. *)
   val mu: tyvar -> ty -> ty
 
+  val forall: ty list -> ty -> ty structure
+(*
+*)
+
   (* A decoded type scheme consists of a list of quantifiers and a body. *)
   type scheme = tyvar list * ty
 
