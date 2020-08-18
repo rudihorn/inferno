@@ -121,18 +121,12 @@ let solve (rectypes : bool) (c : rawco) : unit =
         let witnesses, v = G.instantiate state s in
         WriteOnceRef.set witnesses_hook witnesses;
         U.unify v w
-    | CFrozen (x, _w) ->
-        let s = try XMap.find x env with Not_found -> raise (Unbound x) in
-(*
+    | CFrozen (x, w) ->
+        let s  = try XMap.find x env with Not_found -> raise (Unbound x) in
         let qs = List.map (G.copy state) (G.quantifiers s) in
         let v  = G.copy state (G.body s) in
-        U.set_structure v (Option.map (O.forall qs) (U.structure v));
-let freeze state { quantifiers; body } =
-  v
-
-
-*)
-        assert false
+        U.set_structure v (Some (S.forall qs v));
+        U.unify v w
     | CDef (x, v, c) ->
         solve (XMap.add x (G.trivial v) env) c
     | CLet (xvss, c1, c2, generalizable_hook) ->

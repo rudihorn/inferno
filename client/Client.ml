@@ -21,6 +21,9 @@ module S = struct
     | TyProduct of 'a * 'a
     | TyForall of 'a list * 'a
 
+  let forall qs t =
+    TyForall (qs, t)
+
   let map f t =
     match t with
     | TyArrow (t1, t2) ->
@@ -105,10 +108,6 @@ module O = struct
 
   type scheme =
     tyvar list * ty
-
-  (* JSTOLAREK: possibly redundant? *)
-  let forall qs t =
-    S.TyForall (qs, t)
 
 end
 

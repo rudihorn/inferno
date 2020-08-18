@@ -24,6 +24,8 @@ module type STRUCTURE = sig
      is, depth 1) types whose leaves have type ['a]. *)
   type 'a structure
 
+  val forall : 'a list -> 'a -> 'a structure
+
   (* The type ['a structure] should be a functor, i.e., it should support the
      standard [map] operation. *)
   val map: ('a -> 'b) -> 'a structure -> 'b structure
