@@ -96,12 +96,8 @@ module O = struct
         F.TyArrow (t1, t2)
     | S.TyProduct (t1, t2) ->
         F.TyProduct (t1, t2)
-    | S.TyForall (qs, t) -> assert false
-(*
-      JSTOLAREK: handle this case after making sure that everything else works
-
-       List.fold_right (fun q t -> F.TyForall (q, t)) qs t
-*)
+    | S.TyForall (qs, t) ->
+        List.fold_right (fun q t -> F.TyForall (F.decode_tyvar q, t)) qs t
 
   let mu x t =
     F.TyMu (x, t)

@@ -84,3 +84,4 @@ val subst: debruijn_type -> DeBruijn.index -> debruijn_type -> debruijn_type
 
 val translate: nominal_term -> debruijn_term
 
+val decode_tyvar : ('a, 'b) typ -> 'b

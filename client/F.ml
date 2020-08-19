@@ -74,6 +74,16 @@ let ftyapp t tys =
   List.fold_left (fun t ty -> TyApp (t, ty)) t tys
 (* END F *)
 
+(* Decoder. *)
+(* BEGIN F *)
+
+let decode_tyvar t =
+  match t with
+  | TyForall (tyvar, _) -> tyvar
+  | _ -> assert false
+
+(* END F *)
+
 (* -------------------------------------------------------------------------- *)
 
 (* Boilerplate code for type-in-type substitutions. *)
