@@ -34,6 +34,15 @@ type nominal_type = (tyvar, tyvar) typ
 type debruijn_type =
     (DeBruijn.index, unit) typ
 
+let rec string_of_typ (t : nominal_type)  =
+  match t with
+  | TyVar a -> "TyVar " ^ string_of_int a
+  | TyArrow (a, b) -> "(" ^ string_of_typ a ^ " -> " ^ string_of_typ b ^ ")"
+  | TyProduct (a, b) -> "(" ^ string_of_typ a ^ "×" ^ string_of_typ b ^ ")"
+  | TyForall (q, t) -> "forall " ^ string_of_int q ^ ". " ^ string_of_typ t
+  | TyMu (q, t) -> "mu " ^ string_of_int q ^ ". " ^ string_of_typ t
+
+
 (* -------------------------------------------------------------------------- *)
 
 (* Terms. *)
@@ -77,10 +86,13 @@ let ftyapp t tys =
 (* Decoder. *)
 (* BEGIN F *)
 
-let decode_tyvar t =
+let decode_tyvar (t : nominal_type) =
   match t with
-  | TyForall (tyvar, _) -> tyvar
-  | _ -> assert false
+  | TyVar tyvar -> tyvar
+  | _ ->
+     Printf.fprintf stdout "Assertion failed.  Type variable expected but type found:\n";
+     Printf.fprintf stdout "  %s\n" (string_of_typ t);
+     assert false
 
 (* END F *)
 
