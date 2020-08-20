@@ -110,6 +110,17 @@ end
 module ML = struct
   type ty = O.scheme
   type tevar = string
+
+  (* Fresh tevar names *)
+  let fresh_tevar =
+    let postincrement r =
+      let v = !r in
+      r := v + 1;
+      v in
+    let counter = ref 0 in
+    fun () ->
+    "_x" ^ string_of_int (postincrement counter)
+
   type term =
     | Var of tevar
     | FrozenVar of tevar
@@ -119,6 +130,19 @@ module ML = struct
     (* END ML *)
     | Pair of term * term
     | Proj of int * term
+
+  (* FreezeML syntactic sugar *)
+  let gen v =
+    let x = fresh_tevar () in
+    Let (x, None, v, FrozenVar x)
+
+  let gen_annot v ty =
+    let x = fresh_tevar () in
+    Let (x, Some ty, v, FrozenVar x)
+
+  let inst m =
+    let x = fresh_tevar () in
+    Let (x, None, m, m)
 end
 
 (* -------------------------------------------------------------------------- *)

@@ -212,6 +212,8 @@ let genkidid2 =
 let app_pair = (* ill-typed *)
   ML.App (ML.Pair (id, id), id)
 
+(* FreezeML examples *)
+
 let () =
   assert (test idid);
   assert (test genid);
