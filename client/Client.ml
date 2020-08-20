@@ -131,6 +131,11 @@ module ML = struct
     | Pair of term * term
     | Proj of int * term
 
+  (* Unannotated abstraction and let *)
+  let abs (x, m) = Abs (x, None, m)
+
+  let let_ (x, m, n) = Let (x, None, m, n)
+
   (* FreezeML syntactic sugar *)
   let gen v =
     let x = fresh_tevar () in
