@@ -1,7 +1,7 @@
 open Client
 
 let verbose =
-  false
+  true
 
 (* -------------------------------------------------------------------------- *)
 
@@ -244,11 +244,22 @@ let a2 = env (ML.App (ML.Var "choose", ML.Var "id"))
 let a2_dot = env (ML.App (ML.Var "choose", ML.FrozenVar "id"))
 
 let () =
+(*
   assert (test idid);
   assert (test genid);
   assert (test genidid);
   assert (test genkidid);
-  assert (test genkidid2)
+  assert (test genkidid2);
+*)
+  (* FreezeML examples *)
+(*
+  assert (test a1);
+  assert (test a1_dot);
+*)
+  assert (test a2)
+(*
+  assert (test a2_dot)
+*)
 
 (* -------------------------------------------------------------------------- *)
 
@@ -258,6 +269,8 @@ let () =
    size of the randomly generated terms. *)
 
 let pairs = [
+    0, 5;
+(*
   100000, 5;
   100000, 10;
   100000, 15;
@@ -271,6 +284,7 @@ let pairs = [
      100, 10000;
       10, 100000;
        1, 1000000;
+*)
 ]
 
 let () =
