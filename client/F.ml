@@ -90,8 +90,7 @@ let decode_tyvar (t : nominal_type) =
   match t with
   | TyVar tyvar -> tyvar
   | _ ->
-     Printf.fprintf stdout "Assertion failed.  Type variable expected but type found:\n";
-     Printf.fprintf stdout "  %s\n" (string_of_typ t);
+     Printf.fprintf stdout "Assertion failed.  Type variable expected but type found.\n";
      assert false
 
 (* END F *)

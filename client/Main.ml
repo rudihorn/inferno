@@ -114,6 +114,9 @@ let attempt log msg f x =
 let print_type ty =
   PPrint.(ToChannel.pretty 0.9 80 stdout (FPrinter.print_type ty ^^ hardline))
 
+let print_ml_term m =
+  PPrint.(ToChannel.pretty 0.9 80 stdout (MLPrinter.print_term m ^^ hardline))
+
 let translate t =
   try
     Some (Client.translate t)
@@ -130,7 +133,9 @@ let translate t =
         Printf.fprintf stdout "Type error: mismatch between the type:\n";
         print_type ty1;
         Printf.fprintf stdout "and the type:\n";
-        print_type ty2
+        print_type ty2;
+        Printf.fprintf stdout "when translating the term:\n";
+        print_ml_term t;
       end;
       None
 
