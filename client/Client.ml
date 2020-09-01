@@ -7,15 +7,6 @@
 
 module S = struct
 
-  (* JSTOLAREK: HACK.  Quantifiers are stored as a list of integers.  This
-     should be parameterized, i.e. we should define the structrue of types as
-     `('a, 'b) structure` and then TyForall stores quantifiers as 'b list.  This
-     has a huge knock-on effect in the rest of the code, in particular the
-     unifier) so for the purpose of hacking I avoid this for now.
-
-     EDIT: or maybe not a hack.  Unifier stores variable ids as quantifiers, so
-     when we freeze a variable we really need ints.  *)
-
   type 'a structure =
     | TyArrow of 'a * 'a
     | TyProduct of 'a * 'a
