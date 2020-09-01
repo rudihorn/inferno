@@ -38,6 +38,8 @@ module type STRUCTURE = sig
   exception Iter2
   val iter2: ('a -> 'b -> unit) -> 'a structure -> 'b structure -> unit
 
+  val print: 'a structure -> ('a -> PPrint.document) -> PPrint.document
+
 (* END *)
 end
 (* END STRUCTURE *)

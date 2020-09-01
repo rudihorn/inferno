@@ -93,15 +93,3 @@ let rec print_term_aux level t =
 
 and print_term t =
   print_term_aux 2 t
-
-let print_structure s f =
-  let open Client.S in
-  match s with
-  | TyArrow   (t1, t2) -> parens (f t1 ^^ string "->" ^^ f t2)
-  | TyProduct (t1, t2) -> parens (f t1 ^^ string "×" ^^ f t2)
-  | TyForall  ([],  t) -> f t
-  | TyForall  (qs,  t) ->
-     string "forall " ^^
-     separate comma (List.map (fun q -> f q) qs) ^^
-     dot ^^ space ^^
-     f t

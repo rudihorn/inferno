@@ -60,6 +60,18 @@ module S = struct
     | _, _ ->
         raise Iter2
 
+  let print s f =
+    let open PPrint in
+    match s with
+    | TyArrow   (t1, t2) -> parens (f t1 ^^ string "->" ^^ f t2)
+    | TyProduct (t1, t2) -> parens (f t1 ^^ string "×" ^^ f t2)
+    | TyForall  ([],  t) -> f t
+    | TyForall  (qs,  t) ->
+       string "forall " ^^
+       separate comma (List.map (fun q -> f q) qs) ^^
+       dot ^^ space ^^
+       f t
+
 end
 
 (* -------------------------------------------------------------------------- *)
