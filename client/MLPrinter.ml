@@ -11,7 +11,7 @@ let print_qs (qs : int list) =
   let qs = List.map (fun f -> string (string_of_int f)) qs in
   separate comma qs
 
-let print_scheme (qs, ty) =
+let print_type (qs, ty) =
   match qs with
   | [] -> FPrinter.print_type ty
   | _  ->
@@ -48,7 +48,7 @@ let rec print_term_aux level t =
         string "fun (" ^^
         string x ^^
         string " : " ^^
-        print_scheme ty ^^
+        print_type ty ^^
         string ") -> " ^^
         print_term_aux 2 m
       else
@@ -68,7 +68,7 @@ let rec print_term_aux level t =
         string "let (" ^^
         string x ^^
         string " : " ^^
-        print_scheme ty ^^
+        print_type ty ^^
         string ") = " ^^
         print_term t1 ^^
         string " in " ^^
