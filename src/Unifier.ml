@@ -84,6 +84,21 @@ let adjust_rank v k =
 
 (* -------------------------------------------------------------------------- *)
 
+let print_var f v =
+  let open PPrint in
+  lbrace ^^
+  string "is" ^^ equals ^^ string (string_of_int (id v)) ^^
+  begin
+    match structure v with
+    | None -> empty
+    | Some s ->
+       comma ^^ string "structure" ^^ equals ^^ parens (f s)
+  end ^^
+  string "rank" ^^ equals ^^ string (string_of_int (rank v)) ^^
+  rbrace
+
+(* -------------------------------------------------------------------------- *)
+
 (* [r++]. *)
 
 let postincrement r =
