@@ -60,6 +60,8 @@ let print_var v =
           struct_printer s = S.print var_printer    s in
   var_printer v
 
+let print_tevar v = X.print_tevar v
+
 (* -------------------------------------------------------------------------- *)
 
 (* The syntax of constraints is as follows. *)
@@ -99,6 +101,19 @@ let solve (rectypes : bool) (c : rawco) : unit =
      does not need to be an explicit parameter of the recursive function
      [solve]. *)
 
+  let debug (str : string) (doc : PPrint.document) =
+    let open PPrint in
+    Debug.print_doc (string str ^^ doc) in
+
+  let debug_unify v w =
+    let open PPrint in
+    let message =
+      nest 2 (
+          string "Unifying variables:" ^^ hardline ^^
+          print_var v ^^ hardline ^^
+          print_var w) in
+    Debug.print_doc message in
+
   let state = G.init() in
 
   (* The recursive function [solve] is parameterized with an environment
@@ -112,14 +127,18 @@ let solve (rectypes : bool) (c : rawco) : unit =
         solve env c1;
         solve env c2
     | CEq (v, w) ->
+        Debug.print "Equality constraint";
+        debug_unify v w;
         U.unify v w
     | CExist (v, c) ->
         (* We assume that the variable [v] has been created fresh, so it
            is globally unique, it carries no structure, and its rank is
            [no_rank]. The combinator interface enforces this property. *)
         G.register state v;
+        debug "Existential v = " (print_var v);
         solve env c
     | CInstance (x, w, witnesses_hook) ->
+        debug "Type scheme instance for " (print_tevar x);
         (* The environment provides a type scheme for [x]. *)
         let s = try XMap.find x env with Not_found -> raise (Unbound x) in
         (* Instantiating this type scheme yields a variable [v], which we unify with
@@ -127,19 +146,23 @@ let solve (rectypes : bool) (c : rawco) : unit =
            useful during the decoding phase. *)
         let witnesses, v = G.instantiate state s in
         WriteOnceRef.set witnesses_hook witnesses;
+        debug_unify v w;
         U.unify v w
     | CFrozen (x, w) ->
+        debug "Frozen variable " (print_tevar x);
         let s  = try XMap.find x env with Not_found -> raise (Unbound x) in
         let qs, body = G.instantiate state s in
         let v = fresh (Some (S.forall qs body)) in
-        Debug.print_doc (print_var v);
         G.register state v;
+        debug_unify v w;
         U.unify v w
     | CDef (x, v, c) ->
-        solve (XMap.add x (G.trivial v) env) c
+       debug "Adding definition of " (print_tevar x);
+       solve (XMap.add x (G.trivial v) env) c
     | CLet (xvss, c1, c2, generalizable_hook) ->
         (* Warn the generalization engine that we entering the left-hand side of
            a [let] construct. *)
+        Debug.print ("Entering let binding");
         G.enter state;
         (* Register the variables [vs] with the generalization engine, just as if
            they were existentially bound in [c1]. This is what they are, basically,
@@ -154,6 +177,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
            and to construct a list [ss] of type schemes for our entry points. The
            generalization engine also produces a list [generalizable] of the young
            variables that should be universally quantified here. *)
+        Debug.print ("Exiting let binding, proceeding with body");
         let generalizable, ss = G.exit rectypes state vs in
         (* Fill the write-once reference [generalizable_hook]. *)
         WriteOnceRef.set generalizable_hook generalizable;

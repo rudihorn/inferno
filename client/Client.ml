@@ -161,7 +161,10 @@ end
 (* Instantiate the solver. *)
 
 module Solver =
-  Inferno.SolverHi.Make(struct include String type tevar = t end)(S)(O)
+  Inferno.SolverHi.Make(struct
+      include String type tevar = t
+      let print_tevar = PPrint.string
+    end)(S)(O)
 
 open Solver
 

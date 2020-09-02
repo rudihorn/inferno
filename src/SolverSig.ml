@@ -27,6 +27,8 @@ module type TEVAR = sig
   (* A total ordering. *)
   val compare: tevar -> tevar -> int
 
+  val print_tevar : tevar -> PPrint.document
+
 (* END *)
 end
 (* END TEVAR *)
