@@ -105,12 +105,23 @@ let solve (rectypes : bool) (c : rawco) : unit =
     let open PPrint in
     Debug.print_doc (string str ^^ doc) in
 
-  let debug_unify v w =
+  let debug_unify_before str v w =
+    let open PPrint in
+    let message =
+      str ^^ space ^^ nest 2 (
+          string "Trying to unifying variables:" ^^ hardline ^^
+          print_var v ^^ hardline ^^
+          print_var w) in
+    Debug.print_doc message in
+
+  let debug_unify_after v w =
     let open PPrint in
     let message =
       nest 2 (
-          string "Unifying variables:" ^^ hardline ^^
-          print_var v ^^ hardline ^^
+          string "Unification successful.  Variables after unification:" ^^
+          hardline ^^
+          print_var v ^^
+          hardline ^^
           print_var w) in
     Debug.print_doc message in
 
@@ -120,6 +131,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
      that maps term variables to type schemes. *)
 
   let rec solve (env : ischeme XMap.t) (c : rawco) : unit =
+    let open PPrint in
     match c with
     | CTrue ->
         ()
@@ -127,18 +139,18 @@ let solve (rectypes : bool) (c : rawco) : unit =
         solve env c1;
         solve env c2
     | CEq (v, w) ->
-        Debug.print "Equality constraint";
-        debug_unify v w;
-        U.unify v w
+        debug_unify_before (string "Solving eqaulity constraint.") v w;
+        U.unify v w;
+        debug_unify_after v w
     | CExist (v, c) ->
         (* We assume that the variable [v] has been created fresh, so it
            is globally unique, it carries no structure, and its rank is
            [no_rank]. The combinator interface enforces this property. *)
         G.register state v;
-        debug "Existential v = " (print_var v);
-        solve env c
+        debug "Entering existential v : " (print_var v);
+        solve env c;
+        debug "Exiting existential v : " (print_var v)
     | CInstance (x, w, witnesses_hook) ->
-        debug "Type scheme instance for " (print_tevar x);
         (* The environment provides a type scheme for [x]. *)
         let s = try XMap.find x env with Not_found -> raise (Unbound x) in
         (* Instantiating this type scheme yields a variable [v], which we unify with
@@ -146,23 +158,29 @@ let solve (rectypes : bool) (c : rawco) : unit =
            useful during the decoding phase. *)
         let witnesses, v = G.instantiate state s in
         WriteOnceRef.set witnesses_hook witnesses;
-        debug_unify v w;
-        U.unify v w
+        debug_unify_before (string "Instantiating type scheme for " ^^ print_tevar x ^^ dot) v w;
+        U.unify v w;
+        debug_unify_after v w
     | CFrozen (x, w) ->
-        debug "Frozen variable " (print_tevar x);
         let s  = try XMap.find x env with Not_found -> raise (Unbound x) in
         let qs, body = G.instantiate state s in
         let v = fresh (Some (S.forall qs body)) in
         G.register state v;
-        debug_unify v w;
-        U.unify v w
+        debug_unify_before (string "Instantiating frozen variable " ^^ print_tevar x ^^ dot) v w;
+        U.unify v w;
+        debug_unify_after v w
     | CDef (x, v, c) ->
-       debug "Adding definition of " (print_tevar x);
+       Debug.print_doc (
+           string "Adding definition of " ^^ dquote ^^ (print_tevar x) ^^
+           dquote ^^ string " with unification variable " ^^ print_var v);
        solve (XMap.add x (G.trivial v) env) c
     | CLet (xvss, c1, c2, generalizable_hook) ->
         (* Warn the generalization engine that we entering the left-hand side of
            a [let] construct. *)
-        Debug.print ("Entering let binding");
+        Debug.print_doc (nest 2 (string "Entering let binding LHS.  Defined bindings:" ^^
+              hardline ^^ separate hardline (List.map (fun (x, v, _) ->
+              print_tevar x ^^ space ^^ colon ^^ space ^^ print_var v)
+          xvss)));
         G.enter state;
         (* Register the variables [vs] with the generalization engine, just as if
            they were existentially bound in [c1]. This is what they are, basically,
@@ -177,7 +195,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
            and to construct a list [ss] of type schemes for our entry points. The
            generalization engine also produces a list [generalizable] of the young
            variables that should be universally quantified here. *)
-        Debug.print ("Exiting let binding, proceeding with body");
+        Debug.print ("Exiting let binding LHS, proceeding with body");
         let generalizable, ss = G.exit rectypes state vs in
         (* Fill the write-once reference [generalizable_hook]. *)
         WriteOnceRef.set generalizable_hook generalizable;
