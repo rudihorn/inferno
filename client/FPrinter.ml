@@ -75,11 +75,11 @@ let rec print_term_aux level t =
         parens (print_term t)
   | Abs (x, ty1, t2) ->
       if level >= 2 then
-        string "fun " ^^
-        string x ^^
-        string " : " ^^
-        print_type ty1 ^^
-        string " = " ^^
+        string "λ" ^^
+        parens (string x ^^
+                string " : " ^^
+                print_type ty1) ^^
+        dot ^^ space ^^
         print_term_aux 2 t2
       else
         parens (print_term t)
@@ -95,9 +95,9 @@ let rec print_term_aux level t =
         parens (print_term t)
   | TyAbs (x, t1) ->
       if level >= 2 then
-        string "FUN " ^^
+        string "Λ" ^^
         print_tyvar x ^^
-        string " = " ^^
+        dot ^^ space ^^
         print_term_aux 2 t1
       else
         parens (print_term t)

@@ -175,15 +175,19 @@ let solve (rectypes : bool) (c : rawco) : unit =
         U.unify v w;
         debug_unify_after v w
     | CFrozen (x, w) ->
-        let s  = try XMap.find x env with Not_found -> raise (Unbound x) in
+        let s = try XMap.find x env with Not_found -> raise (Unbound x) in
         let qs, body = G.instantiate state s in
+        (* JSTOLAREK: If I unify v with w I get unification error.  If I unify
+           body with w type inference works correctly but typechecking of System
+           F fails.  This might be because System F typechecker is not expecting
+           quantified types.  Investigate! *)
         let v = fresh (Some (S.forall qs body)) in
         G.register state v;
         debug_unify_before (string "Instantiating frozen variable " ^^
           print_tevar x ^^ space ^^ colon ^^ space ^^ print_scheme s ^^ dot ^^
-          hardline) v w;
-        U.unify v w;
-        debug_unify_after v w
+          hardline) body w;
+        U.unify body w;
+        debug_unify_after body w
     | CDef (x, v, c) ->
        let scheme = G.trivial v in
        Debug.print_doc (
