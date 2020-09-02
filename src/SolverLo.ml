@@ -147,9 +147,9 @@ let solve (rectypes : bool) (c : rawco) : unit =
            is globally unique, it carries no structure, and its rank is
            [no_rank]. The combinator interface enforces this property. *)
         G.register state v;
-        debug "Entering existential v : " (print_var v);
+        debug "Entering existential with unification variable : " (print_var v);
         solve env c;
-        debug "Exiting existential v : " (print_var v)
+        debug "Exiting existential with unification variable : " (print_var v)
     | CInstance (x, w, witnesses_hook) ->
         (* The environment provides a type scheme for [x]. *)
         let s = try XMap.find x env with Not_found -> raise (Unbound x) in
