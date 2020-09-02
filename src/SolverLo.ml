@@ -180,7 +180,17 @@ let solve (rectypes : bool) (c : rawco) : unit =
         (* JSTOLAREK: If I unify v with w I get unification error.  If I unify
            body with w type inference works correctly but typechecking of System
            F fails.  This might be because System F typechecker is not expecting
-           quantified types.  Investigate! *)
+           quantified types.  Investigate!
+
+           Generated System F term certainly looks fishy:
+
+           Λ29. Λ27. let id = Λ17. let _x2 = Λ13. λ(x : 13). x in _x2 in
+                     let choose = Λ22. Λ20. let _x1 = Λ7. Λ5. λ(x : 5). λ(y : 7). x in _x1 in
+           choose [27] [29 -> 29] (id [29])
+
+           Type variables introduced in the definitions of id and choose are not
+           being used in any way.
+        *)
         let v = fresh (Some (S.forall qs body)) in
         G.register state v;
         debug_unify_before (string "Instantiating frozen variable " ^^
