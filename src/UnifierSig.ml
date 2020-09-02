@@ -38,7 +38,7 @@ module type STRUCTURE = sig
   exception Iter2
   val iter2: ('a -> 'b -> unit) -> 'a structure -> 'b structure -> unit
 
-  val print: 'a structure -> ('a -> PPrint.document) -> PPrint.document
+  val print: ('a -> PPrint.document) -> 'a structure -> PPrint.document
 
 (* END *)
 end
@@ -75,6 +75,9 @@ val set_structure: variable -> variable structure option -> unit
 
 val          rank: variable -> int
 val      set_rank: variable -> int -> unit
+
+val         print: (variable structure -> PPrint.document) -> variable
+                -> PPrint.document
 
 (* [adjust_rank v k] is equivalent to [if k < rank v then set_rank v k] and
    equivalent to [set_rank v (min k (rank v))]. We offer this special-purpose

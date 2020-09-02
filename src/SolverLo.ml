@@ -55,6 +55,13 @@ let fresh t =
 
 (* -------------------------------------------------------------------------- *)
 
+let print_var v =
+  let rec var_printer    v = U.print struct_printer v and
+          struct_printer s = S.print var_printer    s in
+  var_printer v
+
+(* -------------------------------------------------------------------------- *)
+
 (* The syntax of constraints is as follows. *)
 
 (* This syntax is exposed to the user in the low-level interface [SolverLo],
@@ -125,6 +132,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
         let s  = try XMap.find x env with Not_found -> raise (Unbound x) in
         let qs, body = G.instantiate state s in
         let v = fresh (Some (S.forall qs body)) in
+        Debug.print_doc (print_var v);
         G.register state v;
         U.unify v w
     | CDef (x, v, c) ->

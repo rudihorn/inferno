@@ -84,17 +84,23 @@ let adjust_rank v k =
 
 (* -------------------------------------------------------------------------- *)
 
-let print_var f v =
+let print f v =
   let open PPrint in
   lbrace ^^
-  string "is" ^^ equals ^^ string (string_of_int (id v)) ^^
+  string "id" ^^ equals ^^ string (string_of_int (id v)) ^^
   begin
     match structure v with
     | None -> empty
     | Some s ->
-       comma ^^ string "structure" ^^ equals ^^ parens (f s)
+       comma ^^ space ^^ string "structure" ^^ equals ^^ f s
   end ^^
-  string "rank" ^^ equals ^^ string (string_of_int (rank v)) ^^
+  begin
+  if Debug.print_ranks then
+    comma ^^ space ^^
+    string "rank" ^^ equals ^^ string (string_of_int (rank v))
+  else
+    empty
+  end ^^
   rbrace
 
 (* -------------------------------------------------------------------------- *)
