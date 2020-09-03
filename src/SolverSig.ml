@@ -38,11 +38,14 @@ end
 (* The structure of types *after decoding* is described to the solver as
    follows. *)
 
+
 (* BEGIN OUTPUT *)
 module type OUTPUT = sig
 
   (* The solver represents type variables via unique integer identifiers. *)
   type tyvar = int
+
+  module TyVarMap : Map.S with type key = tyvar
 
   (* The solver works with first-order types whose structure is defined by
      the type ['a structure], as in the signature [Unifier.STRUCTURE]. *)
@@ -62,6 +65,8 @@ module type OUTPUT = sig
      and [structure] are combined, we see that [ty] must contain the fixed point
      of the functor [\X. tyvar + t X]. *)
   val structure: ty structure -> ty
+
+  val to_structure: ('a structure -> 'a) -> 'a TyVarMap.t -> ty -> 'a
 
   (* If [v] is a type variable and [t] is a type, then [mu v t] is a
      representation of the recursive type [mu v.t]. This function is used in

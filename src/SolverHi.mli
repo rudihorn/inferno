@@ -84,6 +84,10 @@ module Make
 
   (* ---------------------------------------------------------------------- *)
 
+  val from_nominal : scheme -> variable
+
+  (* ---------------------------------------------------------------------- *)
+
   (* Existential quantification. *)
 
   (* Assume that the user-supplied function [c], applied to a fresh type

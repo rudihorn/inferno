@@ -93,6 +93,8 @@ module O = struct
   type ty =
     F.nominal_type
 
+  module TyVarMap = Map.Make(struct type t = int let compare = compare end)
+
   let variable x =
     F.TyVar x
 
@@ -104,6 +106,17 @@ module O = struct
         F.TyProduct (t1, t2)
     | S.TyForall (qs, t) ->
         List.fold_right (fun q t -> F.TyForall (F.decode_tyvar q, t)) qs t
+
+  let to_structure fresh (env : 'a TyVarMap.t) (body : ty) : 'a =
+    let rec go ty = match ty with
+      | F.TyVar v              -> TyVarMap.find v env
+      | F.TyArrow   (ty1, ty2) ->
+         fresh (S.TyArrow (fresh (go ty1), fresh (go ty2)))
+      | F.TyProduct (ty1, ty2) ->
+         fresh (S.TyProduct (fresh (go ty1), fresh (go ty2)))
+      | F.TyForall _ -> assert false
+      | F.TyMu _ -> assert false
+    in go body
 
   let mu x t =
     F.TyMu (x, t)
@@ -276,7 +289,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
       F.Var x
 
     (* Abstraction. *)
-  | ML.Abs (x, _, u) -> (* JSTOLAREK: type annotation ignored *)
+  | ML.Abs (x, None, u) ->
 
       (* We do not know a priori what the domain and codomain of this function
          are, so we must infer them. We introduce two type variables to stand
@@ -294,6 +307,26 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
           def x v1 (hastype u v2)
         )
       ) <$$> fun (ty1, (_ty2, ((), u'))) ->
+      (* Once these constraints are solved, we obtain the translated function
+         body [u']. There remains to construct an explicitly-typed abstraction
+         in the target calculus. *)
+      F.Abs (x, ty1, u')
+
+  | ML.Abs (x, Some ty, u) ->
+
+      let v1 = from_nominal ty in
+
+      (* Here, we could use [exist_], because we do not need [ty2]. I refrain
+         from using it, just to simplify the paper. *)
+      exist (fun v2 ->
+        (* [w] must be the function type [v1 -> v2]. *)
+        (* Here, we could use [^^], instead of [^&], so as to avoid building
+           a useless pair. I refrain from using it, just to simplify the paper. *)
+        w --- arrow v1 v2 ^&
+        (* Under the assumption that [x] has type [domain], the term [u] must
+           have type [codomain]. *)
+        def x v1 (hastype u v2)
+        ) <$$> fun (ty1, ((), u')) -> (* JSTOLAREK: potentially wrong *)
       (* Once these constraints are solved, we obtain the translated function
          body [u']. There remains to construct an explicitly-typed abstraction
          in the target calculus. *)
