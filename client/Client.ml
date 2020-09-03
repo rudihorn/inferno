@@ -60,20 +60,20 @@ module S = struct
     | _, _ ->
         raise Iter2
 
-  let print f s =
+  let print fuel f s =
     let open PPrint in
     match s with
     | TyArrow   (t1, t2) ->
-       parens (f t1 ^^ space ^^ string "->" ^^ space ^^ f t2)
+       parens (f fuel t1 ^^ space ^^ string "->" ^^ space ^^ f fuel t2)
     | TyProduct (t1, t2) ->
-       parens (f t1 ^^ string "×" ^^ f t2)
-    | TyForall  ([],  t) -> f t
+       parens (f fuel t1 ^^ string "×" ^^ f fuel t2)
+    | TyForall  ([],  t) -> f fuel t
     | TyForall  (qs,  t) ->
        string "forall " ^^ lbracket ^^
-       separate (comma ^^ space) (List.map (fun q -> f q) qs) ^^
+       separate (comma ^^ space) (List.map (fun q -> f fuel q) qs) ^^
        rbracket ^^
        dot ^^ space ^^
-       f t
+       f fuel t
 
 end
 

@@ -84,24 +84,30 @@ let adjust_rank v k =
 
 (* -------------------------------------------------------------------------- *)
 
-let print f v =
+let print (fuel : int) f v =
   let open PPrint in
+  if (fuel > 0) then begin
   lbrace ^^
   string "id" ^^ equals ^^ string (string_of_int (id v)) ^^
   begin
     match structure v with
     | None -> empty
     | Some s ->
-       comma ^^ space ^^ string "structure" ^^ equals ^^ f s
+       comma ^^ space ^^ string "structure" ^^ equals ^^ f (fuel - 1) s
   end ^^
   begin
-  if Debug.print_ranks then
-    comma ^^ space ^^
-    string "rank" ^^ equals ^^ string (string_of_int (rank v))
-  else
-    empty
+    if Debug.print_ranks then
+      comma ^^ space ^^
+      string "rank" ^^ equals ^^ string (string_of_int (rank v))
+    else
+      empty
   end ^^
   rbrace
+  end
+  else
+    lbrace ^^
+    string "⋯" ^^
+    rbrace
 
 (* -------------------------------------------------------------------------- *)
 

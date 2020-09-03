@@ -56,9 +56,9 @@ let fresh t =
 (* -------------------------------------------------------------------------- *)
 
 let print_var v =
-  let rec var_printer    v = U.print struct_printer v and
-          struct_printer s = S.print var_printer    s in
-  var_printer v
+  let rec var_printer    fuel v = U.print fuel struct_printer v and
+          struct_printer fuel s = S.print fuel var_printer    s in
+  var_printer Debug.fuel v
 
 let print_tevar v = X.print_tevar v
 
