@@ -1,3 +1,16 @@
+FreezeML(X) fork
+================
+
+Compile and run with:
+
+```
+make && OCAMLRUNPARAM=b _build/default/client/Main.exe
+```
+
+
+Original readme
+===============
+
 A library for constraint-based Hindley-Milner type inference.
 
 This software is described in the ICFP 2014 paper
