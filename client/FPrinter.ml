@@ -18,28 +18,29 @@ let rec print_type_aux level ty =
   | TyProduct (ty1, ty2) ->
       if level >= 1 then
         print_type_aux 0 ty1 ^^
-        string " * " ^^
+        string " × " ^^
         print_type_aux 1 ty2
       else
         parens (print_type ty)
   | TyArrow (ty1, ty2) ->
       if level >= 2 then
         print_type_aux 1 ty1 ^^
-        string " -> " ^^
+        string " → " ^^
         print_type ty2
       else
         parens (print_type ty)
   | TyForall (x, ty1) ->
       if level >= 3 then
+        string "∀" ^^ space ^^
         lbracket ^^
         print_tyvar x ^^
-        rbracket ^^ space ^^
+        rbracket ^^ dot ^^ space ^^
         print_type_aux 3 ty1
       else
         parens (print_type ty)
   | TyMu (x, ty1) ->
       if level >= 3 then
-        string "mu "  ^^
+        string "μ"  ^^
         print_tyvar x ^^
         dot ^^ space ^^
         print_type_aux 3 ty1
@@ -116,7 +117,7 @@ let rec print_term_aux level t =
         print_term_aux 0 t2
       else
         parens (print_term t)
- 
+
 and print_term t =
   print_term_aux 2 t
 

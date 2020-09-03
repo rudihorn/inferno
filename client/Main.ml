@@ -224,9 +224,9 @@ let (<<) f g x = f(g(x))
 (* Environment with some functions from Figure 2 *)
 let env k =
   (* id : forall a. a -> a *)
-  let fml_id k = ML.let_ ("id", ML.gen (ML.abs ("x", ML.Var "x")), k) in
+  let fml_id k = ML.let_ ("id", ML.abs ("x", ML.Var "x"), k) in
   (* choose : forall a. a -> a -> a *)
-  let fml_choose k = ML.let_ ("choose", ML.gen (ML.abs ("x", (ML.abs ("y", ML.Var "x")))), k) in
+  let fml_choose k = ML.let_ ("choose", ML.abs ("x", (ML.abs ("y", ML.Var "x"))), k) in
   (* auto : (forall a. a -> a) -> (forall a. a -> a) *)
 (*
   let fml_auto k = ML.let_ ("auto", ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)), ML.App (ML.Var "x", ML.FrozenVar "x")), k) in
@@ -261,9 +261,9 @@ let () =
   assert (test a1);
   assert (test a1_dot);
 *)
-  assert (test a2)
-(*
   assert (test a2_dot)
+(*
+  assert (test a2)
 *)
 
 (* -------------------------------------------------------------------------- *)

@@ -153,7 +153,7 @@ module ML = struct
 
   let inst m =
     let x = fresh_tevar () in
-    Let (x, None, m, m)
+    Let (x, None, m, Var x)
 end
 
 (* -------------------------------------------------------------------------- *)
