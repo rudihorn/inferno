@@ -147,8 +147,11 @@ let solve (rectypes : bool) (c : rawco) : unit =
     | CTrue ->
         ()
     | CConj (c1, c2) ->
+        Debug.print "Found constraint conjunction.  Solving first constraint.";
         solve env c1;
-        solve env c2
+        Debug.print "First constraint in a conjunction solved, solving second.";
+        solve env c2;
+        Debug.print "Second constraint in a conjunction solved"
     | CEq (v, w) ->
         debug_unify_before (string "Solving eqaulity constraint.") v w;
         U.unify v w;
