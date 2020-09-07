@@ -111,10 +111,11 @@ module O = struct
     let rec go ty = match ty with
       | F.TyVar v              -> TyVarMap.find v env
       | F.TyArrow   (ty1, ty2) ->
-         fresh (S.TyArrow (fresh (go ty1), fresh (go ty2)))
+         fresh (S.TyArrow (go ty1, go ty2))
       | F.TyProduct (ty1, ty2) ->
-         fresh (S.TyProduct (fresh (go ty1), fresh (go ty2)))
-      | F.TyForall _ -> assert false
+         fresh (S.TyProduct (go ty1, go ty2))
+      | F.TyForall (q, ty) ->
+         fresh (S.TyForall ([TyVarMap.find q env], go ty))
       | F.TyMu _ -> assert false
     in go body
 
