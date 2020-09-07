@@ -194,10 +194,15 @@ let solve (rectypes : bool) (c : rawco) : unit =
     | CLet (xvss, c1, c2, generalizable_hook) ->
         (* Warn the generalization engine that we entering the left-hand side of
            a [let] construct. *)
-        Debug.print_doc (nest 2 (string "Entering let binding LHS.  Defined bindings:" ^^
-              hardline ^^ separate hardline (List.map (fun (x, v, _) ->
-              print_tevar x ^^ space ^^ colon ^^ space ^^ print_var v)
-          xvss)));
+        begin
+          if ( List.length( xvss ) > 0 ) then
+            Debug.print_doc (nest 2
+              (string "Entering let binding LHS.  Defined bindings:" ^^
+               hardline ^^ separate hardline (List.map (fun (x, v, _) ->
+               print_tevar x ^^ space ^^ colon ^^ space ^^ print_var v) xvss)))
+          else
+            Debug.print( "Entering top-level binding" )
+        end;
         G.enter state;
         (* Register the variables [vs] with the generalization engine, just as if
            they were existentially bound in [c1]. This is what they are, basically,
