@@ -111,7 +111,8 @@ let from_nominal ((qs, body) : O.scheme) : Lo.variable =
   let env = List.fold_left (fun env q -> O.TyVarMap.add q (Lo.fresh None) env)
                            O.TyVarMap.empty qs in
   let qs' = List.map (fun q -> O.TyVarMap.find q env) qs in
-  Lo.fresh (Some (S.forall qs' (O.to_structure (fun s -> fresh (Some s)) env body)))
+  Lo.fresh (Some (S.forall qs' (O.to_structure (fun s -> fresh (Some s))
+                                               env body)))
 
 (* -------------------------------------------------------------------------- *)
 
