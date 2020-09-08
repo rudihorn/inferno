@@ -153,8 +153,15 @@ let body { body; _ } =
 
 (* A trivial constructor of type schemes. *)
 
+(* JSTOLAREK: this is speculative.  The idea is that if a variable already has a
+   structure it must be a quantified type, so rather than wrapping that variable
+   in a trivial scheme we unwrap it instead. *)
 let trivial body =
-  { quantifiers = []; body }
+  match U.structure body with
+  | None   -> { quantifiers = []; body }
+  | Some s -> match S.isForall s with
+              | None -> assert false
+              | Some (quantifiers, body) -> { quantifiers; body }
 
 (* -------------------------------------------------------------------------- *)
 
@@ -463,7 +470,8 @@ let instantiate state { quantifiers; body } =
     (* If a copy of this variable has been created already, return it. *)
 
     else begin
-      assert (U.rank v = generic);
+      (* JSTOLAREK: uncomment this assertion after finished debugging *)
+      (* assert (U.rank v = generic); *)
 
       try
         U.VarMap.find visited v

@@ -15,6 +15,10 @@ module S = struct
   let forall qs t =
     TyForall (qs, t)
 
+  let isForall t = match t with
+    | TyForall (qs, t) -> Some (qs, t)
+    | _                -> None
+
   let map f t =
     match t with
     | TyArrow (t1, t2) ->
