@@ -54,6 +54,9 @@ let rec find point =
 let equivalent point1 point2 =
   repr point1 == repr point2
 
+let compare point1 point2 =
+  compare (repr point1) (repr point2)
+
 let is_representative point =
   match TRef.get point with
   | Link _ ->

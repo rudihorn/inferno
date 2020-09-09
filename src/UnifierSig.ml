@@ -127,6 +127,8 @@ val unify: variable -> variable -> unit
 
 module VarMap : Hashtbl.S with type key = variable
 
+module VarSet : Set.S with type elt = variable
+
 (* -------------------------------------------------------------------------- *)
 
 (* [equivalent v1 v2] tells whether [v1] and [v2] belong to the same equivalence
