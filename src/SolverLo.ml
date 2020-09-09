@@ -190,10 +190,10 @@ let solve (rectypes : bool) (c : rawco) : unit =
     | CDef (x, v, c) ->
        let scheme = G.trivial v in
        Debug.print_doc (
-           string "Adding definition of " ^^ dquote ^^ (print_tevar x) ^^
+           string "Adding binding " ^^ dquote ^^ (print_tevar x) ^^
            dquote ^^ string " with type scheme " ^^ print_scheme scheme);
        solve (XMap.add x scheme env) c;
-       Debug.print_doc (string "Done with solving the definition of " ^^ print_tevar x)
+       Debug.print_doc (string "Exiting scope of binding " ^^ print_tevar x)
     | CLet (xvss, c1, c2, generalizable_hook) ->
         (* Warn the generalization engine that we entering the left-hand side of
            a [let] construct. *)
