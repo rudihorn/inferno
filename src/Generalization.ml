@@ -187,24 +187,26 @@ let register state v =
 (* Debugging utilities. *)
 
 let show_variable v =
-  Printf.printf "id = %d, rank = %d\n" (U.id v) (U.rank v)
+  Printf.printf "id = %d, rank = %d\n" (U.id v) (U.rank v); flush stdout
 
 let show_pool state k =
   Printf.printf "Pool %d:\n" k;
-  List.iter show_variable (InfiniteArray.get state.pool k)
+  List.iter show_variable (InfiniteArray.get state.pool k); flush stdout
 
 let show_young state =
-  Printf.printf "state.young = %d\n" state.young
+  Printf.printf "state.young = %d\n" state.young; flush stdout
 
 let show_pools state =
   for k = base_rank to state.young do
     show_pool state k
-  done
+  done;
+  flush stdout
 
 let show_state label state =
   Printf.printf "%s:\n" label;
   show_young state;
-  show_pools state
+  show_pools state;
+  flush stdout
 
 (* -------------------------------------------------------------------------- *)
 
