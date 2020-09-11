@@ -246,7 +246,6 @@ let solve (rectypes : bool) (c : rawco) : unit =
    function [O.variable]) is turned into an output type. *)
 
 let decode_variable (x : variable) : O.tyvar =
-  assert (U.rank x <> G.generic);
   U.id x
 
 let decode_variable_as_type (x : variable) : O.ty =
