@@ -257,15 +257,11 @@ let () =
   assert (test genkidid2);
 *)
   (* FreezeML examples *)
-(*
   assert (test a1);
-*)
-  assert (test a1_dot)
-(*
+  assert (test a1_dot);
   assert (test a2);
   assert (test a2_dot);
   assert (test (env a1))
-*)
 
 (* -------------------------------------------------------------------------- *)
 
