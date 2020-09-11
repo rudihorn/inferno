@@ -76,6 +76,7 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
      is nonempty, i.e., the current [enter]/[exit] balance is at least one.) *)
 
   val no_rank: int
+  val generic: int
   val register: state -> variable -> unit
 
   (* A variable can be turned into a trivial scheme, with no quantifiers and
@@ -134,5 +135,7 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
      of the type scheme. *)
 
   val instantiate: state -> scheme -> variable list * variable
+
+  val freeze     : state -> scheme -> variable list * variable
 
 end

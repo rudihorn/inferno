@@ -179,10 +179,10 @@ let solve (rectypes : bool) (c : rawco) : unit =
         debug_unify_after v w
     | CFrozen (x, w) ->
         let s = try XMap.find x env with Not_found -> raise (Unbound x) in
-        let qs, body = G.instantiate state s in
+        let qs, body = G.freeze state s in
         let v = fresh (Some (S.forall qs body)) in
         G.register state v;
-        debug_unify_before (string "Instantiating frozen variable " ^^
+        debug_unify_before (string "Freezing variable " ^^
           print_tevar x ^^ space ^^ colon ^^ space ^^ print_scheme s ^^ dot ^^
           hardline) v w;
         U.unify v w;
@@ -246,12 +246,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
    function [O.variable]) is turned into an output type. *)
 
 let decode_variable (x : variable) : O.tyvar =
-  (* The following assertion ensures that the decoder is invoked only
-     after the solver has been run. It would not really make sense to
-     invoke the decoder before running the solver. That said, at the
-     time of writing this comment, the API does not expose the decoder,
-     so the client should have no way of violating this assertion. *)
-  assert (U.rank x <> G.no_rank);
+  assert (U.rank x <> G.generic);
   U.id x
 
 let decode_variable_as_type (x : variable) : O.ty =

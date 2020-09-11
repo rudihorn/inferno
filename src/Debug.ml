@@ -1,6 +1,6 @@
 let enabled = true
 
-let print_ranks = false
+let print_ranks = true
 
 let print message =
   if enabled then prerr_endline message; flush stderr

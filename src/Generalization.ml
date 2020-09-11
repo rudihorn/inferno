@@ -338,7 +338,7 @@ let exit rectypes state roots =
     (* A postcondition of [traverse v] is [U.rank v <= k]. (This is downward
        propagation.) *)
     let rec traverse v =
-      assert (U.rank v > 0);
+      assert (U.rank v >= 0);
       (* If [v] was visited before, then its rank must be below [k], as we
          adjust ranks on the way down already. *)
       if U.VarMap.mem visited v then
@@ -472,9 +472,7 @@ let instantiate state { quantifiers; body } =
     (* If a copy of this variable has been created already, return it. *)
 
     else begin
-      (* JSTOLAREK: uncomment this assertion after finished debugging *)
-      (* assert (U.rank v = generic); *)
-
+      assert (U.rank v = generic || U.rank v = no_rank);
       try
         U.VarMap.find visited v
       with Not_found ->
@@ -490,9 +488,50 @@ let instantiate state { quantifiers; body } =
         U.VarMap.add visited v v';
         U.set_structure v' (Option.map (S.map copy) (U.structure v));
         v'
+      end
+  in
+  List.map copy quantifiers, copy body
 
-    end
 
+let freeze state { quantifiers; body } =
+  let inScope : U.VarSet.t = U.VarSet.of_list quantifiers in
+
+  (* Prepare to mark which variables have been visited and record their copy. *)
+  let visited : U.variable U.VarMap.t = U.VarMap.create 128 in
+
+  (* If the variable [v] has rank [generic], then [copy v] returns a copy of
+     it, and copies its descendants recursively. If [v] has positive rank,
+     then [copy v] returns [v]. Only one copy per variable is created, even if
+     a variable is encountered several times during the traversal. *)
+
+  let rec copy v =
+
+    (* If this variable has positive rank, then it is not generic: we must
+       stop. *)
+
+    if U.rank v > 0 then
+      v
+    else begin
+    (* If a copy of this variable has been created already, return it. *)
+      try
+        if U.VarSet.mem v inScope then
+            v
+        else
+            U.VarMap.find visited v
+      with Not_found ->
+
+        (* The variable must be copied, and has not been copied yet. Create a
+           new variable, register it, and update the mapping. Then, copy its
+           descendants. Note that the mapping must be updated before making a
+           recursive call to [copy], so as to guarantee termination in the
+           presence of cyclic terms. *)
+
+        let v' = U.fresh None state.young in
+        register_at_rank state v';
+        U.VarMap.add visited v v';
+        U.set_structure v' (Option.map (S.map copy) (U.structure v));
+        v'
+      end
   in
   List.map copy quantifiers, copy body
 
