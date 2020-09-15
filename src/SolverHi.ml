@@ -213,7 +213,7 @@ let frozen_instance x v =
 
 let constant c w =
   let v = fresh (Some c) in
-  CEq (v, w), fun _env -> ()
+  v -- w
 
 
 (* -------------------------------------------------------------------------- *)
