@@ -229,14 +229,11 @@ let env k =
   let fml_choose k = ML.let_ ("choose", ML.abs ("x", (ML.abs ("y", ML.Var "x"))), k) in
   (* auto : (forall a. a -> a) -> (forall a. a -> a) *)
   let fml_auto k = ML.let_ ("auto", ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)), ML.App (ML.Var "x", ML.FrozenVar "x")), k) in
-(*
   (* app : forall a b. (a -> b) -> a -> b *)
-  let fml_app k = ML.let_ ("app", ML.gen (ML.abs ("f", ML.abs ("x", ML.App (ML.Var "f", ML.Var "x")))), k) in
+  let fml_app k = ML.let_ ("app", ML.abs ("f", ML.abs ("x", ML.App (ML.Var "f", ML.Var "x"))), k) in
   (* revapp : forall a b. b -> (a -> b) -> b *)
-  let fml_revapp k = ML.let_ ("revapp", ML.gen (ML.abs ("x", ML.abs ("f", ML.App (ML.Var "f", ML.Var "x")))), k) in
+  let fml_revapp k = ML.let_ ("revapp", ML.abs ("x", ML.abs ("f", ML.App (ML.Var "f", ML.Var "x"))), k) in
   (fml_id << fml_choose << fml_auto << fml_app << fml_revapp) k
-*)
-  (fml_id << fml_choose << fml_auto) k
 
 (* Polymorphic instantiation *)
 (* \x y.y *)
