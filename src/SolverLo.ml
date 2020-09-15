@@ -220,7 +220,16 @@ let solve (rectypes : bool) (c : rawco) : unit =
            and to construct a list [ss] of type schemes for our entry points. The
            generalization engine also produces a list [generalizable] of the young
            variables that should be universally quantified here. *)
-        Debug.print ("Exiting let binding LHS, proceeding with body.");
+        begin
+          if ( List.length( xvss ) > 0 ) then
+            Debug.print_doc (nest 2
+              (string "Typechecked bodies of the following let bindings:" ^^
+               hardline ^^ separate hardline (List.map (fun (x, v, _) ->
+               print_tevar x ^^ space ^^ colon ^^ space ^^ print_var v) xvss)) ^^
+               hardline ^^ string "Prociding with let body now.")
+          else
+            Debug.print( "Typechecking of top-level binding finished" )
+        end;
         let generalizable, ss = G.exit rectypes state vs in
         (* Fill the write-once reference [generalizable_hook]. *)
         WriteOnceRef.set generalizable_hook generalizable;
