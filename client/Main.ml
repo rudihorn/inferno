@@ -84,7 +84,7 @@ let log_action log action =
 
 let log_msg log msg =
   log_action log (fun () ->
-    output_string stdout msg
+    output_string stdout msg; flush stdout
   )
 
 let print_log log =
