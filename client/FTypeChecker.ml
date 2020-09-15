@@ -172,6 +172,7 @@ let rec typeof env (t : debruijn_term) : debruijn_type =
       assert (i = 1 || i = 2);
       let ty1, ty2 = as_product (typeof env t) in
       if i = 1 then ty1 else ty2
+  | Int _ -> TyInt
 
 let typeof =
   typeof empty

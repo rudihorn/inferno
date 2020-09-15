@@ -40,8 +40,9 @@ let rec string_of_typ (t : nominal_type)  =
   | TyVar a -> "TyVar " ^ string_of_int a
   | TyArrow (a, b) -> "(" ^ string_of_typ a ^ " -> " ^ string_of_typ b ^ ")"
   | TyProduct (a, b) -> "(" ^ string_of_typ a ^ "×" ^ string_of_typ b ^ ")"
-  | TyForall (q, t) -> "forall " ^ string_of_int q ^ ". " ^ string_of_typ t
-  | TyMu (q, t) -> "mu " ^ string_of_int q ^ ". " ^ string_of_typ t
+  | TyForall (q, t) -> "∀ " ^ string_of_int q ^ ". " ^ string_of_typ t
+  | TyMu (q, t) -> "μ " ^ string_of_int q ^ ". " ^ string_of_typ t
+  | TyInt -> "Int"
 
 
 (* -------------------------------------------------------------------------- *)
@@ -148,6 +149,7 @@ module TypeInType : DeBruijn.TRAVERSE
         let env, x = extend env x in
         let ty1' = traverse lookup extend env ty1 in
         TyMu (x, ty1')
+    | TyInt -> TyInt
 
 end
 

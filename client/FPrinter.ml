@@ -46,6 +46,8 @@ let rec print_type_aux level ty =
         print_type_aux 3 ty1
       else
         parens (print_type ty)
+  | TyInt ->
+     string "Int"
 
 and print_type ty =
   print_type_aux 3 ty
@@ -117,6 +119,8 @@ let rec print_term_aux level t =
         print_term_aux 0 t2
       else
         parens (print_term t)
+  | Int i ->
+     string (string_of_int i)
 
 and print_term t =
   print_term_aux 2 t
