@@ -21,6 +21,7 @@ type ('a, 'b) typ =
   | TyProduct of ('a, 'b) typ * ('a, 'b) typ
   | TyForall of 'b * ('a, 'b) typ
   | TyMu of 'b * ('a, 'b) typ
+  | TyInt
 (* END F *)
 
 (* BEGIN F *)
@@ -64,6 +65,7 @@ type ('a, 'b) term =
 (* END F *)
   | Pair of ('a, 'b) term * ('a, 'b) term
   | Proj of int * ('a, 'b) term
+  | Int of int
 
 (* BEGIN F *)
 type nominal_term = (tyvar, tyvar) term
@@ -191,10 +193,11 @@ module TypeInTerm : DeBruijn.TRAVERSE
     | Pair (t1, t2) ->
         let t1' = traverse lookup extend env t1
         and t2' = traverse lookup extend env t2 in
-        Pair (t1', t2')      
+        Pair (t1', t2')
     | Proj (i, t) ->
         let t' = traverse lookup extend env t in
         Proj (i, t')
+    | Int i -> Int i
 
 end
 

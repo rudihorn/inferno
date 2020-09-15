@@ -90,6 +90,8 @@ let rec print_term_aux level t =
         print_term_aux 0 t2
       else
         parens (print_term t)
+  | Int i ->
+     string (string_of_int i)
 
 and print_term t =
   print_term_aux 2 t

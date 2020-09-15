@@ -58,6 +58,7 @@ let rec size accu = function
   | ML.Let (_, _, t1, t2)
   | ML.Pair (t1, t2)
     -> size (size (accu + 1) t1) t2
+  | ML.Int _ -> accu
 
 let size =
   size 0

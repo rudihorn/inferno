@@ -135,6 +135,8 @@ module Make
   (* JSTOLAREK: document this *)
   val frozen_instance: tevar -> variable -> unit co
 
+  val constant : variable structure -> variable -> unit co
+
   (* ---------------------------------------------------------------------- *)
 
   (* Construction of constraint abstractions, a.k.a. generalization. *)

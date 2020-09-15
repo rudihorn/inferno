@@ -20,6 +20,7 @@ type ('a, 'b) typ =
   | TyProduct of ('a, 'b) typ * ('a, 'b) typ
   | TyForall of 'b * ('a, 'b) typ
   | TyMu of 'b * ('a, 'b) typ
+  | TyInt
 
 type tyvar =
     int
@@ -50,6 +51,7 @@ type ('a, 'b) term =
   | TyApp of ('a, 'b) term * ('a, 'b) typ
   | Pair of ('a, 'b) term * ('a, 'b) term
   | Proj of int * ('a, 'b) term
+  | Int of int
 
 type nominal_term =
     (tyvar, tyvar) term

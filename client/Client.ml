@@ -11,6 +11,7 @@ module S = struct
     | TyArrow of 'a * 'a
     | TyProduct of 'a * 'a
     | TyForall of 'a list * 'a
+    | TyInt
 
   let forall qs t =
     TyForall (qs, t)
@@ -33,6 +34,7 @@ module S = struct
         let qs = List.map f qs in
         let t  = f t in
         TyForall (qs, t)
+    | TyInt -> TyInt
 
   let fold f t accu =
     match t with
@@ -44,6 +46,7 @@ module S = struct
     | TyForall (qs, t) ->
         let accu = List.fold_left (fun accu q -> f q accu) accu qs in
         f t accu
+    | TyInt -> accu
 
   let iter f t =
     let _ = map f t in
@@ -61,6 +64,7 @@ module S = struct
        (* S-Decompose-Forall *)
        List.iter2 f qs1 qs2;
         f t1 t2
+    | TyInt, TyInt -> ()
     | _, _ ->
         raise Iter2
 
@@ -78,6 +82,7 @@ module S = struct
        rbracket ^^
        dot ^^ space ^^
        f fuel t
+    | TyInt -> string "Int"
 
 end
 
@@ -110,6 +115,7 @@ module O = struct
         F.TyProduct (t1, t2)
     | S.TyForall (qs, t) ->
         List.fold_right (fun q t -> F.TyForall (F.decode_tyvar q, t)) qs t
+    | S.TyInt -> F.TyInt
 
   let to_structure fresh (env : 'a TyVarMap.t) (body : ty) : 'a =
     let rec go ty = match ty with
@@ -120,6 +126,7 @@ module O = struct
          fresh (S.TyProduct (go ty1, go ty2))
       | F.TyForall (q, ty) ->
          fresh (S.TyForall ([TyVarMap.find q env], go ty))
+      | F.TyInt -> fresh (S.TyInt)
       | F.TyMu _ -> assert false
     in go body
 
@@ -154,6 +161,7 @@ module ML = struct
     (* END ML *)
     | Pair of term * term
     | Proj of int * term
+    | Int of int
 
   (* Unannotated abstraction and let *)
   let abs (x, m) = Abs (x, None, m)
@@ -278,6 +286,9 @@ let coerce (vs1 : O.tyvar list) (vs2 : O.tyvar list) : coercion =
 (* BEGIN HASTYPE *)
 let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
 = match t with
+
+  | ML.Int x ->
+     constant S.TyInt w <$$> fun () -> F.Int x
 
     (* Variable. *)
   | ML.Var x ->
