@@ -511,16 +511,14 @@ let freeze state { quantifiers; body } =
 
     (* If this variable has positive rank, then it is not generic: we must
        stop. *)
+    (* If this is a quantified variable return it as is *)
 
-    if U.rank v > 0 then
+    if U.rank v > 0 || U.VarSet.mem v inScope then
       v
-    else begin
-    (* If a copy of this variable has been created already, return it. *)
+    else
       try
-        if U.VarSet.mem v inScope then
-            v
-        else
-            U.VarMap.find visited v
+        (* If a copy of this variable has been created already, return it. *)
+        U.VarMap.find visited v
       with Not_found ->
 
         (* The variable must be copied, and has not been copied yet. Create a
@@ -534,7 +532,6 @@ let freeze state { quantifiers; body } =
         U.VarMap.add visited v v';
         U.set_structure v' (Option.map (S.map copy) (U.structure v));
         v'
-      end
   in
   List.map copy quantifiers, copy body
 
