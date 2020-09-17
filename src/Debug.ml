@@ -1,4 +1,4 @@
-let enabled = false
+let enabled = true
 
 let print_ranks = true
 
