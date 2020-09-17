@@ -155,7 +155,7 @@ let body { body; _ } =
    annotation. *)
 
 (* JSTOLAREK: document how this works on structure created by
-   SolverHi.scheme_to_structure *)
+   SolverHi.annotation_to_structure *)
 let rec scheme body =
   match U.structure body with
   | None   -> { quantifiers = []; body }
