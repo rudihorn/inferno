@@ -339,12 +339,8 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
 
   | ML.Abs (x, Some ty, u) ->
 
-     (* JSTOLAREK: I should have a second `exist` comibinator that takes an
-        existing exisetential variable (instead of creating a fresh one) and
-        that combinator should take t1 as an argument.  Additionally, G.register
-        should be recursive and work on variables with a structure.  Finally, I
-        should restore some of the assertions that I removed in
-        405edacd1b84990344966b6791295fb1acb0930f *)
+     (* Construct an existential variable with structure defined by the type
+        annotation. *)
 
       construct_ (annotation_to_structure ty) (fun v1 ->
 
