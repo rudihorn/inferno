@@ -191,8 +191,11 @@ let register state v =
 (*        assert (U.rank v = no_rank); *)
         U.VarMap.add visited v ();
         U.set_rank v state.young;
-        register_at_rank state v;
+        register_at_rank state v
+        (* JSTOLAREK: this causes cyclic types when typechecking auto *)
+(*
         Option.iter (S.iter register_new) (U.structure v)
+*)
       end
   in register_new v
 
