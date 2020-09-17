@@ -224,6 +224,7 @@ let (<<) f g x = f(g(x))
 
 (* Environment with some functions from Figure 2 *)
 let env k =
+(*
   (* id : forall a. a -> a *)
   let fml_id k = ML.let_ ("id", ML.abs ("x", ML.Var "x"), k) in
   (* choose : forall a. a -> a -> a *)
@@ -234,7 +235,15 @@ let env k =
   let fml_app k = ML.let_ ("app", ML.abs ("f", ML.abs ("x", ML.App (ML.Var "f", ML.Var "x"))), k) in
   (* revapp : forall a b. b -> (a -> b) -> b *)
   let fml_revapp k = ML.let_ ("revapp", ML.abs ("x", ML.abs ("f", ML.App (ML.Var "f", ML.Var "x"))), k) in
-  (fml_id << fml_choose << fml_auto << fml_app << fml_revapp) k
+  (* zero : Int -> Int.  Turns every Int into 0.  This function replaces `inc`
+     from FreezeML paper for all intents and purposes, since we only care about
+     typing *)
+*)
+  let fml_zero k = ML.let_ ("zero", ML.Abs ("x", Some ([], F.TyInt), ML.Int 0), k) in
+(*
+  (fml_id << fml_choose << fml_auto << fml_app << fml_revapp << fml_zero) k
+*)
+  (fml_zero) k
 
 (* Polymorphic instantiation *)
 (* \x y.y *)
@@ -253,12 +262,12 @@ let () =
   assert (test genidid);
   assert (test genkidid);
   assert (test genkidid2);
-*)
   (* FreezeML examples *)
   assert (test a1);
   assert (test a1_dot);
   assert (test a2);
   assert (test a2_dot);
+*)
   assert (test (env a1))
 
 (* -------------------------------------------------------------------------- *)
