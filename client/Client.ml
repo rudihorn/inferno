@@ -117,37 +117,25 @@ module O = struct
         List.fold_right (fun q t -> F.TyForall (F.decode_tyvar q, t)) qs t
     | S.TyInt -> F.TyInt
 
-  let to_variable fresh (env : 'a TyVarMap.t) (body : ty) : 'a =
+  let to_variable callback fresh (env : 'a TyVarMap.t) (body : ty) : 'a =
     let rec go ty = match ty with
       | F.TyVar v              -> TyVarMap.find v env
-      | F.TyArrow   (ty1, ty2) ->
-         fresh (S.TyArrow (go ty1, go ty2))
-      | F.TyProduct (ty1, ty2) ->
-         fresh (S.TyProduct (go ty1, go ty2))
-      | F.TyForall (q, ty) ->
-         (* JSTOLAREK: this is horribly wrong.  A Forall introduces no
-            quantifiers, so we can't expect the quantifier to be bound and then
-            shadow it. At this point I should pass control back to
-            annotation_to_structure *)
-         fresh (S.TyForall ([TyVarMap.find q env], go ty))
-      | F.TyInt -> fresh S.TyInt
-      | F.TyMu _ -> assert false
+      | F.TyArrow   (ty1, ty2) -> fresh (S.TyArrow   (go ty1, go ty2))
+      | F.TyProduct (ty1, ty2) -> fresh (S.TyProduct (go ty1, go ty2))
+      | F.TyForall (q, ty)     -> fresh (callback ([q], ty))
+      | F.TyInt                -> fresh S.TyInt
+      | F.TyMu _               -> assert false
     in go body
 
-  let to_structure fresh (env : 'a TyVarMap.t) (body : ty) : 'a structure =
-    let to_variable = to_variable fresh env in
-    let rec go ty = match ty with
-      | F.TyVar v              -> assert false
-      | F.TyArrow   (ty1, ty2) ->
-         S.TyArrow (to_variable ty1, to_variable ty2)
-      | F.TyProduct (ty1, ty2) ->
-         S.TyProduct (to_variable ty1, to_variable ty2)
-      | F.TyForall (q, ty) ->
-         (* JSTOLAREK: broken just like above *)
-         S.TyForall ([TyVarMap.find q env], to_variable ty)
-      | F.TyInt -> S.TyInt
-      | F.TyMu _ -> assert false
-    in go body
+  let to_structure callback fresh env body : 'a structure =
+    let to_variable = to_variable callback fresh env in
+    match body with
+    | F.TyVar v              -> assert false (* Unbound variables not allowed *)
+    | F.TyArrow (ty1, ty2)   -> S.TyArrow   (to_variable ty1, to_variable ty2)
+    | F.TyProduct (ty1, ty2) -> S.TyProduct (to_variable ty1, to_variable ty2)
+    | F.TyForall (q, ty)     -> callback ([q], ty)
+    | F.TyInt                -> S.TyInt
+    | F.TyMu _               -> assert false
 
   let mu x t =
     F.TyMu (x, t)

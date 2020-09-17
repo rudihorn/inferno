@@ -56,6 +56,9 @@ module type OUTPUT = sig
      the type [ty]. *)
   type ty
 
+  (* A decoded type scheme consists of a list of quantifiers and a body. *)
+  type scheme = tyvar list * ty
+
   (* [variable v] is a representation of the type variable [v] as a decoded
      type. In other words, [variable] is an injection of [tyvar] into [ty]. *)
   val variable: tyvar -> ty
@@ -66,9 +69,11 @@ module type OUTPUT = sig
      of the functor [\X. tyvar + t X]. *)
   val structure: ty structure -> ty
 
-  val to_variable : ('a structure -> 'a) -> 'a TyVarMap.t -> ty -> 'a
+  val to_variable : (scheme -> 'a structure) -> ('a structure -> 'a)
+                 -> 'a TyVarMap.t -> ty -> 'a
 
-  val to_structure: ('a structure -> 'a) -> 'a TyVarMap.t -> ty -> 'a structure
+  val to_structure: (scheme -> 'a structure) -> ('a structure -> 'a)
+                 -> 'a TyVarMap.t -> ty -> 'a structure
 
   (* If [v] is a type variable and [t] is a type, then [mu v t] is a
      representation of the recursive type [mu v.t]. This function is used in
@@ -77,9 +82,6 @@ module type OUTPUT = sig
      types carried by the exceptions [Unify] and [Cycle] can still be cyclic,
      and one may wish to decode and display them. *)
   val mu: tyvar -> ty -> ty
-
-  (* A decoded type scheme consists of a list of quantifiers and a body. *)
-  type scheme = tyvar list * ty
 
 (* END *)
 end
