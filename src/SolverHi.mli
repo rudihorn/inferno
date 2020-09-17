@@ -84,7 +84,7 @@ module Make
 
   (* ---------------------------------------------------------------------- *)
 
-  val from_nominal : scheme -> variable
+  val scheme_to_structure : scheme -> variable structure
 
   (* ---------------------------------------------------------------------- *)
 

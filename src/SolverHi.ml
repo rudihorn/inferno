@@ -107,12 +107,12 @@ let (^^) (rc1, k1) (rc2, k2) =
 
 (* -------------------------------------------------------------------------- *)
 
-let from_nominal ((qs, body) : O.scheme) : Lo.variable =
+let scheme_to_structure ((qs, body) : O.scheme) : Lo.variable S.structure =
   let env = List.fold_left (fun env q -> O.TyVarMap.add q (Lo.fresh None) env)
                            O.TyVarMap.empty qs in
   let qs' = List.map (fun q -> O.TyVarMap.find q env) qs in
-  Lo.fresh (Some (S.forall qs' (O.to_structure (fun s -> fresh (Some s))
-                                               env body)))
+  (S.forall qs' (O.to_structure (fun s -> Lo.fresh (Some s))
+                                               env body))
 
 (* -------------------------------------------------------------------------- *)
 
