@@ -117,7 +117,7 @@ module O = struct
         List.fold_right (fun q t -> F.TyForall (F.decode_tyvar q, t)) qs t
     | S.TyInt -> F.TyInt
 
-  let to_structure fresh (env : 'a TyVarMap.t) (body : ty) : 'a =
+  let to_variable fresh (env : 'a TyVarMap.t) (body : ty) : 'a =
     let rec go ty = match ty with
       | F.TyVar v              -> TyVarMap.find v env
       | F.TyArrow   (ty1, ty2) ->
@@ -125,8 +125,27 @@ module O = struct
       | F.TyProduct (ty1, ty2) ->
          fresh (S.TyProduct (go ty1, go ty2))
       | F.TyForall (q, ty) ->
+         (* JSTOLAREK: this is horribly wrong.  A Forall introduces no
+            quantifiers, so we can't expect the quantifier to be bound and then
+            shadow it. At this point I should pass control back to
+            annotation_to_structure *)
          fresh (S.TyForall ([TyVarMap.find q env], go ty))
-      | F.TyInt -> fresh (S.TyInt)
+      | F.TyInt -> fresh S.TyInt
+      | F.TyMu _ -> assert false
+    in go body
+
+  let to_structure fresh (env : 'a TyVarMap.t) (body : ty) : 'a structure =
+    let to_variable = to_variable fresh env in
+    let rec go ty = match ty with
+      | F.TyVar v              -> assert false
+      | F.TyArrow   (ty1, ty2) ->
+         S.TyArrow (to_variable ty1, to_variable ty2)
+      | F.TyProduct (ty1, ty2) ->
+         S.TyProduct (to_variable ty1, to_variable ty2)
+      | F.TyForall (q, ty) ->
+         (* JSTOLAREK: broken just like above *)
+         S.TyForall ([TyVarMap.find q env], to_variable ty)
+      | F.TyInt -> S.TyInt
       | F.TyMu _ -> assert false
     in go body
 
@@ -339,7 +358,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
         should restore some of the assertions that I removed in
         405edacd1b84990344966b6791295fb1acb0930f *)
 
-      construct_ (scheme_to_structure ty) (fun v1 ->
+      construct_ (annotation_to_structure ty) (fun v1 ->
 
         (* Here, we could use [exist_], because we do not need [ty2]. I refrain
            from using it, just to simplify the paper. *)

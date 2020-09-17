@@ -82,8 +82,9 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
   (* A variable can be turned into a trivial scheme, with no quantifiers and
      no generic part: in other words, a monomorphic type scheme. Non-trivial
      type schemes are created by the functions [enter] and [exit] below. *)
+  (* JSTOLAREK: documentation outdated, this is now an inteligent constructor *)
 
-  val trivial: variable -> scheme
+  val scheme : variable -> scheme
 
   (* [enter] updates the current state by pushing a new [CLet] construct. The
      the hole is replaced with [let exists vs. hole in ...], where the list

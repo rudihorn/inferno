@@ -188,7 +188,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
         U.unify v w;
         debug_unify_after v w
     | CDef (x, v, c) ->
-       let scheme = G.trivial v in
+       let scheme = G.scheme v in
        Debug.print_doc (
            string "Adding binding " ^^ dquote ^^ (print_tevar x) ^^
            dquote ^^ string " with type scheme " ^^ print_scheme scheme);

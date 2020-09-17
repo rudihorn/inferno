@@ -151,17 +151,19 @@ let body { body; _ } =
 
 (* -------------------------------------------------------------------------- *)
 
-(* A trivial constructor of type schemes. *)
+(* A smart constructor of type schemes for variables constructed from type
+   annotation. *)
 
-(* JSTOLAREK: this is speculative.  The idea is that if a variable already has a
-   structure it must be a quantified type, so rather than wrapping that variable
-   in a trivial scheme we unwrap it instead. *)
-let trivial body =
+(* JSTOLAREK: document how this works on structure created by
+   SolverHi.scheme_to_structure *)
+let rec scheme body =
   match U.structure body with
   | None   -> { quantifiers = []; body }
-  | Some s -> match S.isForall s with
-              | None -> assert false
-              | Some (quantifiers, body) -> { quantifiers; body }
+  | Some s ->
+     match S.isForall s with
+     | None                     -> { quantifiers = []; body }
+     | Some ([], body)          -> scheme body
+     | Some (quantifiers, body) -> { quantifiers; body }
 
 (* -------------------------------------------------------------------------- *)
 

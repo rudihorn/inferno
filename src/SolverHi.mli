@@ -84,7 +84,7 @@ module Make
 
   (* ---------------------------------------------------------------------- *)
 
-  val scheme_to_structure : scheme -> variable structure
+  val annotation_to_structure : scheme -> variable structure
 
   (* ---------------------------------------------------------------------- *)
 

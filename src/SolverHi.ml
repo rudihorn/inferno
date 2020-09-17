@@ -107,11 +107,13 @@ let (^^) (rc1, k1) (rc2, k2) =
 
 (* -------------------------------------------------------------------------- *)
 
-let scheme_to_structure ((qs, body) : O.scheme) : Lo.variable S.structure =
+let annotation_to_structure ((qs, body) : O.scheme) : Lo.variable S.structure =
   let env = List.fold_left (fun env q -> O.TyVarMap.add q (Lo.fresh None) env)
                            O.TyVarMap.empty qs in
   let qs' = List.map (fun q -> O.TyVarMap.find q env) qs in
-  S.forall qs' (O.to_structure (fun s -> Lo.fresh (Some s)) env body)
+  match qs' with
+  | [] -> O.to_structure (fun s -> Lo.fresh (Some s)) env body
+  | _  -> S.forall qs' (O.to_variable (fun s -> Lo.fresh (Some s)) env body)
 
 (* -------------------------------------------------------------------------- *)
 
