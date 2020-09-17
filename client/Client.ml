@@ -295,7 +295,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
 = match t with
 
   | ML.Int x ->
-     constant S.TyInt w <$$> fun () -> F.Int x
+     w --- S.TyInt <$$> fun () -> F.Int x
 
     (* Variable. *)
   | ML.Var x ->

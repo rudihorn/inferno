@@ -214,11 +214,6 @@ let frozen_instance x v =
      and stick it into the constraint, for the solver to fill. *)
   CFrozen (x, v), fun _env -> ()
 
-let constant c w =
-  let v = fresh (Some c) in
-  v -- w
-
-
 (* -------------------------------------------------------------------------- *)
 
 (* Constraint abstractions. *)
