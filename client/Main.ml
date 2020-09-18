@@ -254,6 +254,13 @@ let a2 = env (ML.App (ML.Var "choose", ML.Var "id"))
 (* choose ~id *)
 let a2_dot = env (ML.App (ML.Var "choose", ML.FrozenVar "id"))
 
+(* Examples that were not in the PLDI paper *)
+
+(* This was causing an exception in FTypeChecker because I didn't extend type
+   equality checker with TyInt *)
+let fml_id1 = ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)), ML.App (ML.Var "x", ML.Int 1))
+
+
 let () =
 (*
   assert (test idid);
@@ -261,12 +268,14 @@ let () =
   assert (test genidid);
   assert (test genkidid);
   assert (test genkidid2);
-  (* FreezeML examples *)
 *)
+  (* FreezeML examples *)
   assert (test a1);
   assert (test a1_dot);
   assert (test a2);
   assert (test a2_dot);
+
+  assert (test fml_id1);
   assert (test (env a1))
 
 (* -------------------------------------------------------------------------- *)
