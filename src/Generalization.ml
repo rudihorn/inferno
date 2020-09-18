@@ -179,6 +179,9 @@ let register_at_rank ({ pool; _ } as state) v =
 (* The external function [register] assumes that [v]'s rank is uninitialized.
    It sets this rank to the current rank, [state.young], then registers [v]. *)
 
+(* JSTOLAREK: during reguistration we should check the structure recursively for
+   unbound type variables in signatures. *)
+
 let register state v =
   let visited : unit U.VarMap.t = U.VarMap.create 128 in
 
