@@ -179,28 +179,13 @@ let register_at_rank ({ pool; _ } as state) v =
 (* The external function [register] assumes that [v]'s rank is uninitialized.
    It sets this rank to the current rank, [state.young], then registers [v]. *)
 
-(* JSTOLAREK: during reguistration we should check the structure recursively for
+(* JSTOLAREK: during registration we should check the structure recursively for
    unbound type variables in signatures. *)
 
 let register state v =
-  let visited : unit U.VarMap.t = U.VarMap.create 128 in
-
-  let rec register_new v =
-    (* JSTOLAREK: the second condition is a temporary hack.  I need to figure
-       out in what situations we are trying to register an already registered
-       but not yet visited variable *)
-    if ( not (U.VarMap.mem visited v) && U.rank v == 0 ) then
-      begin
-(*        assert (U.rank v = no_rank); *)
-        U.VarMap.add visited v ();
-        U.set_rank v state.young;
-        register_at_rank state v
-        (* JSTOLAREK: this causes cyclic types when typechecking auto *)
-(*
-        Option.iter (S.iter register_new) (U.structure v)
-*)
-      end
-  in register_new v
+  assert (U.rank v = no_rank);
+  U.set_rank v state.young;
+  register_at_rank state v
 
 (* -------------------------------------------------------------------------- *)
 
