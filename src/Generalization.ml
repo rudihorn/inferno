@@ -181,7 +181,6 @@ let register_at_rank ({ pool; _ } as state) v =
 
 (* JSTOLAREK: during registration we should check the structure recursively for
    unbound type variables in signatures. *)
-
 let register state v =
   assert (U.rank v = no_rank);
   U.set_rank v state.young;
@@ -344,7 +343,7 @@ let exit rectypes state roots =
        propagation.) *)
     let rec traverse v =
       (* JSTOLAREK: rethink whether any assertion is possible here *)
-      (* assert (U.rank v >= 0); *)
+      assert (U.rank v >= 0);
       (* If [v] was visited before, then its rank must be below [k], as we
          adjust ranks on the way down already. *)
       if U.VarMap.mem visited v then
