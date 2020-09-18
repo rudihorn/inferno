@@ -153,7 +153,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
         solve env c2;
         Debug.print "Second constraint in a conjunction solved"
     | CEq (v, w) ->
-        debug_unify_before (string "Solving eqaulity constraint.") v w;
+        debug_unify_before (string "Solving equality constraint.") v w;
         U.unify v w;
         debug_unify_after v w
     | CExist (v, c) ->
@@ -197,6 +197,12 @@ let solve (rectypes : bool) (c : rawco) : unit =
     | CLet (xvss, c1, c2, generalizable_hook) ->
         (* Warn the generalization engine that we entering the left-hand side of
            a [let] construct. *)
+        G.enter state;
+        (* Register the variables [vs] with the generalization engine, just as if
+           they were existentially bound in [c1]. This is what they are, basically,
+           but they also serve as named entry points. *)
+        let vs = List.map (fun (_, v, _) -> v) xvss in
+        List.iter (G.register state) vs;
         begin
           if ( List.length( xvss ) > 0 ) then
             Debug.print_doc (nest 2
@@ -206,12 +212,6 @@ let solve (rectypes : bool) (c : rawco) : unit =
           else
             Debug.print( "Entering top-level binding" )
         end;
-        G.enter state;
-        (* Register the variables [vs] with the generalization engine, just as if
-           they were existentially bound in [c1]. This is what they are, basically,
-           but they also serve as named entry points. *)
-        let vs = List.map (fun (_, v, _) -> v) xvss in
-        List.iter (G.register state) vs;
         (* Solve the constraint [c1]. *)
         solve env c1;
         (* Ask the generalization engine to perform an occurs check, to adjust the
