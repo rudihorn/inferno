@@ -500,7 +500,12 @@ let instantiate state { quantifiers; body } =
 
 
 let freeze state { quantifiers; body } =
-  let inScope : U.VarSet.t = U.VarSet.of_list quantifiers in
+  let inScope : U.variable U.VarMap.t = List.fold_left (fun acc q ->
+      assert (U.structure q == None);
+      let q' = U.fresh None no_rank in
+      U.VarMap.add acc q q';
+      acc
+    ) (U.VarMap.create 8) quantifiers in
 
   (* Prepare to mark which variables have been visited and record their copy. *)
   let visited : U.variable U.VarMap.t = U.VarMap.create 128 in
@@ -516,7 +521,9 @@ let freeze state { quantifiers; body } =
        stop. *)
     (* If this is a quantified variable return it as is *)
 
-    if U.rank v > 0 || U.VarSet.mem v inScope then
+    if U.VarMap.mem inScope v then
+      U.VarMap.find inScope v
+    else if U.rank v > 0 then
       v
     else
       try
