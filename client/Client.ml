@@ -342,7 +342,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
      (* Construct an existential variable with structure defined by the type
         annotation. *)
 
-      construct_ (annotation_to_structure ty) (fun v1 ->
+      construct (annotation_to_structure ty) (fun v1 ->
 
         (* Here, we could use [exist_], because we do not need [ty2]. I refrain
            from using it, just to simplify the paper. *)
@@ -356,7 +356,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
              have type [codomain]. *)
           def x v1 (hastype u v2)
         )
-      ) <$$> fun (ty1, ((), u')) -> (* JSTOLAREK: potentially wrong *)
+      ) <$$> fun (ty1, (_ty2, ((), u'))) ->
         (* Once these constraints are solved, we obtain the translated function
            body [u']. There remains to construct an explicitly-typed abstraction
            in the target calculus. *)
