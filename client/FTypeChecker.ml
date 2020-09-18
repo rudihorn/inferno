@@ -134,6 +134,8 @@ let rec equal budget ty1 ty2 =
       equal budget ty1a ty2a && equal budget ty1b ty2b
   | TyForall ((), ty1), TyForall ((), ty2) ->
       equal budget ty1 ty2
+  | TyInt, TyInt ->
+      true
   | _, _ ->
       false
 
