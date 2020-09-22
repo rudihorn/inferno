@@ -291,9 +291,9 @@ let () =
 (* A list of pairs [m, n], where [m] is the number of tests and [n] is the
    size of the randomly generated terms. *)
 
+(*
 let pairs = [
     0, 5;
-(*
   100000, 5;
   100000, 10;
   100000, 15;
@@ -307,7 +307,6 @@ let pairs = [
      100, 10000;
       10, 100000;
        1, 1000000;
-*)
 ]
 
 let () =
@@ -328,3 +327,4 @@ let () =
   ) pairs;
   Printf.printf "In total, %d out of %d terms were considered well-typed.\n%!" !c !d;
   Printf.printf "No problem detected.\n%!"
+*)
