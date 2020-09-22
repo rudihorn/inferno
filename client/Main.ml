@@ -147,6 +147,7 @@ let translate t =
 
 let test (t : ML.term) : bool =
   let log = create_log() in
+  Printf.printf "\n===========================================\n\n%!";
   let outcome =
     attempt log
       "Type inference and translation to System F...\n"
@@ -169,11 +170,16 @@ let test (t : ML.term) : bool =
           "Converting the System F term to de Bruijn style...\n"
           F.translate t
       in
-      let _ty : F.debruijn_type =
+      let ty : F.debruijn_type =
         attempt log
           "Type-checking the System F term...\n"
           FTypeChecker.typeof t
       in
+      log_action log (fun () ->
+        Printf.printf "Pretty-printing the System F de Bruijn type...\n%!";
+        let doc = PPrint.(FPrinter.print_debruijn_type ty ^^ hardline) in
+        PPrint.ToChannel.pretty 0.9 80 stdout doc
+      );
       (* Everything seems to be OK. *)
       if verbose then
         print_log log;
