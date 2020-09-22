@@ -187,15 +187,6 @@ let test (t : ML.term) : bool =
 
 (* -------------------------------------------------------------------------- *)
 
-let x =
-  ML.Var "x"
-
-let y =
-  ML.Var "y"
-
-let f =
-  ML.Var "f"
-
 let var x =
   ML.Var x
 
@@ -204,6 +195,30 @@ let frozen x =
 
 let app x y =
   ML.App (x, y)
+
+let x =
+  var "x"
+
+let y =
+  var "y"
+
+let f =
+  var "f"
+
+let id =
+  var "id"
+
+let choose =
+  var "choose"
+
+let auto =
+  var "auto"
+
+let auto' =
+  var "auto'"
+
+let poly =
+  var "poly"
 
 let forall_a_a_to_a = Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1))
 
@@ -257,14 +272,14 @@ let a1_dot = ML.gen (ML.abs ("x", ML.abs ("y", y)))
    inferred type      : INCORRECT ∀b. ∀a. a → b → b
    type in PLDI paper : (a → a) → (a → a)
  *)
-let a2 = env (app (var "choose") (var "id"))
+let a2 = env (app choose id)
 
 (* example            : A2∘
    term               : choose ~id
    inferred type      : INCORRECT ∀a. a → ∀b. b → b
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
  *)
-let a2_dot = env (app (var "choose") (frozen "id"))
+let a2_dot = env (app choose (frozen "id"))
 
 (* MISSING: A3: choose [] ids *)
 
@@ -287,35 +302,35 @@ let a4_dot = ML.Abs ("x", forall_a_a_to_a, app x (frozen "x"))
    inferred type      : (∀ a. a → a) → (∀ a. a → a)
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
  *)
-let a5 = env (app (var "id") (var "auto"))
+let a5 = env (app id auto)
 
 (* example            : A6
    term               : id auto'
    inferred type      : ∀b. (∀a. a → a) → b → b
    type in PLDI paper : (∀ a. a → a) → (b → b)
  *)
-let a6 = env (app (var "id") (var "auto'"))
+let a6 = env (app id auto')
 
 (* example            : A6∘
    term               : id ~auto'
    inferred type      : ∀ b. (∀ a. a → a) → (b → b)
    type in PLDI paper : ∀ b. (∀ a. a → a) → (b → b)
  *)
-let a6_dot = env (app (var "id") (frozen "auto'"))
+let a6_dot = env (app id (frozen "auto'"))
 
 (* example            : A7
    term               : choose id auto
    inferred type      : INCORRECT ∀ a. a → a
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
  *)
-let a7 = env (app (app (var "choose") (var "id")) (var "auto"))
+let a7 = env (app (app choose id) auto)
 
 (* example            : A8
    term               : choose id auto'
    inferred type      : INCORRECT ∀ b. ∀ a. a → a
    type in PLDI paper : X
  *)
-let a8 = env (app (app (var "choose") (var "id")) (var "auto'"))
+let a8 = env (app (app choose id) auto')
 
 (* MISSING : A9⋆: f (choose ~id) ids *)
 
@@ -324,22 +339,21 @@ let a8 = env (app (app (var "choose") (var "id")) (var "auto'"))
    inferred type      : FAILED ASSERTION
    type in PLDI paper : Int × Bool
  *)
-let a10_star = env (app (var "poly") (frozen "id"))
+let a10_star = env (app poly (frozen "id"))
 
 (* example            : A11⋆
    term               : poly $(λx. x)
    inferred type      : FAILED ASSERTION
    type in PLDI paper : Int × Bool
  *)
-let a11_star = env (app (var "poly") (ML.gen (ML.abs ("x", x))))
+let a11_star = env (app poly (ML.gen (ML.abs ("x", x))))
 
 (* example            : A12⋆
    term               : id poly $(λx. x)
    inferred type      : FAILED ASSERTION
    type in PLDI paper : Int × Bool
  *)
-let a12_star = env (app (app (var "id") (var "poly"))
-                        (ML.gen (ML.abs ("x", x))))
+let a12_star = env (app (app id poly) (ML.gen (ML.abs ("x", x))))
 
 (* Examples that were not in the PLDI paper *)
 
