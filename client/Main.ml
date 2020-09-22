@@ -59,6 +59,7 @@ let rec size accu = function
   | ML.Pair (t1, t2)
     -> size (size (accu + 1) t1) t2
   | ML.Int _ -> accu
+  | ML.Bool _ -> accu
 
 let size =
   size 0
@@ -259,6 +260,9 @@ let a2_dot = env (ML.App (ML.Var "choose", ML.FrozenVar "id"))
 (* This was causing an exception in FTypeChecker because I didn't extend type
    equality checker with TyInt *)
 let fml_id1 = ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)), ML.App (ML.Var "x", ML.Int 1))
+(* Two simple functions to test correctness of Bool implementation *)
+let fml_false = ML.Abs ("x", Some ([], F.TyBool), ML.Bool false)
+let fml_id2 = ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)), ML.App (ML.Var "x", ML.Bool false))
 
 
 let () =
@@ -276,7 +280,9 @@ let () =
   assert (test a2_dot);
 
   assert (test fml_id1);
-  assert (test (env a1))
+  assert (test (env a1));
+  assert (test fml_id2);
+  assert (test fml_false)
 
 (* -------------------------------------------------------------------------- *)
 

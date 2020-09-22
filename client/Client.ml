@@ -12,6 +12,7 @@ module S = struct
     | TyProduct of 'a * 'a
     | TyForall of 'a list * 'a
     | TyInt
+    | TyBool
 
   let forall qs t =
     TyForall (qs, t)
@@ -35,6 +36,7 @@ module S = struct
         let t  = f t in
         TyForall (qs, t)
     | TyInt -> TyInt
+    | TyBool -> TyBool
 
   let fold f t accu =
     match t with
@@ -47,6 +49,7 @@ module S = struct
         let accu = List.fold_left (fun accu q -> f q accu) accu qs in
         f t accu
     | TyInt -> accu
+    | TyBool -> accu
 
   let iter f t =
     let _ = map f t in
@@ -65,6 +68,7 @@ module S = struct
        List.iter2 f qs1 qs2;
         f t1 t2
     | TyInt, TyInt -> ()
+    | TyBool, TyBool -> ()
     | _, _ ->
         raise Iter2
 
@@ -83,6 +87,7 @@ module S = struct
        dot ^^ space ^^
        f fuel t
     | TyInt -> string "Int"
+    | TyBool -> string "Bool"
 
 end
 
@@ -116,6 +121,7 @@ module O = struct
     | S.TyForall (qs, t) ->
         List.fold_right (fun q t -> F.TyForall (F.decode_tyvar q, t)) qs t
     | S.TyInt -> F.TyInt
+    | S.TyBool -> F.TyBool
 
   let to_variable callback fresh (env : 'a TyVarMap.t) (body : ty) : 'a =
     let rec go ty = match ty with
@@ -124,6 +130,7 @@ module O = struct
       | F.TyProduct (ty1, ty2) -> fresh (S.TyProduct (go ty1, go ty2))
       | F.TyForall (q, ty)     -> fresh (callback ([q], ty))
       | F.TyInt                -> fresh S.TyInt
+      | F.TyBool               -> fresh S.TyBool
       | F.TyMu _               -> assert false
     in go body
 
@@ -135,6 +142,7 @@ module O = struct
     | F.TyProduct (ty1, ty2) -> S.TyProduct (to_variable ty1, to_variable ty2)
     | F.TyForall (q, ty)     -> callback ([q], ty)
     | F.TyInt                -> S.TyInt
+    | F.TyBool               -> S.TyBool
     | F.TyMu _               -> assert false
 
   let mu x t =
@@ -169,6 +177,7 @@ module ML = struct
     | Pair of term * term
     | Proj of int * term
     | Int of int
+    | Bool of bool
 
   (* Unannotated abstraction and let *)
   let abs (x, m) = Abs (x, None, m)
@@ -296,6 +305,9 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
 
   | ML.Int x ->
      w --- S.TyInt <$$> fun () -> F.Int x
+
+  | ML.Bool b ->
+     w --- S.TyBool <$$> fun () -> F.Bool b
 
     (* Variable. *)
   | ML.Var x ->

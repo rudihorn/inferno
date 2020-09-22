@@ -92,6 +92,8 @@ let rec print_term_aux level t =
         parens (print_term t)
   | Int i ->
      string (string_of_int i)
+  | Bool b ->
+     string (string_of_bool b)
 
 and print_term t =
   print_term_aux 2 t

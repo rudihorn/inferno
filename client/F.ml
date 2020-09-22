@@ -22,6 +22,7 @@ type ('a, 'b) typ =
   | TyForall of 'b * ('a, 'b) typ
   | TyMu of 'b * ('a, 'b) typ
   | TyInt
+  | TyBool
 (* END F *)
 
 (* BEGIN F *)
@@ -43,6 +44,7 @@ let rec string_of_typ (t : nominal_type)  =
   | TyForall (q, t) -> "∀ " ^ string_of_int q ^ ". " ^ string_of_typ t
   | TyMu (q, t) -> "μ " ^ string_of_int q ^ ". " ^ string_of_typ t
   | TyInt -> "Int"
+  | TyBool -> "Bool"
 
 
 (* -------------------------------------------------------------------------- *)
@@ -67,6 +69,7 @@ type ('a, 'b) term =
   | Pair of ('a, 'b) term * ('a, 'b) term
   | Proj of int * ('a, 'b) term
   | Int of int
+  | Bool of bool
 
 (* BEGIN F *)
 type nominal_term = (tyvar, tyvar) term
@@ -150,6 +153,7 @@ module TypeInType : DeBruijn.TRAVERSE
         let ty1' = traverse lookup extend env ty1 in
         TyMu (x, ty1')
     | TyInt -> TyInt
+    | TyBool -> TyBool
 
 end
 
@@ -200,6 +204,7 @@ module TypeInTerm : DeBruijn.TRAVERSE
         let t' = traverse lookup extend env t in
         Proj (i, t')
     | Int i -> Int i
+    | Bool b -> Bool b
 
 end
 

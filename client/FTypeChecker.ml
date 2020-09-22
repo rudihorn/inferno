@@ -136,6 +136,8 @@ let rec equal budget ty1 ty2 =
       equal budget ty1 ty2
   | TyInt, TyInt ->
       true
+  | TyBool, TyBool ->
+      true
   | _, _ ->
       false
 
@@ -175,6 +177,7 @@ let rec typeof env (t : debruijn_term) : debruijn_type =
       let ty1, ty2 = as_product (typeof env t) in
       if i = 1 then ty1 else ty2
   | Int _ -> TyInt
+  | Bool _ -> TyBool
 
 let typeof =
   typeof empty

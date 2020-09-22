@@ -21,6 +21,7 @@ type ('a, 'b) typ =
   | TyForall of 'b * ('a, 'b) typ
   | TyMu of 'b * ('a, 'b) typ
   | TyInt
+  | TyBool
 
 type tyvar =
     int
@@ -52,6 +53,7 @@ type ('a, 'b) term =
   | Pair of ('a, 'b) term * ('a, 'b) term
   | Proj of int * ('a, 'b) term
   | Int of int
+  | Bool of bool
 
 type nominal_term =
     (tyvar, tyvar) term
