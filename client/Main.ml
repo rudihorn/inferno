@@ -1,68 +1,8 @@
 open Client
+open F
 
 let verbose =
   true
-
-(* -------------------------------------------------------------------------- *)
-
-(* A random generator of pure lambda-terms. *)
-
-let int2var k =
-  "x" ^ string_of_int k
-
-(* [split n] produces two numbers [n1] and [n2] comprised between [0] and [n]
-   (inclusive) whose sum is [n]. *)
-
-let split n =
-  let n1 = Random.int (n + 1) in
-  let n2 = n - n1 in
-  n1, n2
-
-(* The parameter [k] is the number of free variables; the parameter [n] is the
-   size (i.e., the number of internal nodes). *)
-
-let rec random_ml_term k n =
-  if n = 0 then begin
-    assert (k > 0);
-    ML.Var (int2var (Random.int k))
-  end
-  else
-    let c = Random.int 5 (* Abs, App, Pair, Proj, Let *) in
-    if k = 0 || c = 0 then
-      (* The next available variable is [k]. *)
-      let x, k = int2var k, k + 1 in
-      ML.Abs (x, None, random_ml_term k (n - 1))
-    else if c = 1 then
-      let n1, n2 = split (n - 1) in
-      ML.App (random_ml_term k n1, random_ml_term k n2)
-    else if c = 2 then
-      let n1, n2 = split (n - 1) in
-      ML.Pair (random_ml_term k n1, random_ml_term k n2)
-    else if c = 3 then
-      ML.Proj (1 + Random.int 2, random_ml_term k (n - 1))
-    else if c = 4 then
-      let n1, n2 = split (n - 1) in
-      ML.Let (int2var k, None, random_ml_term k n1, random_ml_term (k + 1) n2)
-    else
-      assert false
-
-let rec size accu = function
-  | ML.Var _ ->
-      accu
-  | ML.FrozenVar _ ->
-      accu
-  | ML.Abs (_, _, t)
-  | ML.Proj (_, t)
-    -> size (accu + 1) t
-  | ML.App (t1, t2)
-  | ML.Let (_, _, t1, t2)
-  | ML.Pair (t1, t2)
-    -> size (size (accu + 1) t1) t2
-  | ML.Int _ -> accu
-  | ML.Bool _ -> accu
-
-let size =
-  size 0
 
 (* -------------------------------------------------------------------------- *)
 
@@ -145,23 +85,30 @@ let translate t =
 
 (* Running all passes over a single ML term. *)
 
-let test (t : ML.term) : bool =
+type example = { name : string
+               ; term : ML.term
+               ; typ  : debruijn_type option }
+
+let test { name; term; typ } : unit =
   let log = create_log() in
   Printf.printf "\n===========================================\n\n%!";
+  log_action log (fun () ->
+      Printf.printf "Running example %s\n%!" name;
+    );
   let outcome =
     attempt log
       "Type inference and translation to System F...\n"
-      translate t
+      translate term
   in
-  match outcome with
-  | None ->
-      (* This term is ill-typed. This is considered a normal outcome, since
-         our terms can be randomly generated. *)
-      false
-  | Some (t : F.nominal_term) ->
+  match outcome, typ with
+  | None, None ->
+      (* Term is ill typed and is expected to be as such *)
+      Printf.printf "Example %s is ill-typed." name;
+      Printf.printf "\027[32mExample %s works as expected\027[0m\n" name
+  | Some (t : F.nominal_term), Some exp_ty ->
       log_action log (fun () ->
         Printf.printf "Formatting the System F term...\n%!";
-        let doc = PPrint.(FPrinter.print_term t ^^ hardline) in
+        let doc = PPrint.(string "  " ^^ nest 2 (FPrinter.print_term t) ^^ hardline) in
         Printf.printf "Pretty-printing the System F term...\n%!";
         PPrint.ToChannel.pretty 0.9 80 stdout doc
       );
@@ -176,14 +123,37 @@ let test (t : ML.term) : bool =
           FTypeChecker.typeof t
       in
       log_action log (fun () ->
-        Printf.printf "Pretty-printing the System F de Bruijn type...\n%!";
-        let doc = PPrint.(FPrinter.print_debruijn_type ty ^^ hardline) in
-        PPrint.ToChannel.pretty 0.9 80 stdout doc
+        if ( exp_ty = ty ) then
+          begin
+            Printf.printf "Pretty-printing the System F de Bruijn type...\n%!";
+            let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
+            PPrint.ToChannel.pretty 0.9 80 stdout doc;
+            Printf.printf "\027[32mExample %s works as expected\027[0m\n" name
+          end
+        else
+          begin
+            Printf.printf "Expected type does not match actual type!\n";
+            Printf.printf "Expected:\n";
+            let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type exp_ty ^^ hardline) in
+            PPrint.ToChannel.pretty 0.9 80 stdout doc;
+            Printf.printf "Actual:\n";
+            let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
+            PPrint.ToChannel.pretty 0.9 80 stdout doc;
+            Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name
+          end
       );
       (* Everything seems to be OK. *)
       if verbose then
-        print_log log;
-      true
+        print_log log
+  | None, Some exp_ty ->
+     Printf.printf "Example %s expected to have a type:" name;
+     let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type exp_ty ^^ hardline) in
+     PPrint.ToChannel.pretty 0.9 80 stdout doc;
+     Printf.printf "but was determined ill-typed.";
+     Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name
+  | Some _, None ->
+     Printf.printf "Example %s epected to be ill-typed but typechecks.\n" name;
+     Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name
 
 (* -------------------------------------------------------------------------- *)
 
@@ -258,28 +228,48 @@ let env k =
    inferred type      : ∀ b. ∀ a. a → b → b
    type in PLDI paper : a → b → b
 *)
-let a1 = ML.abs ("x", ML.abs ("y", y))
+let a1 =
+  { name = "A1"
+  ; term = ML.abs ("x", ML.abs ("y", y))
+  ; typ  = Some (TyForall ((), TyForall ((),
+             TyArrow (TyVar 0, TyArrow (TyVar 1, TyVar 1)))))
+  }
 
 (* example            : A1∘
    term               : $(λx y.y)
    inferred type      : ∀ b. ∀ a. a → b → b
    type in PLDI paper : ∀ a b. a → b → b
  *)
-let a1_dot = ML.gen (ML.abs ("x", ML.abs ("y", y)))
+let a1_dot =
+  { name = "A1̣∘"
+  ; term = ML.gen (ML.abs ("x", ML.abs ("y", y)))
+  ; typ  = Some (TyForall ((), TyForall ((),
+             TyArrow (TyVar 0, TyArrow (TyVar 1, TyVar 1)))))
+  }
 
 (* example            : A2
    term               : choose id
    inferred type      : INCORRECT ∀b. ∀a. a → b → b
    type in PLDI paper : (a → a) → (a → a)
  *)
-let a2 = env (app choose id)
+let a2 =
+  { name = "A2"
+  ; term = env (app choose id)
+  ; typ  = Some (TyForall ((),
+             TyArrow (TyArrow (TyVar 0, TyVar 0), TyArrow (TyVar 0, TyVar 0))))
+  }
 
 (* example            : A2∘
    term               : choose ~id
    inferred type      : INCORRECT ∀a. a → ∀b. b → b
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
  *)
-let a2_dot = env (app choose (frozen "id"))
+let a2_dot =
+  { name = "A2∘"
+  ; term = env (app choose (frozen "id"))
+  ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
+                          TyForall ((), TyArrow (TyVar 0, TyVar 0))))
+  }
 
 (* MISSING: A3: choose [] ids *)
 
@@ -288,49 +278,83 @@ let a2_dot = env (app choose (frozen "id"))
    inferred type      : ∀b. (∀a. a → a) → b → b
    type in PLDI paper : (∀ a. a → a) → (b → b)
  *)
-let a4 = ML.Abs ("x", forall_a_a_to_a, app x x)
+let a4 =
+  { name = "A4"
+  ; term = ML.Abs ("x", forall_a_a_to_a, app x x)
+  ; typ  = Some (TyForall ((), TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
+                                        TyArrow (TyVar 0, TyVar 0))))
+  }
 
 (* example            : A4̣∘
    term               : λ(x : ∀ a. a → a). x ~x
    inferred type      : (∀ a. a → a) → (∀ a. a → a)
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
  *)
-let a4_dot = ML.Abs ("x", forall_a_a_to_a, app x (frozen "x"))
+let a4_dot =
+  { name = "A4̣∘"
+  ; term = ML.Abs ("x", forall_a_a_to_a, app x (frozen "x"))
+  ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
+                          TyForall ((), TyArrow (TyVar 0, TyVar 0))))
+  }
 
 (* example            : A5
    term               : id auto
    inferred type      : (∀ a. a → a) → (∀ a. a → a)
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
  *)
-let a5 = env (app id auto)
+let a5 =
+  { name = "A5"
+  ; term = env (app id auto)
+  ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
+                          TyForall ((), TyArrow (TyVar 0, TyVar 0))))
+  }
 
 (* example            : A6
    term               : id auto'
    inferred type      : ∀b. (∀a. a → a) → b → b
    type in PLDI paper : (∀ a. a → a) → (b → b)
  *)
-let a6 = env (app id auto')
+let a6 =
+  { name = "A6"
+  ; term = env (app id auto')
+  ; typ  = Some (TyForall ((), TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
+                                        TyArrow (TyVar 0, TyVar 0))))
+  }
 
 (* example            : A6∘
    term               : id ~auto'
    inferred type      : ∀ b. (∀ a. a → a) → (b → b)
    type in PLDI paper : ∀ b. (∀ a. a → a) → (b → b)
  *)
-let a6_dot = env (app id (frozen "auto'"))
+let a6_dot =
+  { name = "A6∘"
+  ; term = env (app id (frozen "auto'"))
+  ; typ  = Some (TyForall ((), TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
+                                        TyArrow (TyVar 0, TyVar 0))))
+  }
 
 (* example            : A7
    term               : choose id auto
    inferred type      : INCORRECT ∀ a. a → a
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
  *)
-let a7 = env (app (app choose id) auto)
+let a7 =
+  { name = "A7"
+  ; term = env (app (app choose id) auto)
+  ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
+                          TyForall ((), TyArrow (TyVar 0, TyVar 0))))
+  }
 
 (* example            : A8
    term               : choose id auto'
    inferred type      : INCORRECT ∀ b. ∀ a. a → a
    type in PLDI paper : X
  *)
-let a8 = env (app (app choose id) auto')
+let a8 =
+  { name = "A8"
+  ; term = env (app (app choose id) auto')
+  ; typ  = None
+  }
 
 (* MISSING : A9⋆: f (choose ~id) ids *)
 
@@ -339,99 +363,86 @@ let a8 = env (app (app choose id) auto')
    inferred type      : FAILED ASSERTION
    type in PLDI paper : Int × Bool
  *)
-let a10_star = env (app poly (frozen "id"))
+let a10_star =
+  { name = "A10⋆"
+  ; term = env (app poly (frozen "id"))
+  ; typ  = Some (TyProduct (TyInt, TyBool))
+  }
 
 (* example            : A11⋆
    term               : poly $(λx. x)
    inferred type      : FAILED ASSERTION
    type in PLDI paper : Int × Bool
  *)
-let a11_star = env (app poly (ML.gen (ML.abs ("x", x))))
+let a11_star =
+  { name = "A11⋆"
+  ; term = env (app poly (ML.gen (ML.abs ("x", x))))
+  ; typ  = Some (TyProduct (TyInt, TyBool))
+  }
 
 (* example            : A12⋆
    term               : id poly $(λx. x)
    inferred type      : FAILED ASSERTION
    type in PLDI paper : Int × Bool
  *)
-let a12_star = env (app (app id poly) (ML.gen (ML.abs ("x", x))))
+let a12_star =
+  { name = "A12⋆"
+  ; term = env (app (app id poly) (ML.gen (ML.abs ("x", x))))
+  ; typ  = Some (TyProduct (TyInt, TyBool))
+  }
 
 (* Examples that were not in the PLDI paper *)
 
 (* This was causing an exception in FTypeChecker because I didn't extend type
-   equality checker with TyInt *)
-let fml_id1   = ML.Abs ("x", forall_a_a_to_a, app x (ML.Int 1))
-(* Two simple functions to test correctness of Bool implementation *)
-let fml_false = ML.Abs ("x", Some ([], F.TyBool), ML.Bool false)
-let fml_id2   = ML.Abs ("x", forall_a_a_to_a, app x (ML.Bool false))
+   equality checker with TyInt
 
+   term : λ(x : ∀ a. a → a). x 1
+   type : (∀ a. a → a) → Int
+ *)
+let fml_id_to_int =
+  { name = "id_to_int"
+  ; term = ML.Abs ("x", forall_a_a_to_a, app x (ML.Int 1))
+  ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)), TyInt))
+  }
+
+(* Two simple functions to test correctness of Bool implementation *)
+(*
+   term : λ(x : ∀ a. a → a). x true
+   type : (∀ a. a → a) → Bool
+*)
+let fml_id_to_bool =
+  { name = "id_to_bool"
+  ; term = ML.Abs ("x", forall_a_a_to_a, app x (ML.Bool false))
+  ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)), TyBool))
+  }
+
+(*
+   term : λ(x : bool). false
+   type : Bool → Bool
+*)
+let fml_const_false =
+  { name = "const_false"
+  ; term = ML.Abs ("x", Some ([], F.TyBool), ML.Bool false)
+  ; typ  = Some (TyArrow (TyBool, TyBool))
+  }
 
 let () =
   (* FreezeML examples *)
-  assert (test a1);
-  assert (test a1_dot);
-  assert (test a2);
-  assert (test a2_dot);
-  assert (test a4);
-  assert (test a4_dot);
-  assert (test a5);
-  assert (test a6);
-  assert (test a6_dot);
-  assert (test a7);
-  assert (test a8)
-(*
-  assert (test a10_star)
-  assert (test a11_star)
-  assert (test a12_star)
-*)
+  test a1;
+  test a1_dot;
+  test a2;
+  test a2_dot;
+  test a4;
+  test a4_dot;
+  test a5;
+  test a6;
+  test a6_dot;
+  test a7;
+  test a8;
+  test a10_star;
+  test a11_star;
+  test a12_star;
 
-(*
-  assert (test fml_id1);
-  assert (test (env a1));
-  assert (test fml_id2);
-  assert (test fml_false)
-*)
-
-(* -------------------------------------------------------------------------- *)
-
-(* Random testing. *)
-
-(* A list of pairs [m, n], where [m] is the number of tests and [n] is the
-   size of the randomly generated terms. *)
-
-(*
-let pairs = [
-    0, 5;
-  100000, 5;
-  100000, 10;
-  100000, 15;
-  100000, 20;
-  100000, 25; (* at this size, about 1% of the terms are well-typed *)
-  100000, 30;
-  (* At the following sizes, no terms are well-typed! *)
-   10000, 100;
-   10000, 500;
-    1000, 1000;
-     100, 10000;
-      10, 100000;
-       1, 1000000;
-]
-
-let () =
-  Printf.printf "Preparing to type-check a bunch of randomly-generated terms...\n%!";
-  Random.init 0;
-  let c = ref 0 in
-  let d = ref 0 in
-  List.iter (fun (m, n) ->
-    for i = 1 to m do
-      if verbose then
-        Printf.printf "Test number %d...\n%!" i;
-      let t = random_ml_term 0 n in
-      assert (size t = n);
-      let success = test t in
-      if success then incr c;
-      incr d
-    done
-  ) pairs;
-  Printf.printf "In total, %d out of %d terms were considered well-typed.\n%!" !c !d;
-  Printf.printf "No problem detected.\n%!"
-*)
+  test fml_id_to_int;
+  test fml_id_to_bool;
+  test fml_const_false

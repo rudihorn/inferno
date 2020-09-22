@@ -3,6 +3,8 @@
 open PPrint
 open F
 
+let let_hardlines = true
+
 (* -------------------------------------------------------------------------- *)
 
 (* Types. *)
@@ -138,6 +140,7 @@ let rec print_term_aux level t =
         string " = " ^^
         print_term t1 ^^
         string " in " ^^
+          (if let_hardlines then hardline else empty) ^^
         print_term_aux 2 t2
       else
         parens (print_term t)
