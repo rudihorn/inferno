@@ -54,6 +54,49 @@ let rec print_type_aux level ty =
 and print_type ty =
   print_type_aux 3 ty
 
+let rec print_debruijn_type_aux level ty =
+  assert (level >= 0);
+  match ty with
+  | TyVar x ->
+      print_tyvar x
+  | TyProduct (ty1, ty2) ->
+      if level >= 1 then
+        print_debruijn_type_aux 0 ty1 ^^
+        string " × " ^^
+        print_debruijn_type_aux 1 ty2
+      else
+        parens (print_debruijn_type ty)
+  | TyArrow (ty1, ty2) ->
+      if level >= 2 then
+        print_debruijn_type_aux 1 ty1 ^^
+        string " → " ^^
+        print_debruijn_type ty2
+      else
+        parens (print_debruijn_type ty)
+  | TyForall ((), ty1) ->
+      if level >= 3 then
+        string "∀" ^^
+        string "()" ^^
+        dot ^^ space ^^
+        print_debruijn_type_aux 3 ty1
+      else
+        parens (print_debruijn_type ty)
+  | TyMu (x, ty1) ->
+      if level >= 3 then
+        string "μ"  ^^
+        string "()" ^^
+        dot ^^ space ^^
+        print_debruijn_type_aux 3 ty1
+      else
+        parens (print_debruijn_type ty)
+  | TyInt ->
+     string "Int"
+  | TyBool ->
+     string "Bool"
+
+and print_debruijn_type ty =
+  print_debruijn_type_aux 3 ty
+
 (* -------------------------------------------------------------------------- *)
 
 (* Terms. *)
