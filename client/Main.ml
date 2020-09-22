@@ -249,26 +249,130 @@ let env k =
      from FreezeML paper for all intents and purposes, since we only care about
      typing *)
   let fml_zero k = ML.let_ ("zero", ML.Abs ("x", Some ([], F.TyInt), ML.Int 0), k) in
-  (fml_id << fml_choose << fml_auto << fml_autoprim << fml_app << fml_revapp << fml_zero) k
+  (* poly : (forall a. a -> a) -> (Int × Bool) *)
+  let fml_poly k = ML.let_ ("poly", ML.Abs ("f", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)),
+     ML.Pair (ML.App (ML.Var "f", ML.Int 1), ML.App (ML.Var "f", ML.Bool true))), k) in
+  (* JSTOLAREK: implementing pair and pair' requires annotations on let *)
+  (fml_id << fml_choose << fml_auto << fml_autoprim << fml_app << fml_revapp <<
+   fml_zero << fml_poly) k
 
 (* Polymorphic instantiation *)
-(* \x y.y *)
+
+(* example            : A1
+   term               : λx y.y
+   inferred type      : ∀ b. ∀ a. a → b → b
+   type in PLDI paper : a → b → b
+*)
 let a1 = ML.abs ("x", ML.abs ("y", ML.Var "y"))
-(* $(\x y.y) *)
+
+(* example            : A1∘
+   term               : $(λx y.y)
+   inferred type      : ∀ b. ∀ a. a → b → b
+   type in PLDI paper : ∀ a b. a → b → b
+ *)
 let a1_dot = ML.gen (ML.abs ("x", ML.abs ("y", ML.Var "y")))
-(* choose id *)
+
+(* example            : A2
+   term               : choose id
+   inferred type      : INCORRECT ∀b. ∀a. a → b → b
+   type in PLDI paper : (a → a) → (a → a)
+ *)
 let a2 = env (ML.App (ML.Var "choose", ML.Var "id"))
-(* choose ~id *)
+
+(* example            : A2∘
+   term               : choose ~id
+   inferred type      : INCORRECT ∀a. a → ∀b. b → b
+   type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
+ *)
 let a2_dot = env (ML.App (ML.Var "choose", ML.FrozenVar "id"))
+
+(* MISSING: A3: choose [] ids *)
+
+(* example            : A4
+   term               : λ(x : ∀ a. a → a). x x
+   inferred type      : ∀b. (∀a. a → a) → b → b
+   type in PLDI paper : (∀ a. a → a) → (b → b)
+ *)
+let a4 = ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)),
+                      ML.App (ML.Var "x", ML.Var "x"))
+
+(* example            : A4̣∘
+   term               : λ(x : ∀ a. a → a). x ~x
+   inferred type      : (∀ a. a → a) → (∀ a. a → a)
+   type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
+ *)
+let a4_dot = ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)),
+                          ML.App (ML.Var "x", ML.FrozenVar "x"))
+
+(* example            : A5
+   term               : id auto
+   inferred type      : (∀ a. a → a) → (∀ a. a → a)
+   type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
+ *)
+let a5 = env (ML.App (ML.Var "id", ML.Var "auto"))
+
+(* example            : A6
+   term               : id auto'
+   inferred type      : ∀b. (∀a. a → a) → b → b
+   type in PLDI paper : (∀ a. a → a) → (b → b)
+ *)
+let a6 = env (ML.App (ML.Var "id", ML.Var "auto'"))
+
+(* example            : A6∘
+   term               : id ~auto'
+   inferred type      : ∀ b. (∀ a. a → a) → (b → b)
+   type in PLDI paper : ∀ b. (∀ a. a → a) → (b → b)
+ *)
+let a6_dot = env (ML.App (ML.Var "id", ML.FrozenVar "auto'"))
+
+(* example            : A7
+   term               : choose id auto
+   inferred type      : INCORRECT ∀ a. a → a
+   type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
+ *)
+let a7 = env (ML.App (ML.App (ML.Var "choose", ML.Var "id"), ML.Var "auto"))
+
+(* example            : A8
+   term               : choose id auto'
+   inferred type      : INCORRECT ∀ b. ∀ a. a → a
+   type in PLDI paper : X
+ *)
+let a8 = env (ML.App (ML.App (ML.Var "choose", ML.Var "id"), ML.Var "auto'"))
+
+(* MISSING : A9⋆: f (choose ~id) ids *)
+
+(* example            : A10⋆
+   term               : poly ~id
+   inferred type      : FAILED ASSERTION
+   type in PLDI paper : Int × Bool
+ *)
+let a10_star = env (ML.App (ML.Var "poly", ML.FrozenVar "id"))
+
+(* example            : A11⋆
+   term               : poly $(λx. x)
+   inferred type      : FAILED ASSERTION
+   type in PLDI paper : Int × Bool
+ *)
+let a11_star = env (ML.App (ML.Var "poly", ML.gen (ML.abs ("x", ML.Var "x"))))
+
+(* example            : A12⋆
+   term               : id poly $(λx. x)
+   inferred type      : FAILED ASSERTION
+   type in PLDI paper : Int × Bool
+ *)
+let a12_star = env (ML.App (ML.App (ML.Var "id", ML.Var "poly"),
+                            ML.gen (ML.abs ("x", ML.Var "x"))))
 
 (* Examples that were not in the PLDI paper *)
 
 (* This was causing an exception in FTypeChecker because I didn't extend type
    equality checker with TyInt *)
-let fml_id1 = ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)), ML.App (ML.Var "x", ML.Int 1))
+let fml_id1 = ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)),
+                           ML.App (ML.Var "x", ML.Int 1))
 (* Two simple functions to test correctness of Bool implementation *)
 let fml_false = ML.Abs ("x", Some ([], F.TyBool), ML.Bool false)
-let fml_id2 = ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)), ML.App (ML.Var "x", ML.Bool false))
+let fml_id2   = ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)),
+                             ML.App (ML.Var "x", ML.Bool false))
 
 
 let () =
@@ -284,11 +388,25 @@ let () =
   assert (test a1_dot);
   assert (test a2);
   assert (test a2_dot);
+  assert (test a4);
+  assert (test a4_dot);
+  assert (test a5);
+  assert (test a6);
+  assert (test a6_dot);
+  assert (test a7);
+  assert (test a8)
+(*
+  assert (test a10_star)
+  assert (test a11_star)
+  assert (test a12_star)
+*)
 
+(*
   assert (test fml_id1);
   assert (test (env a1));
   assert (test fml_id2);
   assert (test fml_false)
+*)
 
 (* -------------------------------------------------------------------------- *)
 
