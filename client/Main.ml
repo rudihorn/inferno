@@ -187,43 +187,25 @@ let test (t : ML.term) : bool =
 
 (* -------------------------------------------------------------------------- *)
 
-(* A few manually constructed terms. *)
-
 let x =
   ML.Var "x"
 
 let y =
   ML.Var "y"
 
-let id =
-  ML.Abs ("x", None, x)
+let f =
+  ML.Var "f"
 
-let delta =
-  ML.Abs ("x", None, ML.App (x, x))
+let var x =
+  ML.Var x
 
-let deltadelta =
-  ML.App (delta, delta)
+let frozen x =
+  ML.FrozenVar x
 
-let idid =
-  ML.App (id, id)
+let app x y =
+  ML.App (x, y)
 
-let k =
-  ML.Abs ("x", None, ML.Abs ("y", None, x))
-
-let genid =
-  ML.Let ("x", None, id, x)
-
-let genidid =
-  ML.Let ("x", None, id, ML.App (x, x))
-
-let genkidid =
-  ML.Let ("x", None, ML.App (k, id), ML.App (x, id))
-
-let genkidid2 =
-  ML.Let ("x", None, ML.App (ML.App (k, id), id), x)
-
-let app_pair = (* ill-typed *)
-  ML.App (ML.Pair (id, id), id)
+let forall_a_a_to_a = Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1))
 
 (* FreezeML examples from PLDI paper*)
 
@@ -231,27 +213,25 @@ let (<<) f g x = f(g(x))
 
 (* Environment with some functions from Figure 2 *)
 let env k =
-(*
-*)
   (* id : forall a. a -> a *)
-  let fml_id k = ML.let_ ("id", ML.abs ("x", ML.Var "x"), k) in
+  let fml_id k = ML.let_ ("id", ML.abs ("x", x), k) in
   (* choose : forall a. a -> a -> a *)
-  let fml_choose k = ML.let_ ("choose", ML.abs ("x", (ML.abs ("y", ML.Var "x"))), k) in
+  let fml_choose k = ML.let_ ("choose", ML.abs ("x", (ML.abs ("y", x))), k) in
   (* auto : (forall a. a -> a) -> (forall a. a -> a) *)
-  let fml_auto k = ML.let_ ("auto", ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)), ML.App (ML.Var "x", ML.FrozenVar "x")), k) in
+  let fml_auto k = ML.let_ ("auto", ML.Abs ("x", forall_a_a_to_a, app x (frozen "x")), k) in
   (* auto' : forall b. (forall a. a -> a) -> b -> b *)
-  let fml_autoprim k = ML.let_ ("auto'", ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)), ML.App (ML.Var "x", ML.Var "x")), k) in
+  let fml_autoprim k = ML.let_ ("auto'", ML.Abs ("x", forall_a_a_to_a, app x x), k) in
   (* app : forall a b. (a -> b) -> a -> b *)
-  let fml_app k = ML.let_ ("app", ML.abs ("f", ML.abs ("x", ML.App (ML.Var "f", ML.Var "x"))), k) in
+  let fml_app k = ML.let_ ("app", ML.abs ("f", ML.abs ("x", app f x)), k) in
   (* revapp : forall a b. b -> (a -> b) -> b *)
-  let fml_revapp k = ML.let_ ("revapp", ML.abs ("x", ML.abs ("f", ML.App (ML.Var "f", ML.Var "x"))), k) in
+  let fml_revapp k = ML.let_ ("revapp", ML.abs ("x", ML.abs ("f", app f x)), k) in
   (* zero : Int -> Int.  Turns every Int into 0.  This function replaces `inc`
      from FreezeML paper for all intents and purposes, since we only care about
      typing *)
   let fml_zero k = ML.let_ ("zero", ML.Abs ("x", Some ([], F.TyInt), ML.Int 0), k) in
   (* poly : (forall a. a -> a) -> (Int × Bool) *)
-  let fml_poly k = ML.let_ ("poly", ML.Abs ("f", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)),
-     ML.Pair (ML.App (ML.Var "f", ML.Int 1), ML.App (ML.Var "f", ML.Bool true))), k) in
+  let fml_poly k = ML.let_ ("poly", ML.Abs ("f", forall_a_a_to_a,
+     ML.Pair (app f (ML.Int 1), app f (ML.Bool true))), k) in
   (* JSTOLAREK: implementing pair and pair' requires annotations on let *)
   (fml_id << fml_choose << fml_auto << fml_autoprim << fml_app << fml_revapp <<
    fml_zero << fml_poly) k
@@ -263,28 +243,28 @@ let env k =
    inferred type      : ∀ b. ∀ a. a → b → b
    type in PLDI paper : a → b → b
 *)
-let a1 = ML.abs ("x", ML.abs ("y", ML.Var "y"))
+let a1 = ML.abs ("x", ML.abs ("y", y))
 
 (* example            : A1∘
    term               : $(λx y.y)
    inferred type      : ∀ b. ∀ a. a → b → b
    type in PLDI paper : ∀ a b. a → b → b
  *)
-let a1_dot = ML.gen (ML.abs ("x", ML.abs ("y", ML.Var "y")))
+let a1_dot = ML.gen (ML.abs ("x", ML.abs ("y", y)))
 
 (* example            : A2
    term               : choose id
    inferred type      : INCORRECT ∀b. ∀a. a → b → b
    type in PLDI paper : (a → a) → (a → a)
  *)
-let a2 = env (ML.App (ML.Var "choose", ML.Var "id"))
+let a2 = env (app (var "choose") (var "id"))
 
 (* example            : A2∘
    term               : choose ~id
    inferred type      : INCORRECT ∀a. a → ∀b. b → b
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
  *)
-let a2_dot = env (ML.App (ML.Var "choose", ML.FrozenVar "id"))
+let a2_dot = env (app (var "choose") (frozen "id"))
 
 (* MISSING: A3: choose [] ids *)
 
@@ -293,51 +273,49 @@ let a2_dot = env (ML.App (ML.Var "choose", ML.FrozenVar "id"))
    inferred type      : ∀b. (∀a. a → a) → b → b
    type in PLDI paper : (∀ a. a → a) → (b → b)
  *)
-let a4 = ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)),
-                      ML.App (ML.Var "x", ML.Var "x"))
+let a4 = ML.Abs ("x", forall_a_a_to_a, app x x)
 
 (* example            : A4̣∘
    term               : λ(x : ∀ a. a → a). x ~x
    inferred type      : (∀ a. a → a) → (∀ a. a → a)
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
  *)
-let a4_dot = ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)),
-                          ML.App (ML.Var "x", ML.FrozenVar "x"))
+let a4_dot = ML.Abs ("x", forall_a_a_to_a, app x (frozen "x"))
 
 (* example            : A5
    term               : id auto
    inferred type      : (∀ a. a → a) → (∀ a. a → a)
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
  *)
-let a5 = env (ML.App (ML.Var "id", ML.Var "auto"))
+let a5 = env (app (var "id") (var "auto"))
 
 (* example            : A6
    term               : id auto'
    inferred type      : ∀b. (∀a. a → a) → b → b
    type in PLDI paper : (∀ a. a → a) → (b → b)
  *)
-let a6 = env (ML.App (ML.Var "id", ML.Var "auto'"))
+let a6 = env (app (var "id") (var "auto'"))
 
 (* example            : A6∘
    term               : id ~auto'
    inferred type      : ∀ b. (∀ a. a → a) → (b → b)
    type in PLDI paper : ∀ b. (∀ a. a → a) → (b → b)
  *)
-let a6_dot = env (ML.App (ML.Var "id", ML.FrozenVar "auto'"))
+let a6_dot = env (app (var "id") (frozen "auto'"))
 
 (* example            : A7
    term               : choose id auto
    inferred type      : INCORRECT ∀ a. a → a
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
  *)
-let a7 = env (ML.App (ML.App (ML.Var "choose", ML.Var "id"), ML.Var "auto"))
+let a7 = env (app (app (var "choose") (var "id")) (var "auto"))
 
 (* example            : A8
    term               : choose id auto'
    inferred type      : INCORRECT ∀ b. ∀ a. a → a
    type in PLDI paper : X
  *)
-let a8 = env (ML.App (ML.App (ML.Var "choose", ML.Var "id"), ML.Var "auto'"))
+let a8 = env (app (app (var "choose") (var "id")) (var "auto'"))
 
 (* MISSING : A9⋆: f (choose ~id) ids *)
 
@@ -346,43 +324,34 @@ let a8 = env (ML.App (ML.App (ML.Var "choose", ML.Var "id"), ML.Var "auto'"))
    inferred type      : FAILED ASSERTION
    type in PLDI paper : Int × Bool
  *)
-let a10_star = env (ML.App (ML.Var "poly", ML.FrozenVar "id"))
+let a10_star = env (app (var "poly") (frozen "id"))
 
 (* example            : A11⋆
    term               : poly $(λx. x)
    inferred type      : FAILED ASSERTION
    type in PLDI paper : Int × Bool
  *)
-let a11_star = env (ML.App (ML.Var "poly", ML.gen (ML.abs ("x", ML.Var "x"))))
+let a11_star = env (app (var "poly") (ML.gen (ML.abs ("x", x))))
 
 (* example            : A12⋆
    term               : id poly $(λx. x)
    inferred type      : FAILED ASSERTION
    type in PLDI paper : Int × Bool
  *)
-let a12_star = env (ML.App (ML.App (ML.Var "id", ML.Var "poly"),
-                            ML.gen (ML.abs ("x", ML.Var "x"))))
+let a12_star = env (app (app (var "id") (var "poly"))
+                        (ML.gen (ML.abs ("x", x))))
 
 (* Examples that were not in the PLDI paper *)
 
 (* This was causing an exception in FTypeChecker because I didn't extend type
    equality checker with TyInt *)
-let fml_id1 = ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)),
-                           ML.App (ML.Var "x", ML.Int 1))
+let fml_id1   = ML.Abs ("x", forall_a_a_to_a, app x (ML.Int 1))
 (* Two simple functions to test correctness of Bool implementation *)
 let fml_false = ML.Abs ("x", Some ([], F.TyBool), ML.Bool false)
-let fml_id2   = ML.Abs ("x", Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1)),
-                             ML.App (ML.Var "x", ML.Bool false))
+let fml_id2   = ML.Abs ("x", forall_a_a_to_a, app x (ML.Bool false))
 
 
 let () =
-(*
-  assert (test idid);
-  assert (test genid);
-  assert (test genidid);
-  assert (test genkidid);
-  assert (test genkidid2);
-*)
   (* FreezeML examples *)
   assert (test a1);
   assert (test a1_dot);
