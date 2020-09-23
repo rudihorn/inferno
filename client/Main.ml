@@ -234,7 +234,7 @@ let env k =
   (* id : forall a. a -> a *)
   let fml_id k = ML.let_ ("id", ML.abs ("x", x), k) in
   (* choose : forall a. a -> a -> a *)
-  let fml_choose k = ML.let_ ("choose", ML.abs ("x", (ML.abs ("y", x))), k) in
+  let fml_choose k = ML.Let ("choose", Some ([1], F.TyArrow (F.TyVar 1, F.TyArrow (F.TyVar 1, F.TyVar 1))), ML.abs ("x", (ML.abs ("y", x))), k) in
   (* auto : (forall a. a -> a) -> (forall a. a -> a) *)
   let fml_auto k = ML.let_ ("auto", ML.Abs ("x", forall_a_a_to_a, app x (frozen "x")), k) in
   (* auto' : forall b. (forall a. a -> a) -> b -> b *)
