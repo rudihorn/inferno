@@ -156,7 +156,7 @@ let test { name; term; typ } : unit =
          Printf.printf "Example %s expected to have a type:" name;
          let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type exp_ty ^^ hardline) in
          PPrint.ToChannel.pretty 0.9 80 stdout doc;
-         Printf.printf "but was determined ill-typed.";
+         Printf.printf "but was determined ill-typed.\n";
        );
      if verbose then
        print_log log;
