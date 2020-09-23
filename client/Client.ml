@@ -385,10 +385,12 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
       F.App (t1', t2')
 
     (* Generalization. *)
-  | ML.Let (x, _, t, u) -> (* JSTOLAREK: type annotation ignored *)
+  | ML.Let (x, ty, t, u) ->
+
+     let ty = Option.map annotation_to_structure ty in
 
       (* Construct a ``let'' constraint. *)
-      let1 x (hastype t)
+      let1 x ty (hastype t)
         (hastype u w)
       <$$> fun ((b, _), a, t', u') ->
       (* [a] are the type variables that we must introduce (via Lambda-abstractions)
@@ -398,11 +400,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
          coercion to [x]. We use smart constructors so that, if the lists [a] and
          [b] happen to be equal, no extra code is produced. *)
       F.Let (x, F.ftyabs a t',
-(* IFPAPER
-      F.Let (x, coerce a b (F.Var x),
-      ELSE *)
-      flet (x, coerce a b (F.Var x),
-(* END *)
+             flet (x, coerce a b (F.Var x),
       u'))
 (* END HASTYPE *)
 

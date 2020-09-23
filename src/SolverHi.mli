@@ -154,7 +154,7 @@ module Make
        [\Lambda vs.a1].
      - the value [a1] produced by the constraint [c1].
      - the value [a2] produced by the constraint [c2]. *)
-  val let1: tevar -> (variable -> 'a co) -> 'b co ->
+  val let1: tevar -> variable O.structure option -> (variable -> 'a co) -> 'b co ->
             (scheme * tyvar list * 'a * 'b) co
 
   (* END HI *)
@@ -168,7 +168,7 @@ module Make
      [vs] to a constraint. The [i]-th term variable, [x_i], ends up bound to the
      constraint abstraction of the [i]-th type variable in [c_1], which one could
      write [\lambda v_i.c_1]. *)
-  val letn: tevar list -> (variable list -> 'a co) -> 'b co ->
+  val letn: (tevar * variable O.structure option) list -> (variable list -> 'a co) -> 'b co ->
             (scheme list * tyvar list * 'a * 'b) co
 
   (* BEGIN HI *)
