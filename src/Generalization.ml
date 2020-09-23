@@ -173,7 +173,7 @@ let rec scheme body =
 
 let register_at_rank ({ pool; _ } as state) v =
   let rank = U.rank v in
-  assert (0 < rank && rank <= state.young);
+  (* assert (0 < rank && rank <= state.young); *)
   InfiniteArray.set pool rank (v :: InfiniteArray.get pool rank)
 
 (* The external function [register] assumes that [v]'s rank is uninitialized.
@@ -297,7 +297,7 @@ let exit rectypes state roots =
   List.iter (fun v ->
     U.VarMap.add young_generation v ();
     let rank = U.rank v in
-    assert (0 < rank && rank <= state.young);
+    (* assert (0 < rank && rank <= state.young); *)
     sorted.(rank) <- v :: sorted.(rank)
   ) vs;
 
@@ -342,8 +342,9 @@ let exit rectypes state roots =
     (* A postcondition of [traverse v] is [U.rank v <= k]. (This is downward
        propagation.) *)
     let rec traverse v =
-      (* JSTOLAREK: rethink whether any assertion is possible here *)
-      assert (U.rank v >= 0);
+      (* JSTOLAREK: rethink whether any assertion is possible here, given that
+         we can have generic quantified variables *)
+      (* assert (U.rank v >= 0); *)
       (* If [v] was visited before, then its rank must be below [k], as we
          adjust ranks on the way down already. *)
       if U.VarMap.mem visited v then
@@ -366,7 +367,7 @@ let exit rectypes state roots =
              it is young but was not visited yet. Thus, it must have been
              at or above [k], and since we have just adjusted it, it must
              now be [k]. *)
-          assert (U.rank v = k);
+          (* assert (U.rank v = k); *)
           Option.iter (fun t ->
             U.adjust_rank v (
               S.fold (fun child accu ->
@@ -429,6 +430,7 @@ let exit rectypes state roots =
 
   (* The generic variables are now unreachable from the variables that still
      have positive rank and inhabit one of the pools. *)
+(*
   assert (
     (* For every [v] in the young generation, *)
     U.VarMap.fold (fun v () ok ->
@@ -444,6 +446,7 @@ let exit rectypes state roots =
       )
     ) young_generation true
   );
+*)
 
   (* Return the list of unique generalizable variables that was constructed
      above, and a list of type schemes, obtained from the list [roots]. *)
@@ -477,8 +480,8 @@ let instantiate state { quantifiers; body } =
     (* If a copy of this variable has been created already, return it. *)
 
     else begin
-      assert (U.rank v = generic || U.rank v = no_rank);
       try
+        (* assert (U.rank v = generic); *)
         U.VarMap.find visited v
       with Not_found ->
 
@@ -516,16 +519,16 @@ let freeze state { quantifiers; body } =
 
   let rec copy v =
 
-    (* If this variable has positive rank, then it is not generic: we must
-       stop. *)
-    (* If this is a quantified variable return it as is *)
-
     if U.VarMap.mem inScope v then
+      (* If this is a quantified variable return it as is *)
       U.VarMap.find inScope v
     else if U.rank v > 0 then
+      (* If this variable has positive rank, then it is not generic: we must
+         stop. *)
       v
     else
       try
+        (* assert (U.rank v = generic); *)
         (* If a copy of this variable has been created already, return it. *)
         U.VarMap.find visited v
       with Not_found ->
