@@ -91,8 +91,8 @@ type example = { name : string
 
 let test { name; term; typ } : unit =
   let log = create_log() in
-  Printf.printf "\n===========================================\n\n%!";
   log_action log (fun () ->
+      Printf.printf "\n===========================================\n\n%!";
       Printf.printf "Running example %s\n%!" name;
     );
   let outcome =
@@ -103,8 +103,12 @@ let test { name; term; typ } : unit =
   match outcome, typ with
   | None, None ->
       (* Term is ill typed and is expected to be as such *)
-      Printf.printf "Example %s is ill-typed." name;
-      Printf.printf "\027[32mExample %s works as expected\027[0m\n" name
+     log_action log (fun () ->
+         Printf.printf "Example %s is ill-typed." name;
+       );
+     if verbose then
+       print_log log;
+     Printf.printf "\027[32mExample %s works as expected\027[0m\n" name
   | Some (t : F.nominal_term), Some exp_ty ->
       log_action log (fun () ->
         Printf.printf "Formatting the System F term...\n%!";
@@ -128,7 +132,6 @@ let test { name; term; typ } : unit =
             Printf.printf "Pretty-printing the System F de Bruijn type...\n%!";
             let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
             PPrint.ToChannel.pretty 0.9 80 stdout doc;
-            Printf.printf "\027[32mExample %s works as expected\027[0m\n" name
           end
         else
           begin
@@ -139,21 +142,51 @@ let test { name; term; typ } : unit =
             Printf.printf "Actual:\n";
             let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
             PPrint.ToChannel.pretty 0.9 80 stdout doc;
-            Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name
           end
       );
-      (* Everything seems to be OK. *)
       if verbose then
-        print_log log
+        print_log log;
+      if ( exp_ty = ty ) then
+        Printf.printf "\027[32mExample %s works as expected\027[0m\n" name
+      else
+        Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name
+
   | None, Some exp_ty ->
-     Printf.printf "Example %s expected to have a type:" name;
-     let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type exp_ty ^^ hardline) in
-     PPrint.ToChannel.pretty 0.9 80 stdout doc;
-     Printf.printf "but was determined ill-typed.";
+     log_action log (fun () ->
+         Printf.printf "Example %s expected to have a type:" name;
+         let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type exp_ty ^^ hardline) in
+         PPrint.ToChannel.pretty 0.9 80 stdout doc;
+         Printf.printf "but was determined ill-typed.";
+       );
+     if verbose then
+       print_log log;
      Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name
-  | Some _, None ->
-     Printf.printf "Example %s epected to be ill-typed but typechecks.\n" name;
-     Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name
+  | Some t, None ->
+      log_action log (fun () ->
+        Printf.printf "Formatting the System F term...\n%!";
+        let doc = PPrint.(string "  " ^^ nest 2 (FPrinter.print_term t) ^^ hardline) in
+        Printf.printf "Pretty-printing the System F term...\n%!";
+        PPrint.ToChannel.pretty 0.9 80 stdout doc
+      );
+      let t : F.debruijn_term =
+        attempt log
+          "Converting the System F term to de Bruijn style...\n"
+          F.translate t
+      in
+      let ty : F.debruijn_type =
+        attempt log
+          "Type-checking the System F term...\n"
+          FTypeChecker.typeof t
+      in
+      log_action log (fun () ->
+          Printf.printf "Pretty-printing the System F de Bruijn type...\n%!";
+          let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
+          PPrint.ToChannel.pretty 0.9 80 stdout doc;
+          Printf.printf "Example %s epected to be ill-typed but typechecks.\n" name;
+        );
+      if verbose then
+        print_log log;
+      Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name
 
 (* -------------------------------------------------------------------------- *)
 
