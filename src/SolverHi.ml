@@ -108,7 +108,7 @@ let (^^) (rc1, k1) (rc2, k2) =
 (* -------------------------------------------------------------------------- *)
 
 let rec annotation_to_structure ((qs, body) : O.scheme) : Lo.variable S.structure =
-  let env = List.fold_left (fun env q -> O.TyVarMap.add q (Lo.fresh None) env)
+  let env = List.fold_left (fun env q -> O.TyVarMap.add q (Lo.fresh_quantifier ()) env)
                            O.TyVarMap.empty qs in
   let qs' = List.map (fun q -> O.TyVarMap.find q env) qs in
   match qs' with

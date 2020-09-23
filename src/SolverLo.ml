@@ -53,6 +53,9 @@ type ischeme =
 let fresh t =
   U.fresh t G.no_rank
 
+let fresh_quantifier () =
+  U.fresh None G.generic
+
 (* -------------------------------------------------------------------------- *)
 
 let print_var v =
