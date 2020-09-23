@@ -501,7 +501,7 @@ let instantiate state { quantifiers; body } =
 let freeze state { quantifiers; body } =
   let inScope : U.variable U.VarMap.t = List.fold_left (fun acc q ->
       assert (U.structure q == None);
-      let q' = U.fresh None no_rank in
+      let q' = U.fresh None generic in
       U.VarMap.add acc q q';
       acc
     ) (U.VarMap.create 8) quantifiers in
