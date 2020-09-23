@@ -125,15 +125,13 @@ let solve (rectypes : bool) (c : rawco) : unit =
           print_var w) in
     Debug.print_doc message in
 
-  let debug_unify_after v w =
+  let debug_unify_after v =
     let open PPrint in
     let message =
       nest 2 (
-          string "Unification successful.  Variables after unification:" ^^
+          string "Unification successful.  Variable after unification:" ^^
           hardline ^^
-          print_var v ^^
-          hardline ^^
-          print_var w) in
+          print_var v) in
     Debug.print_doc message in
 
   let state = G.init() in
@@ -155,7 +153,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
     | CEq (v, w) ->
         debug_unify_before (string "Solving equality constraint.") v w;
         U.unify v w;
-        debug_unify_after v w
+        debug_unify_after v
     | CExist (v, c) ->
         (* We assume that the variable [v] has been created fresh, so it
            is globally unique, it carries no structure, and its rank is
@@ -176,7 +174,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
           print_tevar x ^^ space ^^ colon ^^ space ^^ print_scheme s ^^ dot ^^
           hardline) v w;
         U.unify v w;
-        debug_unify_after v w
+        debug_unify_after v
     | CFrozen (x, w) ->
         let s = try XMap.find x env with Not_found -> raise (Unbound x) in
         let qs, body = G.freeze state s in
@@ -186,7 +184,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
           print_tevar x ^^ space ^^ colon ^^ space ^^ print_scheme s ^^ dot ^^
           hardline) v w;
         U.unify v w;
-        debug_unify_after v w
+        debug_unify_after v
     | CDef (x, v, c) ->
        let scheme = G.scheme v in
        Debug.print_doc (
@@ -220,27 +218,25 @@ let solve (rectypes : bool) (c : rawco) : unit =
            and to construct a list [ss] of type schemes for our entry points. The
            generalization engine also produces a list [generalizable] of the young
            variables that should be universally quantified here. *)
-        begin
-          if ( List.length( xvss ) > 0 ) then
-            Debug.print_doc (nest 2
-              (string "Typechecked bodies of the following let bindings:" ^^
-               hardline ^^ separate hardline (List.map (fun (x, v, _) ->
-               print_tevar x ^^ space ^^ colon ^^ space ^^ print_var v) xvss)) ^^
-               hardline ^^ string "Prociding with let body now.")
-          else
-            Debug.print( "Typechecking of top-level binding finished" )
-        end;
         let generalizable, ss = G.exit rectypes state vs in
         (* Fill the write-once reference [generalizable_hook]. *)
         WriteOnceRef.set generalizable_hook generalizable;
         (* Extend the environment [env] and fill the write-once references
            [scheme_hook]. *)
+        if ( List.length( xvss ) > 0 ) then
+          Debug.print "Typechecking of let bindings finished.  Adding bindings to environment:";
         let env =
           List.fold_left2 (fun env (x, _, scheme_hook) s ->
             WriteOnceRef.set scheme_hook s;
+            Debug.print_doc (string "  " ^^ print_tevar x ^^ space ^^ colon ^^
+                               space ^^ print_scheme s);
             XMap.add x s env
           ) env xvss ss
         in
+        if ( List.length( xvss ) > 0 ) then
+          Debug.print "Proceeding with let body now"
+        else
+          Debug.print "Typechecking of top-level binding finished";
         (* Proceed to solve [c2] in the extended environment. *)
         solve env c2
 
