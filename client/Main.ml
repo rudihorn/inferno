@@ -230,27 +230,40 @@ let forall_a_a_to_a = Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1))
 let (<<) f g x = f(g(x))
 
 (* Environment with some functions from Figure 2 *)
+(* JSTOLAREK: implementing pair and pair' requires annotations on let *)
+
+(* id : forall a. a -> a *)
+let fml_id k = ML.let_ ("id", ML.abs ("x", x), k)
+
+(* choose : forall a. a -> a -> a *)
+let fml_choose k = ML.Let ("choose",
+  None,
+  (*Some ([1], F.TyArrow (F.TyVar 1, F.TyArrow (F.TyVar 1, F.TyVar 1))),*)
+  ML.abs ("x", (ML.abs ("y", x))), k)
+
+(* auto : (forall a. a -> a) -> (forall a. a -> a) *)
+let fml_auto k = ML.let_ ("auto", ML.Abs ("x", forall_a_a_to_a,
+                                               app x (frozen "x")), k)
+
+(* auto' : forall b. (forall a. a -> a) -> b -> b *)
+let fml_autoprim k = ML.let_ ("auto'", ML.Abs ("x", forall_a_a_to_a, app x x), k)
+
+(* app : forall a b. (a -> b) -> a -> b *)
+let fml_app k = ML.let_ ("app", ML.abs ("f", ML.abs ("x", app f x)), k)
+
+(* revapp : forall a b. b -> (a -> b) -> b *)
+let fml_revapp k = ML.let_ ("revapp", ML.abs ("x", ML.abs ("f", app f x)), k)
+
+(* zero : Int -> Int.  Turns every Int into 0.  This function replaces `inc`
+   from FreezeML paper for all intents and purposes, since we only care about
+   typing *)
+let fml_zero k = ML.let_ ("zero", ML.Abs ("x", Some ([], F.TyInt), ML.Int 0), k)
+
+(* poly : (forall a. a -> a) -> (Int × Bool) *)
+let fml_poly k = ML.let_ ("poly", ML.Abs ("f", forall_a_a_to_a,
+   ML.Pair (app f (ML.Int 1), app f (ML.Bool true))), k)
+
 let env k =
-  (* id : forall a. a -> a *)
-  let fml_id k = ML.let_ ("id", ML.abs ("x", x), k) in
-  (* choose : forall a. a -> a -> a *)
-  let fml_choose k = ML.Let ("choose", Some ([1], F.TyArrow (F.TyVar 1, F.TyArrow (F.TyVar 1, F.TyVar 1))), ML.abs ("x", (ML.abs ("y", x))), k) in
-  (* auto : (forall a. a -> a) -> (forall a. a -> a) *)
-  let fml_auto k = ML.let_ ("auto", ML.Abs ("x", forall_a_a_to_a, app x (frozen "x")), k) in
-  (* auto' : forall b. (forall a. a -> a) -> b -> b *)
-  let fml_autoprim k = ML.let_ ("auto'", ML.Abs ("x", forall_a_a_to_a, app x x), k) in
-  (* app : forall a b. (a -> b) -> a -> b *)
-  let fml_app k = ML.let_ ("app", ML.abs ("f", ML.abs ("x", app f x)), k) in
-  (* revapp : forall a b. b -> (a -> b) -> b *)
-  let fml_revapp k = ML.let_ ("revapp", ML.abs ("x", ML.abs ("f", app f x)), k) in
-  (* zero : Int -> Int.  Turns every Int into 0.  This function replaces `inc`
-     from FreezeML paper for all intents and purposes, since we only care about
-     typing *)
-  let fml_zero k = ML.let_ ("zero", ML.Abs ("x", Some ([], F.TyInt), ML.Int 0), k) in
-  (* poly : (forall a. a -> a) -> (Int × Bool) *)
-  let fml_poly k = ML.let_ ("poly", ML.Abs ("f", forall_a_a_to_a,
-     ML.Pair (app f (ML.Int 1), app f (ML.Bool true))), k) in
-  (* JSTOLAREK: implementing pair and pair' requires annotations on let *)
   (fml_id << fml_choose << fml_auto << fml_autoprim << fml_app << fml_revapp <<
    fml_zero << fml_poly) k
 
@@ -287,7 +300,7 @@ let a1_dot =
  *)
 let a2 =
   { name = "A2"
-  ; term = env (app choose id)
+  ; term = (fml_id << fml_choose) (app choose id)
   ; typ  = Some (TyForall ((),
              TyArrow (TyArrow (TyVar 0, TyVar 0), TyArrow (TyVar 0, TyVar 0))))
   }
@@ -299,7 +312,7 @@ let a2 =
  *)
 let a2_dot =
   { name = "A2∘"
-  ; term = env (app choose (frozen "id"))
+  ; term = (fml_id << fml_choose) (app choose (frozen "id"))
   ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
                           TyForall ((), TyArrow (TyVar 0, TyVar 0))))
   }
@@ -337,7 +350,7 @@ let a4_dot =
  *)
 let a5 =
   { name = "A5"
-  ; term = env (app id auto)
+  ; term = (fml_id << fml_auto) (app id auto)
   ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
                           TyForall ((), TyArrow (TyVar 0, TyVar 0))))
   }
@@ -349,7 +362,7 @@ let a5 =
  *)
 let a6 =
   { name = "A6"
-  ; term = env (app id auto')
+  ; term = (fml_id << fml_autoprim) (app id auto')
   ; typ  = Some (TyForall ((), TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
                                         TyArrow (TyVar 0, TyVar 0))))
   }
@@ -361,7 +374,7 @@ let a6 =
  *)
 let a6_dot =
   { name = "A6∘"
-  ; term = env (app id (frozen "auto'"))
+  ; term = (fml_id << fml_autoprim) (app id (frozen "auto'"))
   ; typ  = Some (TyForall ((), TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
                                         TyArrow (TyVar 0, TyVar 0))))
   }
@@ -373,7 +386,7 @@ let a6_dot =
  *)
 let a7 =
   { name = "A7"
-  ; term = env (app (app choose id) auto)
+  ; term = (fml_id << fml_choose << fml_auto) (app (app choose id) auto)
   ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
                           TyForall ((), TyArrow (TyVar 0, TyVar 0))))
   }
@@ -385,7 +398,7 @@ let a7 =
  *)
 let a8 =
   { name = "A8"
-  ; term = env (app (app choose id) auto')
+  ; term = (fml_id << fml_choose << fml_autoprim) (app (app choose id) auto')
   ; typ  = None
   }
 
@@ -398,7 +411,7 @@ let a8 =
  *)
 let a10_star =
   { name = "A10⋆"
-  ; term = env (app poly (frozen "id"))
+  ; term = (fml_id << fml_poly) (app poly (frozen "id"))
   ; typ  = Some (TyProduct (TyInt, TyBool))
   }
 
@@ -409,7 +422,7 @@ let a10_star =
  *)
 let a11_star =
   { name = "A11⋆"
-  ; term = env (app poly (ML.gen (ML.abs ("x", x))))
+  ; term = fml_poly (app poly (ML.gen (ML.abs ("x", x))))
   ; typ  = Some (TyProduct (TyInt, TyBool))
   }
 
@@ -420,7 +433,7 @@ let a11_star =
  *)
 let a12_star =
   { name = "A12⋆"
-  ; term = env (app (app id poly) (ML.gen (ML.abs ("x", x))))
+  ; term = (fml_id << fml_poly) (app (app id poly) (ML.gen (ML.abs ("x", x))))
   ; typ  = Some (TyProduct (TyInt, TyBool))
   }
 
@@ -476,7 +489,8 @@ let fml_inst =
 *)
 let fml_inst2 =
   { name = "expression instantiation 2"
-  ; term = env (app (ML.let_ ("x", app auto (frozen "id"), x)) (ML.Int 1))
+  ; term = (fml_id << fml_auto) (app (ML.let_ ("x", app auto (frozen "id"), x))
+                                     (ML.Int 1))
   ; typ  = Some TyInt
   }
 
@@ -486,7 +500,7 @@ let fml_inst2 =
 *)
 let fml_nested_forall_inst =
   { name = "nested quantifiers instantiation"
-  ; term = env (ML.Abs ("x",
+  ; term = fml_id (ML.Abs ("x",
       Some ([], F.TyArrow ( F.TyForall (1, F.TyArrow (F.TyVar 1, F.TyVar 1))
                           , F.TyForall (1, F.TyArrow (F.TyVar 1, F.TyVar 1)))),
       app (ML.inst (app x (frozen "id"))) (ML.Int 1)))
