@@ -266,9 +266,16 @@ let fml_zero k = ML.let_ ("zero", ML.Abs ("x", Some ([], F.TyInt), ML.Int 0), k)
 let fml_poly k = ML.let_ ("poly", ML.Abs ("f", forall_a_a_to_a,
    ML.Pair (app f one, app f (ML.Bool true))), k)
 
-let env k =
-  (fml_id << fml_choose << fml_auto << fml_autoprim << fml_app << fml_revapp <<
-   fml_zero << fml_poly) k
+let env k = (
+    fml_id       <<
+    fml_choose   <<
+    fml_auto     <<
+    fml_autoprim <<
+    fml_app      <<
+    fml_revapp   <<
+    fml_zero     <<
+    fml_poly
+  ) k
 
 (* Polymorphic instantiation *)
 
@@ -316,7 +323,8 @@ let a2 =
  *)
 let a2_dot =
   { name = "A2∘"
-  ; term = (fml_id << fml_choose) (app choose (frozen "id"))
+  ; term = (fml_id << fml_choose)
+           (app choose (frozen "id"))
   ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
                           TyForall ((), TyArrow (TyVar 0, TyVar 0))))
   }
@@ -354,7 +362,8 @@ let a4_dot =
  *)
 let a5 =
   { name = "A5"
-  ; term = (fml_id << fml_auto) (app id auto)
+  ; term = (fml_id << fml_auto)
+           (app id auto)
   ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
                           TyForall ((), TyArrow (TyVar 0, TyVar 0))))
   }
