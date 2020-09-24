@@ -303,7 +303,8 @@ let a1_dot =
  *)
 let a2 =
   { name = "A2"
-  ; term = (fml_id << fml_choose) (app choose id)
+  ; term = (fml_id << fml_choose)
+           (app choose id)
   ; typ  = Some (TyForall ((),
              TyArrow (TyArrow (TyVar 0, TyVar 0), TyArrow (TyVar 0, TyVar 0))))
   }
@@ -365,7 +366,8 @@ let a5 =
  *)
 let a6 =
   { name = "A6"
-  ; term = (fml_id << fml_autoprim) (app id auto')
+  ; term = (fml_id << fml_autoprim)
+           (app id auto')
   ; typ  = Some (TyForall ((), TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
                                         TyArrow (TyVar 0, TyVar 0))))
   }
@@ -377,7 +379,8 @@ let a6 =
  *)
 let a6_dot =
   { name = "A6∘"
-  ; term = (fml_id << fml_autoprim) (app id (frozen "auto'"))
+  ; term = (fml_id << fml_autoprim)
+           (app id (frozen "auto'"))
   ; typ  = Some (TyForall ((), TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
                                         TyArrow (TyVar 0, TyVar 0))))
   }
@@ -389,7 +392,8 @@ let a6_dot =
  *)
 let a7 =
   { name = "A7"
-  ; term = (fml_id << fml_choose << fml_auto) (app (app choose id) auto)
+  ; term = (fml_id << fml_choose << fml_auto)
+           (app (app choose id) auto)
   ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
                           TyForall ((), TyArrow (TyVar 0, TyVar 0))))
   }
@@ -401,7 +405,8 @@ let a7 =
  *)
 let a8 =
   { name = "A8"
-  ; term = (fml_id << fml_choose << fml_autoprim) (app (app choose id) auto')
+  ; term = (fml_id << fml_choose << fml_autoprim)
+           (app (app choose id) auto')
   ; typ  = None
   }
 
@@ -414,7 +419,8 @@ let a8 =
  *)
 let a10_star =
   { name = "A10⋆"
-  ; term = (fml_id << fml_poly) (app poly (frozen "id"))
+  ; term = (fml_id << fml_poly)
+           (app poly (frozen "id"))
   ; typ  = Some (TyProduct (TyInt, TyBool))
   }
 
@@ -425,7 +431,8 @@ let a10_star =
  *)
 let a11_star =
   { name = "A11⋆"
-  ; term = fml_poly (app poly (ML.gen (ML.abs ("x", x))))
+  ; term = (fml_poly)
+           (app poly (ML.gen (ML.abs ("x", x))))
   ; typ  = Some (TyProduct (TyInt, TyBool))
   }
 
@@ -436,7 +443,8 @@ let a11_star =
  *)
 let a12_star =
   { name = "A12⋆"
-  ; term = (fml_id << fml_poly) (app (app id poly) (ML.gen (ML.abs ("x", x))))
+  ; term = (fml_id << fml_poly)
+           (app (app id poly) (ML.gen (ML.abs ("x", x))))
   ; typ  = Some (TyProduct (TyInt, TyBool))
   }
 
@@ -492,8 +500,8 @@ let fml_inst =
 *)
 let fml_inst2 =
   { name = "expression instantiation 2"
-  ; term = (fml_id << fml_auto) (app (ML.let_ ("x", app auto (frozen "id"), x))
-                                     one)
+  ; term = (fml_id << fml_auto)
+           (app (ML.let_ ("x", app auto (frozen "id"), x)) one)
   ; typ  = Some TyInt
   }
 
