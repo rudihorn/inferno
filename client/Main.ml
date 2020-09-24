@@ -223,6 +223,9 @@ let auto' =
 let poly =
   var "poly"
 
+let one =
+  ML.Int 1
+
 let forall_a_a_to_a = Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1))
 
 (* FreezeML examples from PLDI paper*)
@@ -261,7 +264,7 @@ let fml_zero k = ML.let_ ("zero", ML.Abs ("x", Some ([], F.TyInt), ML.Int 0), k)
 
 (* poly : (forall a. a -> a) -> (Int × Bool) *)
 let fml_poly k = ML.let_ ("poly", ML.Abs ("f", forall_a_a_to_a,
-   ML.Pair (app f (ML.Int 1), app f (ML.Bool true))), k)
+   ML.Pair (app f one, app f (ML.Bool true))), k)
 
 let env k =
   (fml_id << fml_choose << fml_auto << fml_autoprim << fml_app << fml_revapp <<
@@ -447,7 +450,7 @@ let a12_star =
  *)
 let fml_id_to_int =
   { name = "id_to_int"
-  ; term = ML.Abs ("x", forall_a_a_to_a, app x (ML.Int 1))
+  ; term = ML.Abs ("x", forall_a_a_to_a, app x one)
   ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)), TyInt))
   }
 
@@ -479,7 +482,7 @@ let fml_const_false =
 *)
 let fml_inst =
   { name = "expression instantiation"
-  ; term = app (ML.let_ ("id", ML.abs ("x", x), id)) (ML.Int 1)
+  ; term = app (ML.let_ ("id", ML.abs ("x", x), id)) one
   ; typ  = Some TyInt
   }
 
@@ -490,7 +493,7 @@ let fml_inst =
 let fml_inst2 =
   { name = "expression instantiation 2"
   ; term = (fml_id << fml_auto) (app (ML.let_ ("x", app auto (frozen "id"), x))
-                                     (ML.Int 1))
+                                     one)
   ; typ  = Some TyInt
   }
 
@@ -503,7 +506,7 @@ let fml_nested_forall_inst =
   ; term = fml_id (ML.Abs ("x",
       Some ([], F.TyArrow ( F.TyForall (1, F.TyArrow (F.TyVar 1, F.TyVar 1))
                           , F.TyForall (1, F.TyArrow (F.TyVar 1, F.TyVar 1)))),
-      app (ML.inst (app x (frozen "id"))) (ML.Int 1)))
+      app (ML.inst (app x (frozen "id"))) one))
   ; typ  = Some
       (TyArrow
         (TyArrow ( F.TyForall ((), F.TyArrow (F.TyVar 0, F.TyVar 0))
