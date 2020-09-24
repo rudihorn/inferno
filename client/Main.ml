@@ -25,7 +25,7 @@ let log_action log action =
 
 let log_msg log msg =
   log_action log (fun () ->
-    output_string stdout msg; flush stdout
+    output_string stdout msg
   )
 
 let print_log log =
@@ -59,27 +59,27 @@ let print_type ty =
 let print_ml_term m =
   PPrint.(ToChannel.pretty 0.9 80 stdout (MLPrinter.print_term m ^^ hardline))
 
-let translate t =
+let translate log t =
   try
     Some (Client.translate t)
   with
   | Client.Cycle ty ->
-      if verbose then begin
+     log_action log (fun () ->
         Printf.fprintf stdout "Type error: a cyclic type arose.\n";
         print_type ty
-      end;
-      None
+       );
+     None
   | Client.Unify (ty1, ty2) ->
-      if verbose then begin
+     log_action log (fun () ->
         Printf.fprintf stdout "Type error: type mismatch.\n";
         Printf.fprintf stdout "Type error: mismatch between the type:\n";
         print_type ty1;
         Printf.fprintf stdout "and the type:\n";
         print_type ty2;
         Printf.fprintf stdout "when translating the term:\n";
-        print_ml_term t;
-      end;
-      None
+        print_ml_term t
+       );
+     None
 
 (* -------------------------------------------------------------------------- *)
 
@@ -98,17 +98,17 @@ let test { name; term; typ } : unit =
   let outcome =
     attempt log
       "Type inference and translation to System F...\n"
-      translate term
+      (translate log) term
   in
   match outcome, typ with
   | None, None ->
       (* Term is ill typed and is expected to be as such *)
      log_action log (fun () ->
-         Printf.printf "Example %s is ill-typed." name;
+         Printf.printf "Example %s was rejected by the typechecker as expected.\n" name;
        );
      if verbose then
        print_log log;
-     Printf.printf "\027[32mExample %s works as expected\027[0m\n" name
+     Printf.printf "\027[32mExample %s works as expected\027[0m\n" name; flush stdout
   | Some (t : F.nominal_term), Some exp_ty ->
       log_action log (fun () ->
         Printf.printf "Formatting the System F term...\n%!";
