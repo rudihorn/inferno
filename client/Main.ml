@@ -2,7 +2,7 @@ open Client
 open F
 
 let verbose =
-  true
+  false
 
 (* -------------------------------------------------------------------------- *)
 
@@ -240,8 +240,7 @@ let fml_id k = ML.let_ ("id", ML.abs ("x", x), k)
 
 (* choose : forall a. a -> a -> a *)
 let fml_choose k = ML.Let ("choose",
-  None,
-  (*Some ([1], F.TyArrow (F.TyVar 1, F.TyArrow (F.TyVar 1, F.TyVar 1))),*)
+  Some ([1], F.TyArrow (F.TyVar 1, F.TyArrow (F.TyVar 1, F.TyVar 1))),
   ML.abs ("x", (ML.abs ("y", x))), k)
 
 (* auto : (forall a. a -> a) -> (forall a. a -> a) *)
@@ -409,7 +408,7 @@ let a7 =
 
 (* example            : A8
    term               : choose id auto'
-   inferred type      : INCORRECT ∀ b. ∀ a. a → a
+   inferred type      : rejected but for wrong reasons
    type in PLDI paper : X
  *)
 let a8 =
@@ -530,14 +529,44 @@ let fml_nested_forall_inst =
                  , F.TyForall ((), F.TyArrow (F.TyVar 0, F.TyVar 0))), TyInt))
   }
 
-let () =
-  (* FreezeML examples *)
+(* Correctness of type annotations on let binders *)
 (*
+   term : let (id : ∀ a. a → a) = λx.x in id
+   type : ∀ a. a → a
+*)
+let fml_id_annot_1 =
+  { name = "correct id let annotation"
+  ; term = ML.Let ("id", Some ([1], TyArrow (TyVar 1, TyVar 1)), ML.abs ("x", x), id)
+  ; typ  = Some (F.TyForall ((), F.TyArrow (F.TyVar 0, F.TyVar 0)))
+  }
+
+(*
+   term : let (id : ∀ a b. a → b) = λx.x in id
+   type : X
+*)
+let fml_id_annot_2 =
+  { name = "incorrect id let annotation"
+  ; term = ML.Let ("id", Some ([1;2], TyArrow (TyVar 1, TyVar 2)), ML.abs ("x", x), id)
+  ; typ  = None
+  }
+
+(*
+   term : let (id : ∀ a. a → a) = λ(x : Int).x in id
+   type : X
+*)
+let fml_id_annot_3 =
+  { name = "incorrect id let annotation 2"
+  ; term = ML.Let ("id", Some ([1], TyArrow (TyVar 1, TyVar 1)),
+                   ML.Abs ("x", Some ([], TyInt) , x), id)
+  ; typ  = None
+  }
+
+
+let () =
+  (* PLDI paper examples *)
   test a1;
   test a1_dot;
-  test a2
-*)
-(*
+  test a2;
   test a2_dot;
   test a4;
   test a4_dot;
@@ -550,12 +579,13 @@ let () =
   test a11_star;
   test a12_star;
 
+  (* Other examples *)
   test fml_id_to_int;
   test fml_id_to_bool;
   test fml_const_false;
-  test fml_inst
-*)
-  test fml_inst2
-(*
-  test fml_nested_forall_inst
-*)
+  test fml_inst;
+  test fml_inst2;
+  test fml_nested_forall_inst;
+  test fml_id_annot_1;
+  test fml_id_annot_2;
+  test fml_id_annot_3
