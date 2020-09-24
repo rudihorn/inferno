@@ -459,11 +459,51 @@ let fml_const_false =
   ; typ  = Some (TyArrow (TyBool, TyBool))
   }
 
+(* Some examples to test correct instantiation of quantified types *)
+(*
+   term : (let id = λx.x in id) 1
+   type : Int
+*)
+let fml_inst =
+  { name = "expression instantiation"
+  ; term = app (ML.let_ ("id", ML.abs ("x", x), id)) (ML.Int 1)
+  ; typ  = Some TyInt
+  }
+
+(*
+   term : (let x = auto ~id in x) 1
+   type : Int
+*)
+let fml_inst2 =
+  { name = "expression instantiation 2"
+  ; term = env (app (ML.let_ ("x", app auto (frozen "id"), x)) (ML.Int 1))
+  ; typ  = Some TyInt
+  }
+
+(*
+   term : λ(x : (∀ a. a → a) → (∀ a. a → a)). (x ~id)@ 1
+   type : ((∀ a. a → a) → (∀ a. a → a)) → Int
+*)
+let fml_nested_forall_inst =
+  { name = "nested quantifiers instantiation"
+  ; term = env (ML.Abs ("x",
+      Some ([], F.TyArrow ( F.TyForall (1, F.TyArrow (F.TyVar 1, F.TyVar 1))
+                          , F.TyForall (1, F.TyArrow (F.TyVar 1, F.TyVar 1)))),
+      app (ML.inst (app x (frozen "id"))) (ML.Int 1)))
+  ; typ  = Some
+      (TyArrow
+        (TyArrow ( F.TyForall ((), F.TyArrow (F.TyVar 0, F.TyVar 0))
+                 , F.TyForall ((), F.TyArrow (F.TyVar 0, F.TyVar 0))), TyInt))
+  }
+
 let () =
   (* FreezeML examples *)
+(*
   test a1;
   test a1_dot;
-  test a2;
+  test a2
+*)
+(*
   test a2_dot;
   test a4;
   test a4_dot;
@@ -478,4 +518,10 @@ let () =
 
   test fml_id_to_int;
   test fml_id_to_bool;
-  test fml_const_false
+  test fml_const_false;
+  test fml_inst
+*)
+  test fml_inst2
+(*
+  test fml_nested_forall_inst
+*)
