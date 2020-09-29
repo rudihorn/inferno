@@ -225,6 +225,8 @@ let product_i i x y =
   else
     product y x
 
+(* JSTOLAREK: coercions unused at the moment.  Drop them altogether? *)
+
 (* Should we use smart constructors to eliminate redundant coercions when possible? *)
 let smart =
   true
@@ -399,9 +401,8 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
          [a]. Hence, in general, we must re-bind [x] to an application of a suitable
          coercion to [x]. We use smart constructors so that, if the lists [a] and
          [b] happen to be equal, no extra code is produced. *)
-      F.Let (x, F.ftyabs a t',
-             flet (x, coerce a b (F.Var x),
-      u'))
+
+      F.Let (x, F.ftyabs a t', u')
 (* END HASTYPE *)
 
     (* Pair. *)
