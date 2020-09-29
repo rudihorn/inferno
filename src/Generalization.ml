@@ -235,7 +235,10 @@ let enter state =
 let make_scheme (is_generic : U.variable -> bool) (body : U.variable) : scheme =
 
   (* Prepare to mark which variables have been visited. *)
-  let visited : unit U.VarMap.t = U.VarMap.create 128 in
+  let { quantifiers; body } = scheme body in
+
+  let visited : unit U.VarMap.t = List.fold_left (fun acc v ->
+    U.VarMap.add acc v (); acc) (U.VarMap.create 128) quantifiers in
 
   let rec traverse v quantifiers =
 
@@ -264,7 +267,7 @@ let make_scheme (is_generic : U.variable -> bool) (body : U.variable) : scheme =
 
   in
   (* Discover which quantifiers are accessible from [body]. *)
-  let quantifiers = traverse body [] in
+  let quantifiers = traverse body quantifiers in
   (* Build a type scheme. *)
   { quantifiers; body }
 
