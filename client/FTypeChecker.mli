@@ -5,6 +5,7 @@ open F
 (* [typeof t] type-checks the closed term [t] and constructs its type. *)
 
 exception NotAnArrow   of debruijn_type
+exception NotAProduct  of debruijn_type
 exception NotAForall   of debruijn_type
 exception TypeMismatch of debruijn_type * debruijn_type
 
