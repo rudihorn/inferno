@@ -160,7 +160,7 @@ and unify_descriptors t desc1 desc2 = {
   structure = unify_structures t desc1.structure desc2.structure;
   rank      = min desc1.rank desc2.rank;
 }
-  
+
 (* -------------------------------------------------------------------------- *)
 
 (* [unify_structures structure1 structure2] combines two structures. If one of
@@ -170,7 +170,7 @@ and unify_descriptors t desc1 desc2 = {
 and unify_structures t structure1 structure2 =
   Option.multiply (fun t1 t2 ->
     S.iter2 (unify t) t1 t2;
-    t2 (* arbitrary; [t1] and [t2] are now equal anyway *)    
+    t2 (* arbitrary; [t1] and [t2] are now equal anyway *)
   ) structure1 structure2
 
 (* -------------------------------------------------------------------------- *)
@@ -271,7 +271,7 @@ let new_acyclic_decoder
     with Not_found ->
       (* Because the graph is assumed to be acyclic, it is ok to update
          the hash table only after the recursive call. *)
-      let a = 
+      let a =
         match structure v with
         | None ->
             leaf v
@@ -305,8 +305,8 @@ let new_acyclic_decoder
 
 type status =
     (* this variable is being visited: *)
-  | Active      
-    (* this variable is being visited and participates in a cycle: *) 
+  | Active
+    (* this variable is being visited and participates in a cycle: *)
   | Rediscovered
 
 let new_cyclic_decoder
