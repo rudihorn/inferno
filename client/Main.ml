@@ -511,7 +511,7 @@ let fml_const_false =
    term : (let id = λx.x in id) 1
    type : Int
 *)
-let fml_inst =
+let fml_inst_1 =
   { name = "expression instantiation"
   ; term = app (ML.let_ ("id", ML.abs ("x", x), id)) one
   ; typ  = Some TyInt
@@ -521,7 +521,7 @@ let fml_inst =
    term : (let x = auto ~id in x) 1
    type : Int
 *)
-let fml_inst2 =
+let fml_inst_2 =
   { name = "expression instantiation 2"
   ; term = (fml_id << fml_auto)
            (app (ML.let_ ("x", app auto (frozen "id"), x)) one)
@@ -598,8 +598,8 @@ let () =
   test fml_id_to_int;
   test fml_id_to_bool;
   test fml_const_false;
-  test fml_inst;
-  test fml_inst2;
+  test fml_inst_1;
+  test fml_inst_2;
   test fml_nested_forall_inst;
   test fml_id_annot_1;
   test fml_id_annot_2;
