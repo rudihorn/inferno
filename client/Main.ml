@@ -42,7 +42,22 @@ let attempt log msg f x =
     f x
   with e ->
     print_log log;
-    Printf.printf "%s\n" (Printexc.to_string e);
+    begin
+    match e with
+    | FTypeChecker.NotAnArrow ty ->
+       let doc = PPrint.(string "Exception: not an arrow type:" ^^ hardline ^^
+         string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
+       PPrint.ToChannel.pretty 0.9 80 stdout doc
+    | FTypeChecker.NotAProduct ty ->
+       let doc = PPrint.(string "Exception: not a product type:" ^^ hardline ^^
+         string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
+       PPrint.ToChannel.pretty 0.9 80 stdout doc
+    | FTypeChecker.NotAForall ty ->
+       let doc = PPrint.(string "Exception: not a forall type:" ^^ hardline ^^
+         string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
+       PPrint.ToChannel.pretty 0.9 80 stdout doc
+    | _ -> Printf.printf "%s\n" (Printexc.to_string e)
+    end;
     Printexc.print_backtrace stdout;
     flush stdout;
     exit 1
