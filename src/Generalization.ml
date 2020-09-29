@@ -541,12 +541,21 @@ let freeze state { quantifiers; body } =
            descendants. Note that the mapping must be updated before making a
            recursive call to [copy], so as to guarantee termination in the
            presence of cyclic terms. *)
-
-        let v' = U.fresh None state.young in
-        register_at_rank state v';
-        U.VarMap.add visited v v';
-        U.set_structure v' (Option.map (S.map copy) (U.structure v));
-        v'
+       if U.rank v = generic then
+         begin
+           let v' = U.fresh None generic in
+           U.VarMap.add visited v v';
+           U.set_structure v' (Option.map (S.map copy) (U.structure v));
+           v'
+         end
+       else
+         begin
+           let v' = U.fresh None state.young in
+           register_at_rank state v';
+           U.VarMap.add visited v v';
+           U.set_structure v' (Option.map (S.map copy) (U.structure v));
+           v'
+         end
   in
   List.map copy quantifiers, copy body
 
