@@ -154,7 +154,7 @@ module MakeTranslate
   include MakeMap(V)(T)
 
   include Nominal2deBruijn(N)
-  
+
   let translate t =
     map
       lookup
