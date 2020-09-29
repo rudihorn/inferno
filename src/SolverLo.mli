@@ -42,8 +42,8 @@ module Make
   (* [fresh t] creates a fresh type variable, with optional structure [t]. *)
   val fresh: variable structure option -> variable
 
-  (* [fresh_quantifier t] creates a fresh quantifier variable with no structure. *)
-  val fresh_quantifier: variable structure option -> variable
+  (* [fresh_generic t] creates a fresh generic (quantified) variable. *)
+  val fresh_generic: variable structure option -> variable
 
   (* The type [ischeme] describes the solver's type schemes. *)
 
