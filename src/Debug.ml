@@ -9,4 +9,4 @@ let print_doc doc =
   if enabled then
     PPrint.(ToChannel.pretty 0.9 80 stderr (doc ^^ hardline)); flush stderr
 
-let fuel = 4
+let fuel = 5
