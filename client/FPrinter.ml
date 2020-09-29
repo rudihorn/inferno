@@ -175,3 +175,74 @@ let rec print_term_aux level t =
 and print_term t =
   print_term_aux 2 t
 
+let rec print_debruijn_term_aux level t =
+  assert (level >= 0);
+  match t with
+  | Var x ->
+      string x
+  | App (t1, t2) ->
+      if level >= 1 then
+        print_debruijn_term_aux 1 t1 ^^
+        space ^^
+        print_debruijn_term_aux 0 t2
+      else
+        parens (print_debruijn_term t)
+  | TyApp (t1, ty2) ->
+      if level >= 1 then
+        print_debruijn_term_aux 1 t1 ^^
+        space ^^ lbracket ^^
+        print_debruijn_type ty2 ^^
+        rbracket
+      else
+        parens (print_debruijn_term t)
+  | Abs (x, ty1, t2) ->
+      if level >= 2 then
+        string "λ" ^^
+        parens (string x ^^
+                string " : " ^^
+                print_debruijn_type ty1) ^^
+        dot ^^ space ^^
+        print_debruijn_term_aux 2 t2
+      else
+        parens (print_debruijn_term t)
+  | Let (x, t1, t2) ->
+      if level >= 2 then
+        string "let " ^^
+        string x ^^
+        string " = " ^^
+        print_debruijn_term t1 ^^
+        string " in " ^^
+          (if let_hardlines then hardline else empty) ^^
+        print_debruijn_term_aux 2 t2
+      else
+        parens (print_debruijn_term t)
+  | TyAbs ((), t1) ->
+      if level >= 2 then
+        string "Λ()" ^^
+        dot ^^ space ^^
+        print_debruijn_term_aux 2 t1
+      else
+        parens (print_debruijn_term t)
+ | Pair (t1, t2) ->
+      parens (
+        print_debruijn_term t1 ^^
+        comma ^^ space ^^
+        print_debruijn_term t2
+      )
+  | Proj (i, t2) ->
+      (* like [App] *)
+      if level >= 1 then
+        string "proj" ^^
+        OCaml.int i ^^
+        space ^^
+        print_debruijn_term_aux 0 t2
+      else
+        parens (print_debruijn_term t)
+  | Int i ->
+     string (string_of_int i)
+  | Bool b ->
+     string (string_of_bool b)
+
+and print_debruijn_term t =
+  print_debruijn_term_aux 2 t
+
