@@ -116,7 +116,7 @@ let rec annotation_to_structure ((qs, body) : O.scheme) : Lo.variable S.structur
   let qs' = List.map (fun q -> O.TyVarMap.find q env) qs in
   match qs' with
   | [] -> O.to_structure annotation_to_structure
-            (fun s -> Lo.fresh_generic (Some s)) env body
+            (fun s -> Lo.fresh (Some s)) env body
   | _  -> S.forall qs' (O.to_variable annotation_to_structure
                           (fun s -> Lo.fresh_generic (Some s)) env body)
 
