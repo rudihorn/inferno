@@ -56,6 +56,8 @@ and descriptor = {
 
   mutable rank : int;
 
+  skolem : bool;
+
 }
 
 (* -------------------------------------------------------------------------- *)
@@ -124,14 +126,17 @@ let postincrement r =
 
 let fresh =
   let id = ref 0 in
-  fun structure rank ->
+  fun structure rank skolem ->
     TUnionFind.fresh {
       id = postincrement id;
       structure = structure;
       rank = rank;
+      skolem = skolem;
     }
 
 (* -------------------------------------------------------------------------- *)
+
+exception UnifySkolem
 
 (* The internal function [unify t v1 v2] equates the variables [v1] and [v2]
    and propagates the consequences of this equation until an inconsistency is
@@ -154,12 +159,38 @@ let rec unify (t : _ TRef.transaction) (v1 : variable) (v2 : variable) : unit =
 (* [unify_descriptors desc1 desc2] combines the descriptors [desc1] and
    [desc2], producing a descriptor for the merged equivalence class. *)
 
-and unify_descriptors t desc1 desc2 = {
-  (* An arbitrary choice of identifier is ok. *)
-  id        = desc1.id;
-  structure = unify_structures t desc1.structure desc2.structure;
-  rank      = min desc1.rank desc2.rank;
-}
+and unify_descriptors t desc1 desc2 =
+  match desc1, desc2 with
+  (* Skolems can't have a structure. Ever. *)
+  | _, { skolem = true; structure = Some _; _ }
+  |    { skolem = true; structure = Some _; _ }, _ ->
+     assert false
+
+  | { id = id1; skolem = true; _ }, { id = id2; skolem = true; _ } ->
+     (* Skolem can't unify with other skolem but can unify with itself *)
+     if (id1 <> id2) then raise UnifySkolem;
+     assert (desc1.structure = None);
+     assert (desc2.structure = None);
+     assert (desc1.rank = desc2.rank);
+     {
+      id        = id1;
+      structure = None;
+      rank      = desc1.rank;
+      skolem    = true
+     }
+
+  | { id = id1; skolem = true; _ }, { structure = Some _; _ }
+  | { structure = Some _; _ }, { id = id1; skolem = true; _ } ->
+     (* Skolems don't unify with variables that have a structure *)
+     raise UnifySkolem
+
+  | _, _ -> {
+      (* We pick the skolem identifier *)
+      id        = if desc2.skolem then desc2.id else desc1.id;
+      structure = unify_structures t desc1.structure desc2.structure;
+      rank      = min desc1.rank desc2.rank;
+      skolem    = desc1.skolem || desc2.skolem (* skolemize *)
+    }
 
 (* -------------------------------------------------------------------------- *)
 

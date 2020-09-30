@@ -93,7 +93,7 @@ val   adjust_rank: variable -> int -> unit
 (* A new variable, with specified structure and rank, is obtained as follows.
    A fresh identifier is automatically picked. *)
 
-val fresh: variable structure option -> int -> variable
+val fresh: variable structure option -> int -> bool -> variable
 
 (* -------------------------------------------------------------------------- *)
 
