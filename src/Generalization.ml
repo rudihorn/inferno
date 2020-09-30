@@ -182,7 +182,7 @@ let register_at_rank ({ pool; _ } as state) v =
 (* JSTOLAREK: during registration we should check the structure recursively for
    unbound type variables in signatures. *)
 let register state v =
-  assert (U.rank v = no_rank);
+  (* assert (U.rank v = no_rank); *)
   U.set_rank v state.young;
   register_at_rank state v
 
@@ -462,7 +462,7 @@ let exit rectypes state roots =
    must be copied is determined by inspecting the rank -- [generic] means
    copy, a positive rank means don't copy. *)
 
-let instantiate state { quantifiers; body } =
+let instantiate use_skolems state { quantifiers; body } =
 
   List.iter (fun q -> assert (U.structure q = None)) quantifiers;
 
@@ -496,7 +496,7 @@ let instantiate state { quantifiers; body } =
            recursive call to [copy], so as to guarantee termination in the
            presence of cyclic terms. *)
 
-        let v' = U.fresh None state.young false in
+        let v' = U.fresh None state.young use_skolems in
         register_at_rank state v';
         U.VarMap.add visited v v';
         U.set_structure v' (Option.map (S.map copy) (U.structure v));
@@ -505,6 +505,11 @@ let instantiate state { quantifiers; body } =
   in
   List.map copy quantifiers, copy body
 
+let instantiate_with_skolems state scheme =
+  instantiate true state scheme
+
+let instantiate state scheme =
+  instantiate false state scheme
 
 let freeze state { quantifiers; body } =
   let inScope : U.variable U.VarMap.t = List.fold_left (fun acc q ->
