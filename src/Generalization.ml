@@ -173,7 +173,7 @@ let rec scheme body =
 
 let register_at_rank ({ pool; _ } as state) v =
   let rank = U.rank v in
-  (* assert (0 < rank && rank <= state.young); *)
+  assert (0 < rank && rank <= state.young);
   InfiniteArray.set pool rank (v :: InfiniteArray.get pool rank)
 
 (* The external function [register] assumes that [v]'s rank is uninitialized.
@@ -484,7 +484,7 @@ let instantiate state { quantifiers; body } =
 
     else begin
       try
-        (* assert (U.rank v = generic); *)
+        assert (U.rank v = generic);
         U.VarMap.find visited v
       with Not_found ->
 
@@ -531,7 +531,7 @@ let freeze state { quantifiers; body } =
       v
     else
       try
-        (* assert (U.rank v = generic); *)
+        assert (U.rank v = generic);
         (* If a copy of this variable has been created already, return it. *)
         U.VarMap.find visited v
       with Not_found ->
