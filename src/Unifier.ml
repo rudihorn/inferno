@@ -73,6 +73,9 @@ let structure v =
 let set_structure v structure =
   (TUnionFind.find v).structure <- structure
 
+let has_structure v =
+  (TUnionFind.find v).structure != None
+
 let rank v =
   (TUnionFind.find v).rank
 
@@ -101,6 +104,12 @@ let print (fuel : int) f v =
     if Debug.print_ranks then
       comma ^^ space ^^
       string "rank" ^^ equals ^^ string (string_of_int (rank v))
+    else
+      empty
+  end ^^
+  begin
+    if ( (TUnionFind.find v).skolem ) then
+      comma ^^ space ^^ string "skolem"
     else
       empty
   end ^^
