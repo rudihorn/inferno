@@ -464,6 +464,8 @@ let exit rectypes state roots =
 
 let instantiate state { quantifiers; body } =
 
+  List.iter (fun q -> assert (U.structure q = None)) quantifiers;
+
   (* Prepare to mark which variables have been visited and record their copy. *)
   let visited : U.variable U.VarMap.t = U.VarMap.create 128 in
 
