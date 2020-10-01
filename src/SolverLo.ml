@@ -203,6 +203,25 @@ let solve (rectypes : bool) (c : rawco) : unit =
            they were existentially bound in [c1]. This is what they are, basically,
            but they also serve as named entry points. *)
         let vs = List.map (fun (_, v, _) -> v) xvss in
+        (* JSTOLAREK: doesn't work, debug *)
+(*
+        let vs, keep_orig_vs = List.split (List.map (fun v ->
+             if ( U.has_structure v ) then
+               begin
+               Debug.print_doc ( string "Variable has structure : " ^^ print_var v);
+               let v = snd (G.instantiate_with_skolems state (G.scheme v)) in
+               Debug.print_doc ( string "Variable after skolem instantiation : " ^^ print_var v);
+               ( v, true )
+               end
+             else
+               ( v, false )) vs) in
+*)
+        (* JSTOLAREK: There are problems with the above code.  The variables in
+           vs are already present in c1 - see `letn` function in SolverHi.  When
+           we instantiate them we change the identifiers, so the variables are
+           no longer shared.  Also, the change does not seem to be visible in
+           c1 *)
+
         List.iter (G.register state) vs;
         begin
           if ( List.length( xvss ) > 0 ) then
@@ -222,6 +241,19 @@ let solve (rectypes : bool) (c : rawco) : unit =
            generalization engine also produces a list [generalizable] of the young
            variables that should be universally quantified here. *)
         let generalizable, ss = G.exit rectypes state vs in
+
+        (* JSTOLAREK: handle generalizable as well *)
+(*
+        let ss = List.fold_right2 (fun s (v, keep) acc ->
+                     if ( keep ) then
+                       begin
+                         G.scheme v :: acc
+                       end
+                     else
+                       s :: acc
+                   ) ss (List.combine vs keep_orig_vs) [] in
+*)
+
         (* Fill the write-once reference [generalizable_hook]. *)
         WriteOnceRef.set generalizable_hook generalizable;
         (* Extend the environment [env] and fill the write-once references

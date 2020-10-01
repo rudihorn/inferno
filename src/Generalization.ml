@@ -505,6 +505,11 @@ let instantiate use_skolems state { quantifiers; body } =
   in
   List.map copy quantifiers, copy body
 
+(* JSTOLAREK: THIS IS HORRIBLY BROKEN.  Skolem variables should only be
+   generated at the leaves, but the current function also generates them in the
+   nodes.  Fix: check if a variable has a structure.  If no then generated
+   skolem (if requested), otherwise generate normal unification variable (even
+   if skolems requested) *)
 let instantiate_with_skolems state scheme =
   instantiate true state scheme
 

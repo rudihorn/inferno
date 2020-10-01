@@ -2,7 +2,7 @@ open Client
 open F
 
 let verbose =
-  false
+  true
 
 (* -------------------------------------------------------------------------- *)
 
@@ -579,6 +579,7 @@ let fml_id_annot_3 =
 
 let () =
   (* PLDI paper examples *)
+(*
   test a1;
   test a1_dot;
   test a2;
@@ -601,6 +602,7 @@ let () =
   test fml_inst_1;
   test fml_inst_2;
   test fml_nested_forall_inst;
-  test fml_id_annot_1;
   test fml_id_annot_2;
   test fml_id_annot_3
+*)
+  test fml_id_annot_1
