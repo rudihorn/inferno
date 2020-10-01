@@ -262,6 +262,9 @@ let solve (rectypes : bool) (c : rawco) : unit =
           Debug.print "Typechecking of let bindings finished.  Adding bindings to environment:";
         let env =
           List.fold_left2 (fun env (x, _, scheme_hook) s ->
+              (* JSTOLAREK: here I should check whether v (currently ignored)
+                 has a signature.  If yes, add that signature to the environment
+                 and ignore s. *)
             WriteOnceRef.set scheme_hook s;
             Debug.print_doc (string "  " ^^ print_tevar x ^^ space ^^ colon ^^
                                space ^^ print_scheme s);

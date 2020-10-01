@@ -241,6 +241,8 @@ let letn xs f1 (rc2, k2) =
   ) xs in
   (* Pass the vector of type variables to the user-supplied function [f1],
      as in [CExist]. *)
+  (* JSTOLAREK: variables passed to f1 should be instantiated if they have a
+     signature.  But there's no way to instantiate variables at this point! *)
   let vs = List.map (fun (_, v, _) -> v) xvss in
   let rc1, k1 = f1 vs in
   (* Create one more write-once reference, which will receive the list of
