@@ -402,6 +402,14 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
          coercion to [x]. We use smart constructors so that, if the lists [a] and
          [b] happen to be equal, no extra code is produced. *)
 
+      (* JSTOLAREK: The above no longer holds in FreezeML.  Consider:
+
+           let x = auto ~id in ...
+
+         There is no need to bind any type variables using Lambda-abstraction in
+         the LHS (therefore [a] is empty) but [x] has the type scheme
+         [forall a. a -> a], making [b] non-empty. *)
+
       F.Let (x, F.ftyabs a t', u')
 (* END HASTYPE *)
 
