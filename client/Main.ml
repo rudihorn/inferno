@@ -576,6 +576,18 @@ let fml_id_annot_3 =
   ; typ  = None
   }
 
+(*
+   term : let id = λx.x in let (y : ∀ a. a → a) = ~id in y
+   type : ∀ a. a → a
+*)
+let fml_id_annot_4 =
+  { name = "rebind id with annotation"
+  ; term = ML.let_ ("id", ML.abs ("x", x),
+      ML.Let ("y", Some ([1], TyArrow (TyVar 1, TyVar 1)),
+                   frozen "id", y))
+  ; typ  = Some (F.TyForall ((), F.TyArrow (F.TyVar 0, F.TyVar 0)))
+  }
+
 
 let () =
   (* PLDI paper examples *)
@@ -602,7 +614,8 @@ let () =
   test fml_inst_1;
   test fml_inst_2;
   test fml_nested_forall_inst;
+  test fml_id_annot_1;
   test fml_id_annot_2;
-  test fml_id_annot_3
+  test fml_id_annot_3;
 *)
-  test fml_id_annot_1
+  test fml_id_annot_4
