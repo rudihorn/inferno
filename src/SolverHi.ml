@@ -243,13 +243,13 @@ let letn xs f1 (rc2, k2) =
      as in [CExist]. *)
   (* JSTOLAREK: variables passed to f1 should be instantiated if they have a
      signature.  But there's no way to instantiate variables at this point! *)
-  let vs = List.map (fun (_, v, _) -> v) xvss in
+  let vs = List.map (fun _ -> fresh None) xvss in
   let rc1, k1 = f1 vs in
   (* Create one more write-once reference, which will receive the list of
      all generalizable variables in the left-hand side. *)
   let generalizable_hook = WriteOnceRef.create() in
   (* Build a [CLet] constraint. *)
-  CLet (xvss, rc1, rc2, generalizable_hook),
+  CLet (xvss, vs, rc1, rc2, generalizable_hook),
   fun env ->
     (* In the decoding phase, read the write-once references, *)
     let decode = env in
@@ -303,7 +303,7 @@ include struct
 
 let ok rc =
   match rc with
-  | CLet (_, _, CTrue, _) ->
+  | CLet (_, _, _, CTrue, _) ->
       (* The argument of [solve] should be constructed by [let0]. *)
       true
   | _ ->

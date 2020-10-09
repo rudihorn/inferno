@@ -93,6 +93,7 @@ type rawco =
   | CFrozen   of tevar * variable
   | CDef of tevar * variable * rawco
   | CLet of (tevar * variable * ischeme WriteOnceRef.t) list
+        * variable list
         * rawco
         * rawco
         * variable list WriteOnceRef.t
@@ -195,14 +196,16 @@ let solve (rectypes : bool) (c : rawco) : unit =
            dquote ^^ string " with type scheme " ^^ print_scheme scheme);
        solve (XMap.add x scheme env) c;
        Debug.print_doc (string "Exiting scope of binding " ^^ print_tevar x)
-    | CLet (xvss, c1, c2, generalizable_hook) ->
+    | CLet (xvss, vs, c1, c2, generalizable_hook) ->
         (* Warn the generalization engine that we entering the left-hand side of
            a [let] construct. *)
         G.enter state;
         (* Register the variables [vs] with the generalization engine, just as if
            they were existentially bound in [c1]. This is what they are, basically,
            but they also serve as named entry points. *)
+(* JSTOLAREK: not needed, vs already exist in CLet
         let vs = List.map (fun (_, v, _) -> v) xvss in
+ *)
         (* JSTOLAREK: doesn't work, debug *)
 (*
         let vs, keep_orig_vs = List.split (List.map (fun v ->
@@ -242,18 +245,34 @@ let solve (rectypes : bool) (c : rawco) : unit =
            variables that should be universally quantified here. *)
         let generalizable, ss = G.exit rectypes state vs in
 
-        (* JSTOLAREK: handle generalizable as well *)
 (*
-        let ss = List.fold_right2 (fun s (v, keep) acc ->
-                     if ( keep ) then
+  - instantiate annotation with skolems
+  - unify with body of the type scheme
+
+  - if succeedes it should result in variables being unified with each other
+    (one skolem can unify with multiple tyvars)
+
+  - update the list of generalizable variables and quantifiers?  Generalizable
+    variables need to be right in order for big-lambda abstractions tobe
+    inserted correctly
+*)
+        let ss = List.fold_right2 (fun s ((_, ov, _), sv) acc ->
+                     (* ov = original v, sv = solved v *)
+                     if ( U.has_structure ov ) then
                        begin
-                         G.scheme v :: acc
+                         Debug.print_doc (nest 2
+                           (string "Let-binder with type annottation:" ^^ hardline ^^
+                            string "Annotation: " ^^ print_var ov ^^ hardline ^^
+                            string "Inferred  : " ^^ print_var sv ^^ hardline ^^
+                            string "Scheme    : " ^^ print_scheme s) );
+                         (* JSTOLAREK: skolem instantiation and unification here *)
+                         G.scheme ov :: acc
                        end
                      else
-                       s :: acc
-                   ) ss (List.combine vs keep_orig_vs) [] in
-*)
-
+                       begin
+                         s :: acc
+                       end
+                   ) ss (List.combine xvss vs) [] in
         (* Fill the write-once reference [generalizable_hook]. *)
         WriteOnceRef.set generalizable_hook generalizable;
         (* Extend the environment [env] and fill the write-once references
