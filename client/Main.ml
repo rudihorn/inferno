@@ -98,7 +98,7 @@ let translate log t =
   | Client.UnifySkolem (ty1, ty2) ->
      log_action log (fun () ->
         Printf.fprintf stdout "Type error: type mismatch.\n";
-        Printf.fprintf stdout "Type error: mismatch between the type:\n";
+        Printf.fprintf stdout "Type error: skolem unification error between types:\n";
         print_type ty1;
         Printf.fprintf stdout "and the type:\n";
         print_type ty2;
