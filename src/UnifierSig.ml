@@ -76,6 +76,7 @@ val            id: variable -> int
 val     structure: variable -> variable structure option
 val set_structure: variable -> variable structure option -> unit
 val has_structure: variable -> bool
+val is_skolem    : variable -> bool
 
 val          rank: variable -> int
 val      set_rank: variable -> int -> unit

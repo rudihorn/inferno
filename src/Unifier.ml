@@ -87,6 +87,9 @@ let adjust_rank v k =
   if k < desc.rank then
     desc.rank <- k
 
+let is_skolem v =
+  (TUnionFind.find v).skolem
+
 (* -------------------------------------------------------------------------- *)
 
 let print (fuel : int) f v =

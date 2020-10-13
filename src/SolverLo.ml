@@ -245,6 +245,8 @@ let solve (rectypes : bool) (c : rawco) : unit =
            generalization engine also produces a list [generalizable] of the young
            variables that should be universally quantified here. *)
         let generalizable, ss = G.exit rectypes state vs in
+        (* HACK: skolems don't generalize *)
+        let generalizable = List.filter (fun v -> not (U.is_skolem v)) generalizable in
 
 (*
   - instantiate annotation with skolems
