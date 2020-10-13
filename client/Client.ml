@@ -441,6 +441,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
 
 exception Unbound = Solver.Unbound
 exception Unify = Solver.Unify
+exception UnifySkolem = Solver.UnifySkolem
 exception Cycle = Solver.Cycle
 
 let translate (t : ML.term) : F.nominal_term =

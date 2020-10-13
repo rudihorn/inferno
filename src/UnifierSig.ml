@@ -116,6 +116,7 @@ val fresh: variable structure option -> int -> bool -> variable
    [v2]. *)
 
 exception Unify of variable * variable
+exception UnifySkolem of variable * variable
 
 val unify: variable -> variable -> unit
 

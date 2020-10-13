@@ -316,6 +316,7 @@ end
 exception Unbound = Lo.Unbound
 (* BEGIN EXC *)
 exception Unify of O.ty * O.ty
+exception UnifySkolem of O.ty * O.ty
 exception Cycle of O.ty
 (* END EXC *)
 
@@ -337,6 +338,9 @@ let solve rectypes (rc, k) =
   | Lo.Unify (v1, v2) ->
       let decode = new_decoder true (* cyclic decoder *) in
       raise (Unify (decode v1, decode v2))
+  | Lo.UnifySkolem (v1, v2) ->
+      let decode = new_decoder true (* cyclic decoder *) in
+      raise (UnifySkolem (decode v1, decode v2))
   | Lo.Cycle v ->
       let decode = new_decoder true (* cyclic decoder *) in
       raise (Cycle (decode v))

@@ -95,6 +95,17 @@ let translate log t =
         print_ml_term t
        );
      None
+  | Client.UnifySkolem (ty1, ty2) ->
+     log_action log (fun () ->
+        Printf.fprintf stdout "Type error: type mismatch.\n";
+        Printf.fprintf stdout "Type error: mismatch between the type:\n";
+        print_type ty1;
+        Printf.fprintf stdout "and the type:\n";
+        print_type ty2;
+        Printf.fprintf stdout "when translating the term:\n";
+        print_ml_term t
+       );
+     None
 
 (* -------------------------------------------------------------------------- *)
 

@@ -110,6 +110,7 @@ module Make
 
   exception Unbound of tevar
   exception Unify of variable * variable
+  exception UnifySkolem of variable * variable
   exception Cycle of variable
   val solve: bool -> rawco -> unit
 

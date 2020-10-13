@@ -145,7 +145,8 @@ let fresh =
 
 (* -------------------------------------------------------------------------- *)
 
-exception UnifySkolem
+exception UnifySkolemInternal
+exception UnifySkolem of variable * variable
 
 (* The internal function [unify t v1 v2] equates the variables [v1] and [v2]
    and propagates the consequences of this equation until an inconsistency is
@@ -161,7 +162,10 @@ let rec unify (t : _ TRef.transaction) (v1 : variable) (v2 : variable) : unit =
      optimization; it is essential in guaranteeing termination, since we are
      dealing with potentially cyclic structures. *)
 
-  TUnionFind.union t (unify_descriptors t) v1 v2
+  try
+    TUnionFind.union t (unify_descriptors t) v1 v2
+  with UnifySkolemInternal ->
+    raise (UnifySkolem (v1, v2))
 
 (* -------------------------------------------------------------------------- *)
 
@@ -177,7 +181,7 @@ and unify_descriptors t desc1 desc2 =
 
   | { id = id1; skolem = true; _ }, { id = id2; skolem = true; _ } ->
      (* Skolem can't unify with other skolem but can unify with itself *)
-     if (id1 <> id2) then raise UnifySkolem;
+     if (id1 <> id2) then raise UnifySkolemInternal;
      assert (desc1.structure = None);
      assert (desc2.structure = None);
      assert (desc1.rank = desc2.rank);
@@ -191,7 +195,7 @@ and unify_descriptors t desc1 desc2 =
   | { id = id1; skolem = true; _ }, { structure = Some _; _ }
   | { structure = Some _; _ }, { id = id1; skolem = true; _ } ->
      (* Skolems don't unify with variables that have a structure *)
-     raise UnifySkolem
+     raise UnifySkolemInternal
 
   | _, _ -> {
       (* We pick the skolem identifier *)

@@ -108,6 +108,7 @@ type rawco =
 
 exception Unbound of tevar
 exception Unify = U.Unify
+exception UnifySkolem = U.UnifySkolem
 exception Cycle = U.Cycle
 
 let solve (rectypes : bool) (c : rawco) : unit =

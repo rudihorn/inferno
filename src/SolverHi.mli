@@ -193,6 +193,7 @@ module Make
 
   exception Unbound of tevar
   exception Unify of ty * ty
+  exception UnifySkolem of ty * ty
   exception Cycle of ty
   val solve: bool -> 'a co -> 'a
 
