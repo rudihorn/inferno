@@ -260,22 +260,26 @@ let solve (rectypes : bool) (c : rawco) : unit =
     inserted correctly
 *)
         let ss = List.fold_right2 (fun s ((_, ov, _), sv) acc ->
-                     (* ov = original v, sv = solved v *)
-                     if ( U.has_structure ov ) then
-                       begin
-                         Debug.print_doc (nest 2
-                           (string "Let-binder with type annottation:" ^^ hardline ^^
-                            string "Annotation: " ^^ print_var ov ^^ hardline ^^
-                            string "Inferred  : " ^^ print_var sv ^^ hardline ^^
-                            string "Scheme    : " ^^ print_scheme s) );
-                         (* JSTOLAREK: skolem instantiation and unification here *)
-                         G.scheme ov :: acc
-                       end
-                     else
-                       begin
-                         s :: acc
-                       end
-                   ) ss (List.combine xvss vs) [] in
+            (* ov = original v, sv = solved v *)
+            if ( U.has_structure ov ) then
+              begin
+                Debug.print_doc (nest 2
+                  (string "Let-binder with type annottation:" ^^ hardline ^^
+                   string "Annotation: " ^^ print_var ov ^^ hardline ^^
+                   string "Inferred  : " ^^ print_var sv ^^ hardline ^^
+                   string "Scheme    : " ^^ print_scheme s) );
+                let v = snd (G.instantiate_with_skolems state (G.scheme ov)) in
+                let i = snd (G.instantiate state s) in
+                debug_unify_before (string "Unifying let annotation with inferred type of let body.") v i;
+                U.unify v i;
+                debug_unify_after v;
+                G.scheme ov :: acc
+              end
+            else
+              begin
+                s :: acc
+              end
+          ) ss (List.combine xvss vs) [] in
         (* Fill the write-once reference [generalizable_hook]. *)
         WriteOnceRef.set generalizable_hook generalizable;
         (* Extend the environment [env] and fill the write-once references
