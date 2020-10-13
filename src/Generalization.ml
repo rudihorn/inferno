@@ -496,7 +496,7 @@ let instantiate use_skolems state { quantifiers; body } =
            recursive call to [copy], so as to guarantee termination in the
            presence of cyclic terms. *)
 
-        let v' = U.fresh None state.young use_skolems in
+        let v' = U.fresh None state.young (use_skolems && not (U.has_structure v)) in
         register_at_rank state v';
         U.VarMap.add visited v v';
         U.set_structure v' (Option.map (S.map copy) (U.structure v));
@@ -505,11 +505,6 @@ let instantiate use_skolems state { quantifiers; body } =
   in
   List.map copy quantifiers, copy body
 
-(* JSTOLAREK: THIS IS HORRIBLY BROKEN.  Skolem variables should only be
-   generated at the leaves, but the current function also generates them in the
-   nodes.  Fix: check if a variable has a structure.  If no then generated
-   skolem (if requested), otherwise generate normal unification variable (even
-   if skolems requested) *)
 let instantiate_with_skolems state scheme =
   instantiate true state scheme
 
