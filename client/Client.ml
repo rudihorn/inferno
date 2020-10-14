@@ -407,8 +407,8 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
            let x = auto ~id in ...
 
          There is no need to bind any type variables using Lambda-abstraction in
-         the LHS (therefore [a] is empty) but [x] has the type scheme
-         [forall a. a -> a], making [b] non-empty. *)
+         the body of bound term (therefore [a] is empty) but [x] has the type
+         scheme [forall a. a -> a], making [b] non-empty. *)
 
       F.Let (x, F.ftyabs a t', u')
 (* END HASTYPE *)

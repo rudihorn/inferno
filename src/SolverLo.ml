@@ -204,28 +204,6 @@ let solve (rectypes : bool) (c : rawco) : unit =
         (* Register the variables [vs] with the generalization engine, just as if
            they were existentially bound in [c1]. This is what they are, basically,
            but they also serve as named entry points. *)
-(* JSTOLAREK: not needed, vs already exist in CLet
-        let vs = List.map (fun (_, v, _) -> v) xvss in
- *)
-        (* JSTOLAREK: doesn't work, debug *)
-(*
-        let vs, keep_orig_vs = List.split (List.map (fun v ->
-             if ( U.has_structure v ) then
-               begin
-               Debug.print_doc ( string "Variable has structure : " ^^ print_var v);
-               let v = snd (G.instantiate_with_skolems state (G.scheme v)) in
-               Debug.print_doc ( string "Variable after skolem instantiation : " ^^ print_var v);
-               ( v, true )
-               end
-             else
-               ( v, false )) vs) in
-*)
-        (* JSTOLAREK: There are problems with the above code.  The variables in
-           vs are already present in c1 - see `letn` function in SolverHi.  When
-           we instantiate them we change the identifiers, so the variables are
-           no longer shared.  Also, the change does not seem to be visible in
-           c1 *)
-
         List.iter (G.register state) vs;
         begin
           if ( List.length( xvss ) > 0 ) then
@@ -245,20 +223,18 @@ let solve (rectypes : bool) (c : rawco) : unit =
            generalization engine also produces a list [generalizable] of the young
            variables that should be universally quantified here. *)
         let generalizable, ss = G.exit rectypes state vs in
+        (* JSTOLAREK: this deserves some proper debugging. What happens here is
+           that bogus skolems are being reported as being generalizable.  These
+           skolems are introduced in the code just below when we check the let
+           signature against the inferred type.  They don't show up anywhere in
+           the terms or generated types, and yet they are visible to the
+           generalization engine.  For now I just implement a simple but
+           effective workaround that filters out any skolems from the list of
+           generalizable variables. *)
         (* HACK: skolems don't generalize *)
         let generalizable = List.filter (fun v -> not (U.is_skolem v)) generalizable in
-
-(*
-  - instantiate annotation with skolems
-  - unify with body of the type scheme
-
-  - if succeedes it should result in variables being unified with each other
-    (one skolem can unify with multiple tyvars)
-
-  - update the list of generalizable variables and quantifiers?  Generalizable
-    variables need to be right in order for big-lambda abstractions tobe
-    inserted correctly
-*)
+        (* Check that the signature, if present, is subtype of the inferred type
+           scheme *)
         let ss = List.fold_right2 (fun s ((_, ov, _), sv) acc ->
             (* ov = original v, sv = solved v *)
             if ( U.has_structure ov ) then
@@ -288,9 +264,6 @@ let solve (rectypes : bool) (c : rawco) : unit =
           Debug.print "Typechecking of let bindings finished.  Adding bindings to environment:";
         let env =
           List.fold_left2 (fun env (x, _, scheme_hook) s ->
-              (* JSTOLAREK: here I should check whether v (currently ignored)
-                 has a signature.  If yes, add that signature to the environment
-                 and ignore s. *)
             WriteOnceRef.set scheme_hook s;
             Debug.print_doc (string "  " ^^ print_tevar x ^^ space ^^ colon ^^
                                space ^^ print_scheme s);
