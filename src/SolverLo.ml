@@ -223,7 +223,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
            generalization engine also produces a list [generalizable] of the young
            variables that should be universally quantified here. *)
         let generalizable, ss = G.exit rectypes state vs in
-        (* JSTOLAREK: this deserves some proper debugging. What happens here is
+        (* JSTOLAREK: this deserves some proper debugging.  What happens here is
            that bogus skolems are being reported as being generalizable.  These
            skolems are introduced in the code just below when we check the let
            signature against the inferred type.  They don't show up anywhere in
@@ -235,6 +235,18 @@ let solve (rectypes : bool) (c : rawco) : unit =
         let generalizable = List.filter (fun v -> not (U.is_skolem v)) generalizable in
         (* Check that the signature, if present, is subtype of the inferred type
            scheme *)
+        (* JSTOLAREK:
+
+           - take all quantifiers in a signature and set their flag to skolem
+             (no need to traverse body)
+
+           - take just the body of the signature and just the body of solved v
+             and attempt to unify them.
+
+           - unskolemize the quantifiers in the signature
+
+           - remove duplicates from generalizable list
+          *)
         let ss = List.fold_right2 (fun s ((_, ov, _), sv) acc ->
             (* ov = original v, sv = solved v *)
             if ( U.has_structure ov ) then
