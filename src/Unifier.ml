@@ -56,7 +56,7 @@ and descriptor = {
 
   mutable rank : int;
 
-  skolem : bool;
+  mutable skolem : bool;
 
 }
 
@@ -89,6 +89,12 @@ let adjust_rank v k =
 
 let is_skolem v =
   (TUnionFind.find v).skolem
+
+let skolemize v =
+  (TUnionFind.find v).skolem <- true
+
+let unskolemize v =
+  (TUnionFind.find v).skolem <- false
 
 (* -------------------------------------------------------------------------- *)
 
