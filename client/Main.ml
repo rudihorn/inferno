@@ -599,6 +599,18 @@ let fml_id_annot_4 =
   ; typ  = Some (F.TyForall ((), F.TyArrow (F.TyVar 0, F.TyVar 0)))
   }
 
+(*
+   term : let id = λx.x in let (choose : ∀a b. a → b → b) = λx.λy.x in choose id
+   type : X
+*)
+let fml_id_annot_5 =
+  { name = "fml_id_annot_5"
+  ; term = ML.let_ ("id", ML.abs ("x", x),
+      ML.Let ("choose", Some ([1;2], TyArrow (TyVar 1, TyArrow (TyVar 2, TyVar 2))),
+                   ML.abs ("x", ML.abs ("y", x)), app choose id))
+  ; typ  = None
+  }
+
 
 let () =
   (* PLDI paper examples *)
@@ -627,4 +639,5 @@ let () =
   test fml_id_annot_1;
   test fml_id_annot_2;
   test fml_id_annot_3;
-  test fml_id_annot_4
+  test fml_id_annot_4;
+  test fml_id_annot_5
