@@ -2,7 +2,7 @@ open Client
 open F
 
 let verbose =
-  false
+  true
 
 (* -------------------------------------------------------------------------- *)
 
@@ -330,7 +330,7 @@ let a1_dot =
 
 (* example            : A2
    term               : choose id
-   inferred type      : INCORRECT ∀b. ∀a. a → b → b
+   inferred type      : ∀a. (a → a) → (a → a)
    type in PLDI paper : (a → a) → (a → a)
  *)
 let a2 =
@@ -343,7 +343,7 @@ let a2 =
 
 (* example            : A2∘
    term               : choose ~id
-   inferred type      : INCORRECT ∀a. a → ∀b. b → b
+   inferred type      : (∀ a. a → a) → (∀ a. a → a)
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
  *)
 let a2_dot =
@@ -421,7 +421,7 @@ let a6_dot =
 
 (* example            : A7
    term               : choose id auto
-   inferred type      : INCORRECT ∀ a. a → a
+   inferred type      : (∀ a. a → a) → (∀ a. a → a)
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
  *)
 let a7 =
@@ -434,7 +434,7 @@ let a7 =
 
 (* example            : A8
    term               : choose id auto'
-   inferred type      : rejected but for wrong reasons
+   inferred type      : X
    type in PLDI paper : X
  *)
 let a8 =
@@ -448,7 +448,7 @@ let a8 =
 
 (* example            : A10⋆
    term               : poly ~id
-   inferred type      : FAILED ASSERTION
+   inferred type      : Int × Bool
    type in PLDI paper : Int × Bool
  *)
 let a10_star =
@@ -460,7 +460,7 @@ let a10_star =
 
 (* example            : A11⋆
    term               : poly $(λx. x)
-   inferred type      : FAILED ASSERTION
+   inferred type      : Int × Bool
    type in PLDI paper : Int × Bool
  *)
 let a11_star =
@@ -472,7 +472,7 @@ let a11_star =
 
 (* example            : A12⋆
    term               : id poly $(λx. x)
-   inferred type      : FAILED ASSERTION
+   inferred type      : Int × Bool
    type in PLDI paper : Int × Bool
  *)
 let a12_star =
@@ -523,7 +523,7 @@ let fml_const_false =
    type : Int
 *)
 let fml_inst_1 =
-  { name = "expression instantiation"
+  { name = "inst_1"
   ; term = app (ML.let_ ("id", ML.abs ("x", x), id)) one
   ; typ  = Some TyInt
   }
@@ -533,7 +533,7 @@ let fml_inst_1 =
    type : Int
 *)
 let fml_inst_2 =
-  { name = "expression instantiation 2"
+  { name = "inst_2"
   ; term = (fml_id << fml_auto)
            (app (ML.let_ ("x", app auto (frozen "id"), x)) one)
   ; typ  = Some TyInt
@@ -544,7 +544,7 @@ let fml_inst_2 =
    type : ((∀ a. a → a) → (∀ a. a → a)) → Int
 *)
 let fml_nested_forall_inst =
-  { name = "nested quantifiers instantiation"
+  { name = "nested_forall_inst"
   ; term = fml_id (ML.Abs ("x",
       Some ([], F.TyArrow ( F.TyForall (1, F.TyArrow (F.TyVar 1, F.TyVar 1))
                           , F.TyForall (1, F.TyArrow (F.TyVar 1, F.TyVar 1)))),
@@ -561,7 +561,7 @@ let fml_nested_forall_inst =
    type : ∀ a. a → a
 *)
 let fml_id_annot_1 =
-  { name = "correct id let annotation"
+  { name = "id_annot_1"
   ; term = ML.Let ("id", Some ([1], TyArrow (TyVar 1, TyVar 1)), ML.abs ("x", x), id)
   ; typ  = Some (F.TyForall ((), F.TyArrow (F.TyVar 0, F.TyVar 0)))
   }
@@ -571,7 +571,7 @@ let fml_id_annot_1 =
    type : X
 *)
 let fml_id_annot_2 =
-  { name = "incorrect id let annotation"
+  { name = "id_annot_2"
   ; term = ML.Let ("id", Some ([1;2], TyArrow (TyVar 1, TyVar 2)), ML.abs ("x", x), id)
   ; typ  = None
   }
@@ -581,7 +581,7 @@ let fml_id_annot_2 =
    type : X
 *)
 let fml_id_annot_3 =
-  { name = "incorrect id let annotation 2"
+  { name = "id_annot_3"
   ; term = ML.Let ("id", Some ([1], TyArrow (TyVar 1, TyVar 1)),
                    ML.Abs ("x", Some ([], TyInt) , x), id)
   ; typ  = None
@@ -592,7 +592,7 @@ let fml_id_annot_3 =
    type : ∀ a. a → a
 *)
 let fml_id_annot_4 =
-  { name = "rebind id with annotation"
+  { name = "id_annot_4"
   ; term = ML.let_ ("id", ML.abs ("x", x),
       ML.Let ("y", Some ([1], TyArrow (TyVar 1, TyVar 1)),
                    frozen "id", y))
@@ -604,7 +604,7 @@ let fml_id_annot_4 =
    type : X
 *)
 let fml_id_annot_5 =
-  { name = "fml_id_annot_5"
+  { name = "id_annot_5"
   ; term = ML.let_ ("id", ML.abs ("x", x),
       ML.Let ("choose", Some ([1;2], TyArrow (TyVar 1, TyArrow (TyVar 2, TyVar 2))),
                    ML.abs ("x", ML.abs ("y", x)), app choose id))
