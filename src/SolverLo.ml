@@ -75,6 +75,14 @@ let print_scheme scheme =
        dot ^^ space ^^
        print_var (G.body scheme)
 
+(* -------------------------------------------------------------------------- *)
+
+
+let rec unduplicate equal = function
+  | [] -> []
+  | elem :: elems -> (let _, others = List.partition (equal elem) elems in
+                      elem :: unduplicate equal others)
+
 
 (* -------------------------------------------------------------------------- *)
 
@@ -256,11 +264,13 @@ let solve (rectypes : bool) (c : rawco) : unit =
                    string "Annotation: " ^^ print_var ov ^^ hardline ^^
                    string "Inferred  : " ^^ print_var sv ^^ hardline ^^
                    string "Scheme    : " ^^ print_scheme s) );
-                let v = snd (G.instantiate_with_skolems state (G.scheme ov)) in
-                let i = snd (G.instantiate state s) in
-                debug_unify_before (string "Unifying let annotation with inferred type of let body.") v i;
-                U.unify v i;
-                debug_unify_after v;
+                let ovs = G.scheme ov in
+                List.iter U.skolemize (G.quantifiers ovs);
+                debug_unify_before (string "Unifying let annotation with inferred type of let body.")
+                  (G.body ovs) (G.body s);
+                U.unify (G.body ovs) (G.body s);
+                debug_unify_after (G.body ovs);
+                List.iter U.unskolemize (G.quantifiers ovs);
                 G.scheme ov :: acc
               end
             else
@@ -268,6 +278,9 @@ let solve (rectypes : bool) (c : rawco) : unit =
                 s :: acc
               end
           ) ss (List.combine xvss vs) [] in
+        (* Remove duplicate generalizable variables.  These can be introduced
+           when unifying the inferred type with signature *)
+        let generalizable = unduplicate U.equivalent generalizable in
         (* Fill the write-once reference [generalizable_hook]. *)
         WriteOnceRef.set generalizable_hook generalizable;
         (* Extend the environment [env] and fill the write-once references
