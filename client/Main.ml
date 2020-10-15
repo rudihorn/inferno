@@ -631,6 +631,83 @@ let f10_dagger =
                           TyForall ((), TyArrow (TyVar 0, TyVar 0))))
   }
 
+(* Bad examples *)
+
+(* example            : bad1
+   term               : λf.(poly ~f, f 1)
+   inferred type      : INCORRECT: Exception
+   type in PLDI paper : X
+ *)
+let bad1 =
+  { name = "bad1"
+  ; term = (fml_poly)
+           (abs "f" (ML.Pair (app poly (frozen "f"), app (var "f") one)))
+  ; typ  = None
+  }
+
+(* example            : bad2
+   term               : λf.(f 1, poly ~f)
+   inferred type      : INCORRECT: Exception
+   type in PLDI paper : X
+ *)
+let bad2 =
+  { name = "bad2"
+  ; term = (fml_poly)
+           (abs "f" (ML.Pair (app (var "f") one, app poly (frozen "f"))))
+  ; typ  = None
+  }
+
+(* example            : bad3
+   term               : λ(bot : ∀ a. a). let f = bot bot in (poly ~f, f 1)
+   inferred type      : INCORRECT: segmentation fault
+   type in PLDI paper : X
+ *)
+let bad3 =
+  { name = "bad3"
+  ; term = (fml_poly)
+           (ML.Abs ("bot", Some ([1], F.TyVar 1),
+                    ML.let_ ("f", app (var "bot") (var "bot"),
+                             (ML.Pair (app (var "f") one, app poly (frozen "f"))))))
+  ; typ  = None
+  }
+
+(* example            : bad4
+   term               : λ(bot : ∀ a. a). let f = bot bot in (f 1, poly ~f)
+   inferred type      : INCORRECT: segmentation fault
+   type in PLDI paper : X
+ *)
+let bad4 =
+  { name = "bad4"
+  ; term = (fml_poly)
+           (ML.Abs ("bot", Some ([1], F.TyVar 1),
+                    ML.let_ ("f", app (var "bot") (var "bot"),
+                             (ML.Pair (app poly (frozen "f"), app (var "f") one)))))
+  ; typ  = None
+  }
+
+(* example            : bad5
+   term               : let f = λx.x in ~f 1
+   inferred type      : X
+   type in PLDI paper : X
+ *)
+let bad5 =
+  { name = "bad5"
+  ; term = ML.let_ ("f", abs "x" x, app (frozen "f") one)
+  ; typ  = None
+  }
+
+(* example            : bad6
+   term               : let f = λx.x in id ~f 1
+   inferred type      : X
+   type in PLDI paper : X
+ *)
+let bad6 =
+  { name = "bad6"
+  ; term = (fml_id)
+           (ML.let_ ("f", abs "x" x, app (app id (frozen "f")) one))
+  ; typ  = None
+  }
+
 
 (* Examples that were not in the PLDI paper *)
 
@@ -792,6 +869,17 @@ let () =
 
   test f9;
   test f10_dagger;
+
+(*
+  test bad1;
+  test bad2;
+*)
+(* JSTOLAREK: these cause segmentation fault
+  test bad3;
+  test bad4;
+*)
+  test bad5; (* JSTOLAREK: verify that these fails for the right reason *)
+  test bad6;
 
   (* Other examples *)
   test fml_id_to_int;
