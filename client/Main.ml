@@ -291,6 +291,16 @@ let fml_zero k = ML.let_ ("zero", ML.Abs ("x", Some ([], F.TyInt), ML.Int 0), k)
 let fml_poly k = ML.let_ ("poly", ML.Abs ("f", forall_a_a_to_a,
    ML.Pair (app f one, app f (ML.Bool true))), k)
 
+(* pair : forall a b. a -> b -> (a × b) *)
+let fml_pair k = ML.Let ("pair",
+  Some ([1;2], F.TyArrow (F.TyVar 1, F.TyArrow (F.TyVar 2, F.TyProduct (F.TyVar 1, F.TyVar 2)))),
+  ML.abs ("x", (ML.abs ("y", ML.Pair (x, y)))), k)
+
+(* pair' : forall b a. a -> b -> (a × b) *)
+let fml_pairprim k = ML.Let ("pair'",
+  Some ([2;1], F.TyArrow (F.TyVar 1, F.TyArrow (F.TyVar 2, F.TyProduct (F.TyVar 1, F.TyVar 2)))),
+  ML.abs ("x", (ML.abs ("y", ML.Pair (x, y)))), k)
+
 let env k = (
     fml_id       <<
     fml_choose   <<
@@ -299,10 +309,19 @@ let env k = (
     fml_app      <<
     fml_revapp   <<
     fml_zero     <<
-    fml_poly
+    fml_poly     <<
+    fml_pair     <<
+    fml_pairprim
   ) k
 
-(* Polymorphic instantiation *)
+(* Test basic well-formedness of functions in the environment *)
+let env_test =
+  { name = "env_test"
+  ; term = env (ML.Int 1)
+  ; typ  = Some TyInt
+  }
+
+(* PLDI paper examples *)
 
 (* example            : A1
    term               : λx y.y
@@ -613,6 +632,7 @@ let fml_id_annot_5 =
 
 
 let () =
+  test env_test;
   (* PLDI paper examples *)
   test a1;
   test a1_dot;
