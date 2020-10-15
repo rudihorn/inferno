@@ -518,6 +518,71 @@ let b1_star =
                           TyProduct (TyInt, TyBool)))
   }
 
+(* MISSING : B2⋆: λ(xs : List (∀ a. a → a)). poly (head xs) *)
+
+
+(* Section C : Functions on Polymorphic Lists *)
+
+(* MISSING: whole section, because lists are not supported *)
+
+
+(* Section D : Application Functions *)
+
+(* example            : D1⋆
+   term               : app poly ~id
+   inferred type      : Int × Bool
+   type in PLDI paper : Int × Bool
+ *)
+let d1_star =
+  { name = "D1⋆"
+  ; term = (fml_app << fml_poly << fml_id)
+           (app (app (var "app") poly) (frozen "id"))
+  ; typ  = Some (TyProduct (TyInt, TyBool))
+  }
+
+(* example            : D2⋆
+   term               : revapp ~id poly
+   inferred type      : Int × Bool
+   type in PLDI paper : Int × Bool
+ *)
+let d2_star =
+  { name = "D2⋆"
+  ; term = (fml_revapp << fml_poly << fml_id)
+           (app (app (var "revapp") (frozen "id")) poly)
+  ; typ  = Some (TyProduct (TyInt, TyBool))
+  }
+
+(* MISSING : D3⋆: runST ~argST *)
+
+(* MISSING : D4⋆: app runST ~argST *)
+
+(* MISSING : D5⋆: revapp ~argST runST *)
+
+
+(* Section E : η-expansion *)
+
+(* MISSING: E1: k h l *)
+
+(* MISSING: E2⋆: k $(λx.(h x)@) l
+     where: k : ∀ a. a → List a → a
+            h : Int → ∀ a. a → a
+            l : List (∀ a. Int → a → a)
+ *)
+
+(* example            : E3
+   term               : let r : (∀ a. a → (∀ b. b → b)) → Int = λx.1 in r (λx.λy.y)
+   inferred type      : ?
+   type in PLDI paper : X
+ *)
+(*
+let e3_star =
+  { name = "E3"
+  ; term = ML.Let ("r", , ML.abs ("x", one), app (var "r", ML.abs ()) )
+  ; typ  = None
+  }
+*)
+
+
 
 (* Examples that were not in the PLDI paper *)
 
@@ -668,6 +733,9 @@ let () =
   test a12_star;
 
   test b1_star;
+
+  test d1_star;
+  test d2_star;
 
   (* Other examples *)
   test fml_id_to_int;
