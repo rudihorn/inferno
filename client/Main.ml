@@ -321,7 +321,9 @@ let env_test =
   ; typ  = Some TyInt
   }
 
-(* PLDI paper examples *)
+(* PLDI paper examples (Figure 2) *)
+
+(* Section A: Polymorphic instantiation *)
 
 (* example            : A1
    term               : λx y.y
@@ -501,6 +503,22 @@ let a12_star =
   ; typ  = Some (TyProduct (TyInt, TyBool))
   }
 
+(* Section B : Inference with Polymorphic arguments *)
+
+(* example            : B1⋆
+   term               : λ(f : ∀ a. a → a). (f 1, f True)
+   inferred type      : (∀ a. a → a) → Int × Bool
+   type in PLDI paper : (∀ a. a → a) → Int × Bool
+ *)
+let b1_star =
+  { name = "B1⋆"
+  ; term = ML.Abs ("f", forall_a_a_to_a, ML.Pair (app f one,
+                                                  app f (ML.Bool true)))
+  ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
+                          TyProduct (TyInt, TyBool)))
+  }
+
+
 (* Examples that were not in the PLDI paper *)
 
 (* This was causing an exception in FTypeChecker because I didn't extend type
@@ -648,6 +666,8 @@ let () =
   test a10_star;
   test a11_star;
   test a12_star;
+
+  test b1_star;
 
   (* Other examples *)
   test fml_id_to_int;
