@@ -574,17 +574,62 @@ let d2_star =
 
 (* example            : E3
    term               : let r : (∀ a. a → (∀ b. b → b)) → Int = λx.1 in r (λx.λy.y)
-   inferred type      : ?
+   inferred type      : X
    type in PLDI paper : X
  *)
-(*
-let e3_star =
+let e3 =
   { name = "E3"
-  ; term = ML.Let ("r", , abs "x" one, app (var "r", ML.abs ()) )
+  ; term = ML.Let ("r", Some ([], F.TyArrow (F.TyForall (1, F.TyArrow (F.TyVar 1,
+                          F.TyForall (2, F.TyArrow (F.TyVar 2, F.TyVar 2)))), F.TyInt)),
+                        abs "x" one,
+                   app (var "r") (abs "x" (abs "y" y)))
   ; typ  = None
   }
-*)
 
+(* example            : E3∘
+   term               : let r : (∀ a. a → (∀ b. b → b)) → Int = λx.1 in r $(λx.$(λy.y))
+   inferred type      : FAILING WITH EXCEPTION
+   type in PLDI paper : Int
+ *)
+let e3_dot =
+  { name = "E3∘"
+  ; term = ML.Let ("r", Some ([], F.TyArrow (F.TyForall (1, F.TyArrow (F.TyVar 1,
+                          F.TyForall (2, F.TyArrow (F.TyVar 2, F.TyVar 2)))), F.TyInt)),
+                        abs "x" one,
+                   app (var "r") (ML.gen (abs "x" (ML.gen (abs "y" y)))))
+  ; typ  = Some TyInt
+  }
+
+(* Section F : FreezeML Programs *)
+
+(* MISSING: F1-F8.  Either already implemented in previous examples or not
+   possible to implement due to lack of support for lists *)
+
+(* example            : F9
+   term               : let f = revapp ~id in f poly
+   inferred type      : Int × Bool
+   type in PLDI paper : Int × Bool
+ *)
+let f9 =
+  { name = "F9"
+  ; term = (fml_revapp << fml_id << fml_poly)
+           (ML.let_ ("f", app (var "revapp") (frozen "id"), app (var "f") poly))
+  ; typ  = Some (TyProduct (TyInt, TyBool))
+  }
+
+(* example            : F10†
+   term               : choose id (λ(x : ∀ a. a → a). $(auto' x))
+   inferred type      : INCORRECT: X
+   type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
+ *)
+let f10_dagger =
+  { name = "F10†"
+  ; term = (fml_choose << fml_id << fml_autoprim)
+           (app (app choose id) (ML.Abs ("x", forall_a_a_to_a,
+                                         ML.gen (app (var "auto'") x))))
+  ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
+                          TyForall ((), TyArrow (TyVar 0, TyVar 0))))
+  }
 
 
 (* Examples that were not in the PLDI paper *)
@@ -739,6 +784,14 @@ let () =
 
   test d1_star;
   test d2_star;
+
+  test e3; (* JSTOLAREK: investigate failing assertion in generalize *)
+(*
+  test e3_dot;
+*)
+
+  test f9;
+  test f10_dagger;
 
   (* Other examples *)
   test fml_id_to_int;
