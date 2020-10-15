@@ -231,18 +231,24 @@ let solve (rectypes : bool) (c : rawco) : unit =
            generalization engine also produces a list [generalizable] of the young
            variables that should be universally quantified here. *)
         let generalizable, ss = G.exit rectypes state vs in
-        (* JSTOLAREK:
+        (* Check the inferred type scheme against the type annotation or accept
+           the inferred type if no annotation present.  Checking algorithm:
 
-           - take all quantifiers in a signature and set their flag to skolem
-             (no need to traverse body)
+           - skolemize quantifiers in the signature.  This is a stateful
+             operation, so all occurrences of quantifiers in the body become
+             skolems
 
-           - take just the body of the signature and just the body of solved v
-             and attempt to unify them.
+           - unify body of signature with body of inferred type scheme.  This
+             updates type annotations inside the body of a bound term to match
+             the types in the annotation (importantly, it unifies types that
+             should be equal).  If unification fails it means that the type
+             annotation is not an instance of inferred type.
 
-           - unskolemize the quantifiers in the signature
+           - unskolemize variables in the type signature
 
-           - remove duplicates from generalizable list
-          *)
+           - reorder quantifiers in the inferred scheme to match the signature
+
+         *)
         let ss = List.fold_right2 (fun s ((_, ov, _), sv) acc ->
             (* ov = original v, sv = solved v *)
             if ( U.has_structure ov ) then
