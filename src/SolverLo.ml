@@ -83,7 +83,6 @@ let rec unduplicate equal = function
   | elem :: elems -> (let _, others = List.partition (equal elem) elems in
                       elem :: unduplicate equal others)
 
-
 (* -------------------------------------------------------------------------- *)
 
 (* The syntax of constraints is as follows. *)
@@ -245,9 +244,6 @@ let solve (rectypes : bool) (c : rawco) : unit =
              annotation is not an instance of inferred type.
 
            - unskolemize variables in the type signature
-
-           - reorder quantifiers in the inferred scheme to match the signature
-
          *)
         let ss = List.fold_right2 (fun s ((_, ov, _), sv) acc ->
             (* ov = original v, sv = solved v *)
@@ -268,9 +264,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
                 G.scheme ov :: acc
               end
             else
-              begin
                 s :: acc
-              end
           ) ss (List.combine xvss vs) [] in
         (* Remove duplicate generalizable variables.  These can be introduced
            when unifying the inferred type with signature *)
