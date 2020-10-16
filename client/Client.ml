@@ -225,6 +225,16 @@ let product_i i x y =
   else
     product y x
 
+(* Ensures that all elements of xs appearing in ys appear at the front and in
+   the same order *)
+let rec align_order equal xs ys = match xs, ys with
+  | [], _ -> ys
+  | _, [] -> []
+  | x :: xs, _ ->
+     let equals, others = List.partition (equal x) ys in
+     List.append equals (align_order equal xs others)
+
+
 (* JSTOLAREK: coercions unused at the moment.  Drop them altogether? *)
 
 (* Should we use smart constructors to eliminate redundant coercions when possible? *)
@@ -402,6 +412,13 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
          coercion to [x]. We use smart constructors so that, if the lists [a] and
          [b] happen to be equal, no extra code is produced. *)
 
+         (* JSTOLAREK: delete this, debugging only
+           Inferno.Debug.print_doc PPrint.(string "a: " ^^ (separate comma
+             (List.map (fun x -> string (string_of_int x)) a)));
+           Inferno.Debug.print_doc PPrint.(string "b: " ^^ (separate comma
+             (List.map (fun x -> string (string_of_int x)) b)));
+         *)
+
       (* JSTOLAREK: The above no longer holds in FreezeML.  Consider:
 
            let x = auto ~id in ...
@@ -410,7 +427,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
          the body of bound term (therefore [a] is empty) but [x] has the type
          scheme [forall a. a -> a], making [b] non-empty. *)
 
-      F.Let (x, F.ftyabs a t', u')
+      F.Let (x, F.ftyabs (align_order (==) b a) t', u')
 (* END HASTYPE *)
 
     (* Pair. *)
