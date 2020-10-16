@@ -296,7 +296,6 @@ let forall_a_a_to_a = Some ([1], F.TyArrow (F.TyVar 1, F.TyVar 1))
 let (<<) f g x = f(g(x))
 
 (* Environment with some functions from Figure 2 *)
-(* JSTOLAREK: implementing pair and pair' requires annotations on let *)
 
 (* id : forall a. a -> a *)
 let fml_id k = ML.let_ ("id", abs "x" x, k)
@@ -872,7 +871,6 @@ let fml_id_annot_5 =
   ; typ  = None
   }
 
-
 (*
    term : λx. choose ~id x
    type : X
@@ -881,6 +879,34 @@ let fml_mono_binder_constraint =
   { name = "mono_binder_constraint"
   ; term = (fml_choose << fml_id)
            (abs "x" (app (app choose (frozen "id")) x))
+  ; typ  = None
+  }
+
+(*
+   term : (λ(f : ∀ a b. a → b → (a × b)). f one true) pair
+   type : Int × Bool
+*)
+let fml_quantifier_ordering_1 =
+  { name = "quantifier_ordering_1"
+  ; term = (fml_pair)
+           (app (ML.Abs ("f", Some ([1;2], TyArrow (TyVar 1, TyArrow (TyVar 2,
+                                           TyProduct (TyVar 1, TyVar 2))))
+                            , app (app (var "f") one) (ML.Bool true)))
+                (var "pair"))
+  ; typ  = Some (TyProduct (TyInt, TyBool))
+  }
+
+(*
+   term : (λ(f : ∀ a b. a → b → (a × b)). f one true) pair'
+   type : X
+*)
+let fml_quantifier_ordering_2 =
+  { name = "quantifier_ordering_2"
+  ; term = (fml_pairprim)
+           (app (ML.Abs ("f", Some ([1;2], TyArrow (TyVar 1, TyArrow (TyVar 2,
+                                           TyProduct (TyVar 1, TyVar 2))))
+                            , app (app (var "f") one) (ML.Bool true)))
+                (var "pair'"))
   ; typ  = None
   }
 
@@ -937,4 +963,6 @@ let () =
   test fml_id_annot_3;
   test fml_id_annot_4;
   test fml_id_annot_5;
-  test fml_mono_binder_constraint
+  test fml_mono_binder_constraint;
+  test fml_quantifier_ordering_1;
+  test fml_quantifier_ordering_2
