@@ -74,16 +74,21 @@ let print_type ty =
 let print_ml_term m =
   PPrint.(ToChannel.pretty 0.9 80 stdout (MLPrinter.print_term m ^^ hardline))
 
+type 'a result =
+  | WellTyped of 'a
+  | IllTyped
+  | ImplementationBug
+
 let translate log t =
   try
-    Some (Client.translate t)
+    WellTyped (Client.translate t)
   with
   | Client.Cycle ty ->
      log_action log (fun () ->
         Printf.fprintf stdout "Type error: a cyclic type arose.\n";
         print_type ty
        );
-     None
+     IllTyped
   | Client.Unify (ty1, ty2) ->
      log_action log (fun () ->
         Printf.fprintf stdout "Type error: type mismatch.\n";
@@ -94,7 +99,7 @@ let translate log t =
         Printf.fprintf stdout "when translating the term:\n";
         print_ml_term t
        );
-     None
+     IllTyped
   | Client.UnifySkolem (ty1, ty2) ->
      log_action log (fun () ->
         Printf.fprintf stdout "Type error: type mismatch.\n";
@@ -105,7 +110,19 @@ let translate log t =
         Printf.fprintf stdout "when translating the term:\n";
         print_ml_term t
        );
-     None
+     IllTyped
+  (* JSTOLAREK: other exceptions are thrown due to bugs in the implementation.
+     I'm catching them here to simplify testing by not having to comment out
+     failing test cases.  No exceptions should ever happen in a correct
+     implementation (other than Client exceptions which are used to communicate
+     typechecking errors). *)
+  | exn ->
+     log_action log (fun () ->
+        Printf.fprintf stdout "Implementation bug.\n";
+        Printf.fprintf stdout "%s\n" (Printexc.to_string exn);
+        Printf.fprintf stdout "%s" (Printexc.get_backtrace ());
+       );
+     ImplementationBug
 
 (* -------------------------------------------------------------------------- *)
 
@@ -127,15 +144,17 @@ let test { name; term; typ } : unit =
       (translate log) term
   in
   match outcome, typ with
-  | None, None ->
+  | IllTyped, None ->
       (* Term is ill typed and is expected to be as such *)
      log_action log (fun () ->
          Printf.printf "Example %s was rejected by the typechecker as expected.\n" name;
        );
      if verbose then
        print_log log;
-     Printf.printf "\027[32mExample %s works as expected\027[0m\n" name; flush stdout
-  | Some (t : F.nominal_term), Some exp_ty ->
+     Printf.printf "\027[32mExample %s works as expected\027[0m\n" name;
+     flush stdout
+
+  | WellTyped (t : F.nominal_term), Some exp_ty ->
       log_action log (fun () ->
         Printf.printf "Formatting the System F term...\n%!";
         let doc = PPrint.(string "  " ^^ nest 2 (FPrinter.print_term t) ^^ hardline) in
@@ -175,19 +194,22 @@ let test { name; term; typ } : unit =
       if ( exp_ty = ty ) then
         Printf.printf "\027[32mExample %s works as expected\027[0m\n" name
       else
-        Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name
+        Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name;
+     flush stdout
 
-  | None, Some exp_ty ->
+  | IllTyped, Some exp_ty ->
      log_action log (fun () ->
-         Printf.printf "Example %s expected to have a type:" name;
+         Printf.printf "Example %s expected to have a type:\n" name;
          let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type exp_ty ^^ hardline) in
          PPrint.ToChannel.pretty 0.9 80 stdout doc;
          Printf.printf "but was determined ill-typed.\n";
        );
      if verbose then
        print_log log;
-     Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name
-  | Some t, None ->
+     Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name;
+     flush stdout
+
+  | WellTyped t, None ->
       log_action log (fun () ->
         Printf.printf "Formatting the System F term...\n%!";
         let doc = PPrint.(string "  " ^^ nest 2 (FPrinter.print_term t) ^^ hardline) in
@@ -212,7 +234,19 @@ let test { name; term; typ } : unit =
         );
       if verbose then
         print_log log;
-      Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name
+      Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name;
+     flush stdout
+
+  | ImplementationBug, _ ->
+     (* Typechecking caused an exception *)
+     log_action log (fun () ->
+         Printf.printf "Example %s triggered an implementation bug!\n" name;
+       );
+     if verbose then
+       print_log log;
+     Printf.printf "\027[31mExample does not %s work as expected\027[0m\n" name;
+     flush stdout
+
 
 (* -------------------------------------------------------------------------- *)
 
@@ -875,17 +909,15 @@ let () =
   test d2_star;
 
   test e3; (* JSTOLAREK: investigate failing assertion in generalize *)
-(* JSTOLAREK: causes exception
-  test e3_dot;
-*)
+  test e3_dot; (* JSTOLAREK: causes exception *)
 
   test f9;
   test f10_dagger;
 
-(* JSTOLAREK: these cause exception
+(* JSTOLAREK: these cause exception *)
   test bad1;
   test bad2;
-*)
+
 (* JSTOLAREK: these cause segmentation fault
   test bad3;
   test bad4;
