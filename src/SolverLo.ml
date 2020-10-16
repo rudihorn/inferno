@@ -199,6 +199,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
         debug_unify_after v
     | CDef (x, v, c) ->
        let scheme = G.scheme v in
+       List.iter U.skolemize (G.quantifiers scheme);
        Debug.print_doc (
            string "Adding binding " ^^ dquote ^^ (print_tevar x) ^^
            dquote ^^ string " with type scheme " ^^ print_scheme scheme);
