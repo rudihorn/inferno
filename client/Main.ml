@@ -839,6 +839,18 @@ let fml_id_annot_5 =
   }
 
 
+(*
+   term : λx. choose ~id x
+   type : X
+*)
+let fml_mono_binder_constraint =
+  { name = "mono_binder_constraint"
+  ; term = (fml_choose << fml_id)
+           (abs "x" (app (app choose (frozen "id")) x))
+  ; typ  = None
+  }
+
+
 let () =
   test env_test;
   (* PLDI paper examples *)
@@ -863,14 +875,14 @@ let () =
   test d2_star;
 
   test e3; (* JSTOLAREK: investigate failing assertion in generalize *)
-(*
+(* JSTOLAREK: causes exception
   test e3_dot;
 *)
 
   test f9;
   test f10_dagger;
 
-(*
+(* JSTOLAREK: these cause exception
   test bad1;
   test bad2;
 *)
@@ -878,7 +890,7 @@ let () =
   test bad3;
   test bad4;
 *)
-  test bad5; (* JSTOLAREK: verify that these fails for the right reason *)
+  test bad5; (* JSTOLAREK: verify that these two fail for the right reason *)
   test bad6;
 
   (* Other examples *)
@@ -892,4 +904,5 @@ let () =
   test fml_id_annot_2;
   test fml_id_annot_3;
   test fml_id_annot_4;
-  test fml_id_annot_5
+  test fml_id_annot_5;
+  test fml_mono_binder_constraint
