@@ -811,8 +811,8 @@ let fml_nested_forall_inst =
       app (ML.inst (app x (frozen "id"))) one))
   ; typ  = Some
       (TyArrow
-        (TyArrow ( F.TyForall ((), F.TyArrow (F.TyVar 0, F.TyVar 0))
-                 , F.TyForall ((), F.TyArrow (F.TyVar 0, F.TyVar 0))), TyInt))
+        (TyArrow ( TyForall ((), TyArrow (TyVar 0, TyVar 0))
+                 , TyForall ((), TyArrow (TyVar 0, TyVar 0))), TyInt))
   }
 
 (* Correctness of type annotations on let binders *)
@@ -823,7 +823,7 @@ let fml_nested_forall_inst =
 let fml_id_annot_1 =
   { name = "id_annot_1"
   ; term = ML.Let ("id", Some ([1], TyArrow (TyVar 1, TyVar 1)), abs "x" x, id)
-  ; typ  = Some (F.TyForall ((), F.TyArrow (F.TyVar 0, F.TyVar 0)))
+  ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
   }
 
 (*
@@ -856,7 +856,7 @@ let fml_id_annot_4 =
   ; term = ML.let_ ("id", abs "x" x,
       ML.Let ("y", Some ([1], TyArrow (TyVar 1, TyVar 1)),
                    frozen "id", y))
-  ; typ  = Some (F.TyForall ((), F.TyArrow (F.TyVar 0, F.TyVar 0)))
+  ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
   }
 
 (*
@@ -883,7 +883,7 @@ let fml_mono_binder_constraint =
   }
 
 (*
-   term : (λ(f : ∀ a b. a → b → (a × b)). f one true) pair
+   term : (λ(f : ∀ a b. a → b → (a × b)). f 1 true) ~pair
    type : Int × Bool
 *)
 let fml_quantifier_ordering_1 =
@@ -892,12 +892,12 @@ let fml_quantifier_ordering_1 =
            (app (ML.Abs ("f", Some ([1;2], TyArrow (TyVar 1, TyArrow (TyVar 2,
                                            TyProduct (TyVar 1, TyVar 2))))
                             , app (app (var "f") one) (ML.Bool true)))
-                (var "pair"))
+                (frozen "pair"))
   ; typ  = Some (TyProduct (TyInt, TyBool))
   }
 
 (*
-   term : (λ(f : ∀ a b. a → b → (a × b)). f one true) pair'
+   term : (λ(f : ∀ a b. a → b → (a × b)). f 1 true) ~pair'
    type : X
 *)
 let fml_quantifier_ordering_2 =
@@ -906,8 +906,21 @@ let fml_quantifier_ordering_2 =
            (app (ML.Abs ("f", Some ([1;2], TyArrow (TyVar 1, TyArrow (TyVar 2,
                                            TyProduct (TyVar 1, TyVar 2))))
                             , app (app (var "f") one) (ML.Bool true)))
-                (var "pair'"))
+                (frozen "pair'"))
   ; typ  = None
+  }
+
+(*
+   term : let (x : (∀ a. a → a) → Int) = λ(f : ∀ a. a → a). f 1 in 1
+   type : Int
+*)
+let fml_type_annotations_1 =
+  { name = "type_annotations_1"
+  ; term = ML.Let ("x",
+                   Some ([], TyArrow (TyForall (1, TyArrow (TyVar 1, TyVar 1)),
+                                      TyInt)),
+                   ML.Abs ("f", forall_a_a_to_a, app (var "f") one), one)
+  ; typ  = Some TyInt
   }
 
 
@@ -965,4 +978,5 @@ let () =
   test fml_id_annot_5;
   test fml_mono_binder_constraint;
   test fml_quantifier_ordering_1;
-  test fml_quantifier_ordering_2
+  test fml_quantifier_ordering_2;
+  test fml_type_annotations_1
