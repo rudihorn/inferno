@@ -386,9 +386,9 @@ let new_decoder rectypes =
 
 (* The function [decode_scheme] is parameterized by a type decoder, [decode]. *)
 
-let decode_scheme decode (s : ischeme) : O.scheme =
-  List.map decode_variable (G.quantifiers s),
-  decode (G.body s)
+let decode_scheme decode (s : ischeme) : O.ty =
+  O.forall (List.map decode_variable (G.quantifiers s))
+    (decode (G.body s))
 
 end
 

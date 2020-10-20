@@ -109,7 +109,8 @@ let (^^) (rc1, k1) (rc2, k2) =
 
 (* This function converts a type signature to a structure of a unifier variable.
    It assumes every variable in the signature is generic. *)
-let rec annotation_to_structure ((qs, body) : O.scheme) : Lo.variable S.structure =
+let rec annotation_to_structure (t : O.ty) : Lo.variable S.structure =
+  let (qs, body) = O.to_scheme t in
   let env = List.fold_left
               (fun env q -> O.TyVarMap.add q (Lo.fresh_generic None) env)
               O.TyVarMap.empty qs in

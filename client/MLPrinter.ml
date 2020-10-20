@@ -2,6 +2,7 @@
 
 open PPrint
 open Client.ML
+open Client
 
 (* -------------------------------------------------------------------------- *)
 
@@ -13,10 +14,10 @@ let print_qs (qs : int list) =
   let qs = List.map (fun f -> string (string_of_int f)) qs in
   separate comma qs
 
-let print_type (qs, ty) =
-  match qs with
-  | [] -> FPrinter.print_type ty
-  | _  ->
+let print_type ty =
+  match O.to_scheme ty with
+  | ([], _) -> FPrinter.print_type ty
+  | (qs, ty)  ->
      string "forall " ^^
      print_qs qs ^^
      dot ^^ space ^^

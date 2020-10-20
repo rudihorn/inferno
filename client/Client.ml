@@ -116,6 +116,10 @@ module O = struct
   let variable x =
     F.TyVar x
 
+  let forall qs body = match qs with
+    | [] -> body
+    | _  -> List.fold_right (fun q t -> F.TyForall (q, t)) qs body
+
   let structure t =
     match t with
     | S.TyArrow (t1, t2) ->
@@ -132,7 +136,7 @@ module O = struct
       | F.TyVar v              -> TyVarMap.find v env
       | F.TyArrow   (ty1, ty2) -> fresh (S.TyArrow   (go ty1, go ty2))
       | F.TyProduct (ty1, ty2) -> fresh (S.TyProduct (go ty1, go ty2))
-      | F.TyForall (q, ty)     -> fresh (callback ([q], ty))
+      | F.TyForall _           -> fresh (callback ty)
       | F.TyInt                -> fresh S.TyInt
       | F.TyBool               -> fresh S.TyBool
       | F.TyMu _               -> assert false
@@ -144,7 +148,7 @@ module O = struct
     | F.TyVar v              -> assert false (* Unbound variables not allowed *)
     | F.TyArrow (ty1, ty2)   -> S.TyArrow   (to_variable ty1, to_variable ty2)
     | F.TyProduct (ty1, ty2) -> S.TyProduct (to_variable ty1, to_variable ty2)
-    | F.TyForall (q, ty)     -> callback ([q], ty)
+    | F.TyForall _           -> callback body
     | F.TyInt                -> S.TyInt
     | F.TyBool               -> S.TyBool
     | F.TyMu _               -> assert false
@@ -152,13 +156,16 @@ module O = struct
   let mu x t =
     F.TyMu (x, t)
 
-  type scheme =
-    tyvar list * ty
+  let rec to_scheme = function
+    | F.TyForall (q, body) ->
+       let (qs, body) = to_scheme body in
+       (q :: qs,  body)
+    | t                     -> ([], t)
 
 end
 
 module ML = struct
-  type ty = O.scheme
+  type ty    = O.ty
   type tevar = string
 
   (* Fresh tevar names *)
@@ -408,7 +415,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
       (* Construct a ``let'' constraint. *)
       let1 x ty (hastype t)
         (hastype u w)
-      <$$> fun ((b, _), a, t', u') ->
+      <$$> fun (t, a, t', u') ->
       (* [a] are the type variables that we must introduce (via Lambda-abstractions)
          while type-checking [t]. [(b, _)] is the type scheme that [x] must receive
          while type-checking [u]. Its quantifiers [b] are guaranteed to form a subset of
@@ -430,6 +437,8 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
          There is no need to bind any type variables using Lambda-abstraction in
          the body of bound term (therefore [a] is empty) but [x] has the type
          scheme [forall a. a -> a], making [b] non-empty. *)
+
+      let (b, _) = O.to_scheme t in
 
       F.Let (x, F.ftyabs (align_order (==) b a) t', u')
 (* END HASTYPE *)

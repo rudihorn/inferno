@@ -134,7 +134,7 @@ module Make
 
   (* The function [decode_scheme] decodes a type scheme. It is parameterized
      with a type decoder. *)
-  val decode_scheme: decoder -> ischeme -> scheme
+  val decode_scheme: decoder -> ischeme -> ty
 
 (* END *)
 end

@@ -56,12 +56,13 @@ module type OUTPUT = sig
      the type [ty]. *)
   type ty
 
-  (* A decoded type scheme consists of a list of quantifiers and a body. *)
-  type scheme = tyvar list * ty
-
   (* [variable v] is a representation of the type variable [v] as a decoded
      type. In other words, [variable] is an injection of [tyvar] into [ty]. *)
   val variable: tyvar -> ty
+
+  val forall: tyvar list -> ty -> ty
+
+  val to_scheme : ty -> tyvar list * ty
 
   (* [structure t] turns [t], an application of type constructor to children
      of type [ty], into something of type [ty]. In other words, when [variable]
@@ -69,10 +70,10 @@ module type OUTPUT = sig
      of the functor [\X. tyvar + t X]. *)
   val structure: ty structure -> ty
 
-  val to_variable : (scheme -> 'a structure) -> ('a structure -> 'a)
+  val to_variable : (ty -> 'a structure) -> ('a structure -> 'a)
                  -> 'a TyVarMap.t -> ty -> 'a
 
-  val to_structure: (scheme -> 'a structure) -> ('a structure -> 'a)
+  val to_structure: (ty -> 'a structure) -> ('a structure -> 'a)
                  -> 'a TyVarMap.t -> ty -> 'a structure
 
   (* If [v] is a type variable and [t] is a type, then [mu v t] is a
