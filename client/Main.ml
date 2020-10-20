@@ -244,7 +244,7 @@ let test { name; term; typ } : unit =
        );
      if verbose then
        print_log log;
-     Printf.printf "\027[31mExample does not %s work as expected\027[0m\n" name;
+     Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name;
      flush stdout
 
 
@@ -923,6 +923,16 @@ let fml_type_annotations_1 =
   ; typ  = Some TyInt
   }
 
+(*
+   term : let id = λx.x in ~id 1
+   type : ∀ a. a → a
+*)
+let fml_id_appl =
+  { name = "id_annot_1"
+  ; term = ML.let_ ("id", abs "x" x, app (frozen "id") one)
+  ; typ  = None
+  }
+
 
 let () =
   test env_test;
@@ -979,4 +989,5 @@ let () =
   test fml_mono_binder_constraint;
   test fml_quantifier_ordering_1;
   test fml_quantifier_ordering_2;
-  test fml_type_annotations_1
+  test fml_type_annotations_1; (* JSTOALREK: assertion failure in generalize *)
+  test fml_id_appl

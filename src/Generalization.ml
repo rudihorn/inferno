@@ -173,6 +173,8 @@ let rec scheme body =
 
 let register_at_rank ({ pool; _ } as state) v =
   let rank = U.rank v in
+  (* JSTOLAREK: example fml_type_annotations_1 triggers this assertion but
+     otherwise looks fine *)
   assert (0 < rank && rank <= state.young);
   InfiniteArray.set pool rank (v :: InfiniteArray.get pool rank)
 
