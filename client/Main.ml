@@ -89,6 +89,12 @@ let translate log t =
         print_type ty
        );
      IllTyped
+  | Client.NotMono (x, ty) ->
+     log_action log (fun () ->
+        Printf.fprintf stdout "Type error: unannotated lambda binder %s inferred with polymorphic type:\n" x;
+        print_type ty
+       );
+     IllTyped
   | Client.Unify (ty1, ty2) ->
      log_action log (fun () ->
         Printf.fprintf stdout "Type error: type mismatch.\n";

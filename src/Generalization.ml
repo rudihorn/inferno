@@ -160,7 +160,7 @@ let rec scheme body =
   match U.structure body with
   | None   -> { quantifiers = []; body }
   | Some s ->
-     match S.isForall s with
+     match S.maybeForall s with
      | None                     -> { quantifiers = []; body }
      | Some ([], body)          -> scheme body
      | Some (quantifiers, body) -> { quantifiers; body }

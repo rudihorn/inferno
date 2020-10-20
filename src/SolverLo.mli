@@ -83,7 +83,7 @@ module Make
        the monomorphic type scheme [v] in the constraint [C]. In other words,
        an instantiation constraint [x w] will be satisfied by unifying [v] and
        [w]. *)
-  | CDef of tevar * variable * rawco
+  | CDef of tevar * variable * bool * rawco
 
     (* A nontrivial type scheme definition, [let [x, v, s?]* C1 in C2 [vs?]].
        In short, for each triple [x, v, s?] in the list, the term variable [x]
@@ -109,6 +109,7 @@ module Make
      the constraint. *)
 
   exception Unbound of tevar
+  exception NotMono of tevar * variable
   exception Unify of variable * variable
   exception UnifySkolem of variable * variable
   exception Cycle of variable

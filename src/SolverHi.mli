@@ -143,6 +143,8 @@ module Make
      scheme [v] in the constraint [c]. *)
   val def: tevar -> variable -> 'a co -> 'a co
 
+  val mono_def: tevar -> variable -> 'a co -> 'a co
+
   (* [let1 x c1 c2] binds the term variable [x] to the constraint abstraction
      [c1] in the constraint [c2]. (Technically, [c1] is a function of a fresh
      type variable to a constraint, as in [exist].) The resulting constraint
@@ -192,6 +194,7 @@ module Make
      is a way of ensuring that the final result has no free type variables. *)
 
   exception Unbound of tevar
+  exception NotMono of tevar * ty
   exception Unify of ty * ty
   exception UnifySkolem of ty * ty
   exception Cycle of ty

@@ -17,9 +17,13 @@ module S = struct
   let forall qs t =
     TyForall (qs, t)
 
-  let isForall t = match t with
+  let maybeForall t = match t with
     | TyForall (qs, t) -> Some (qs, t)
     | _                -> None
+
+  let isForall = function
+    | TyForall _ -> true
+    | _          -> false
 
   let map f t =
     match t with
@@ -353,7 +357,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
           w --- arrow v1 v2 ^&
           (* Under the assumption that [x] has type [domain], the term [u] must
              have type [codomain]. *)
-          def x v1 (hastype u v2)
+          mono_def x v1 (hastype u v2)
         )
       ) <$$> fun (ty1, (_ty2, ((), u'))) ->
       (* Once these constraints are solved, we obtain the translated function
@@ -457,6 +461,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
    type; it creates its own using [exist]. And it runs the solver. *)
 
 exception Unbound = Solver.Unbound
+exception NotMono = Solver.NotMono
 exception Unify = Solver.Unify
 exception UnifySkolem = Solver.UnifySkolem
 exception Cycle = Solver.Cycle

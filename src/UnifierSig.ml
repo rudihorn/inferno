@@ -26,7 +26,9 @@ module type STRUCTURE = sig
 
   val forall : 'a list -> 'a -> 'a structure
 
-  val isForall : 'a structure -> ('a list * 'a) option
+  val maybeForall : 'a structure -> ('a list * 'a) option
+
+  val isForall : 'a structure -> bool
 
   (* The type ['a structure] should be a functor, i.e., it should support the
      standard [map] operation. *)

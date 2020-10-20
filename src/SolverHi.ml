@@ -225,7 +225,11 @@ let frozen_instance x v =
    as a special case of [CLet] would be more costly (by a constant factor). *)
 
 let def x v (rc, k) =
-  CDef (x, v, rc),
+  CDef (x, v, false, rc),
+  k
+
+let mono_def x v (rc, k) =
+  CDef (x, v, true, rc),
   k
 
 (* The general form of [CLet] involves two constraints, the left-hand side and
@@ -314,6 +318,7 @@ end
 
 exception Unbound = Lo.Unbound
 (* BEGIN EXC *)
+exception NotMono of X.tevar * O.ty
 exception Unify of O.ty * O.ty
 exception UnifySkolem of O.ty * O.ty
 exception Cycle of O.ty
@@ -334,6 +339,9 @@ let solve rectypes (rc, k) =
        that the cyclic decoder is required here, even if [rectypes] is [false],
        as recursive types can appear before the occurs check is successfully
        run. *)
+  | Lo.NotMono (x, v) ->
+      let decode = new_decoder true (* cyclic decoder *) in
+      raise (NotMono (x, decode v))
   | Lo.Unify (v1, v2) ->
       let decode = new_decoder true (* cyclic decoder *) in
       raise (Unify (decode v1, decode v2))

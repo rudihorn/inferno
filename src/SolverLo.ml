@@ -77,11 +77,29 @@ let print_scheme scheme =
 
 (* -------------------------------------------------------------------------- *)
 
-
 let rec unduplicate equal = function
   | [] -> []
   | elem :: elems -> (let _, others = List.partition (equal elem) elems in
                       elem :: unduplicate equal others)
+
+let isMono v =
+  let visited : unit U.VarMap.t = U.VarMap.create 128 in
+
+  let rec checkMono v =
+    if U.VarMap.mem visited v then
+      false (* cyclic types considered not monomorphic *)
+    else
+      begin
+        U.VarMap.add visited v ();
+        match U.structure v with
+        | None   -> true
+        | Some s ->
+           if S.isForall s then
+             false
+           else
+             S.fold (fun v acc -> acc && checkMono v) s true
+      end
+  in checkMono v
 
 (* -------------------------------------------------------------------------- *)
 
@@ -98,7 +116,7 @@ type rawco =
   | CExist of variable * rawco
   | CInstance of tevar * variable * variable list WriteOnceRef.t
   | CFrozen   of tevar * variable
-  | CDef of tevar * variable * rawco
+  | CDef of tevar * variable * bool * rawco
   | CLet of (tevar * variable * ischeme WriteOnceRef.t) list
         * variable list
         * rawco
@@ -114,6 +132,7 @@ type rawco =
    embedded in the syntax of the constraint. *)
 
 exception Unbound of tevar
+exception NotMono of tevar * variable
 exception Unify = U.Unify
 exception UnifySkolem = U.UnifySkolem
 exception Cycle = U.Cycle
@@ -197,13 +216,27 @@ let solve (rectypes : bool) (c : rawco) : unit =
           hardline) v w;
         U.unify v w;
         debug_unify_after v
-    | CDef (x, v, c) ->
+    | CDef (x, v, restrict_to_mono, c) ->
        let scheme = G.scheme v in
        List.iter U.skolemize (G.quantifiers scheme);
        Debug.print_doc (
-           string "Adding binding " ^^ dquote ^^ (print_tevar x) ^^
+           string "Adding binder " ^^ dquote ^^ (print_tevar x) ^^
            dquote ^^ string " with type scheme " ^^ print_scheme scheme);
        solve (XMap.add x scheme env) c;
+
+       Debug.print_doc (
+           string "Type scheme on binder " ^^ dquote ^^ (print_tevar x) ^^
+             dquote ^^ string " after solving constraint in scope " ^^
+             print_scheme scheme);
+
+
+       if restrict_to_mono then
+         begin
+           Debug.print_doc ( string "Testing monomorphic constraint on variable "
+                             ^^ print_tevar x);
+           if not (isMono v) then
+             raise (NotMono (x, v))
+         end;
        Debug.print_doc (string "Exiting scope of binding " ^^ print_tevar x)
     | CLet (xvss, vs, c1, c2, generalizable_hook) ->
         (* Warn the generalization engine that we entering the left-hand side of
