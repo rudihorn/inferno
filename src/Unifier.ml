@@ -154,6 +154,9 @@ let fresh =
 
 (* -------------------------------------------------------------------------- *)
 
+exception UnifyInternal
+exception Unify of variable * variable
+
 exception UnifySkolemInternal
 exception UnifySkolem of variable * variable
 
@@ -173,8 +176,11 @@ let rec unify (t : _ TRef.transaction) (v1 : variable) (v2 : variable) : unit =
 
   try
     TUnionFind.union t (unify_descriptors t) v1 v2
-  with UnifySkolemInternal ->
-    raise (UnifySkolem (v1, v2))
+  with
+  | UnifySkolemInternal ->
+     raise (UnifySkolem (v1, v2))
+  | UnifyInternal ->
+     raise (Unify (v1, v2))
 
 (* -------------------------------------------------------------------------- *)
 
@@ -206,13 +212,24 @@ and unify_descriptors t desc1 desc2 =
      (* Skolems don't unify with variables that have a structure *)
      raise UnifySkolemInternal
 
-  | _, _ -> {
-      (* We pick the skolem identifier *)
-      id        = if desc2.skolem then desc2.id else desc1.id;
-      structure = unify_structures t desc1.structure desc2.structure;
-      rank      = min desc1.rank desc2.rank;
-      skolem    = desc1.skolem || desc2.skolem (* skolemize *)
-    }
+  | _, _ ->
+     (* JSTOLAREK: experimental unification restriction: variables with no
+        strcuture and rank -1 (quantified variables) can only be unified if one
+        of them is a skolem.
+     *)
+(*
+     if not (desc1.skolem || desc2.skolem) &&
+        (desc1.rank = -1 ||  desc2.rank = -1) &&
+        (desc1.structure = None ||  desc2.structure = None) then
+       raise UnifyInternal;
+*)
+     let id        = if desc2.skolem (* We pick the skolem identifier *)
+                     then desc2.id
+                     else desc1.id in
+     let structure = unify_structures t desc1.structure desc2.structure in
+     let rank      = min desc1.rank desc2.rank in
+     let skolem    = desc1.skolem || desc2.skolem in (* skolemize *)
+       { id; structure; rank; skolem }
 
 (* -------------------------------------------------------------------------- *)
 
@@ -231,8 +248,6 @@ and unify_structures t structure1 structure2 =
 (* The public version of [unify] wraps the unification process in a
    transaction, so that a failed unification attempt does not alter the state
    of the unifier. *)
-
-exception Unify of variable * variable
 
 let unify v1 v2 =
   try
