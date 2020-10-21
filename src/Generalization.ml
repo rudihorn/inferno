@@ -517,7 +517,7 @@ let instantiate state scheme =
 let freeze state { quantifiers; body } =
   let inScope : U.variable U.VarMap.t = List.fold_left (fun acc q ->
       assert (U.structure q == None);
-      let q' = U.fresh None generic false in
+      let q' = U.fresh None generic (U.is_skolem q) in
       U.VarMap.add acc q q';
       acc
     ) (U.VarMap.create 8) quantifiers in
@@ -553,7 +553,7 @@ let freeze state { quantifiers; body } =
            presence of cyclic terms. *)
 
         let rank = if U.rank v = generic then generic else state.young in
-        let v'   = U.fresh None rank false in
+        let v'   = U.fresh None rank (U.is_skolem v) in
         if rank != generic then register_at_rank state v';
         U.VarMap.add visited v v';
         U.set_structure v' (Option.map (S.map copy) (U.structure v));
