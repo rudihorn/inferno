@@ -927,6 +927,7 @@ let fml_quantifier_ordering_2 =
 (*
    term : let (x : (∀ a. a → a) → Int) = λ(f : ∀ a. a → a). f 1 in 1
    type : Int
+   bugs : #2
 *)
 let fml_type_annotations_1 =
   { name = "type_annotations_1"
