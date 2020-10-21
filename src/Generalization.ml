@@ -167,29 +167,6 @@ let rec scheme body =
 
 (* -------------------------------------------------------------------------- *)
 
-(* The internal function [register_at_rank] assumes that [v]'s rank is already
-   a valid positive rank, and registers [v] by inserting it into the appropriate
-   pool. *)
-
-let register_at_rank ({ pool; _ } as state) v =
-  let rank = U.rank v in
-  (* JSTOLAREK: example fml_type_annotations_1 triggers this assertion but
-     otherwise looks fine *)
-  assert (0 < rank && rank <= state.young);
-  InfiniteArray.set pool rank (v :: InfiniteArray.get pool rank)
-
-(* The external function [register] assumes that [v]'s rank is uninitialized.
-   It sets this rank to the current rank, [state.young], then registers [v]. *)
-
-(* JSTOLAREK: during registration we should check the structure recursively for
-   unbound type variables in signatures. *)
-let register state v =
-  (* assert (U.rank v = no_rank); *)
-  U.set_rank v state.young;
-  register_at_rank state v
-
-(* -------------------------------------------------------------------------- *)
-
 (* Debugging utilities. *)
 
 let show_variable v =
@@ -213,6 +190,29 @@ let show_state label state =
   show_young state;
   show_pools state;
   flush stdout
+
+(* -------------------------------------------------------------------------- *)
+
+(* The internal function [register_at_rank] assumes that [v]'s rank is already
+   a valid positive rank, and registers [v] by inserting it into the appropriate
+   pool. *)
+
+let register_at_rank ({ pool; _ } as state) v =
+  let rank = U.rank v in
+  (* JSTOLAREK: example fml_type_annotations_1 triggers this assertion but
+     otherwise looks fine *)
+  assert (0 < rank && rank <= state.young);
+  InfiniteArray.set pool rank (v :: InfiniteArray.get pool rank)
+
+(* The external function [register] assumes that [v]'s rank is uninitialized.
+   It sets this rank to the current rank, [state.young], then registers [v]. *)
+
+(* JSTOLAREK: during registration we should check the structure recursively for
+   unbound type variables in signatures. *)
+let register state v =
+  (* assert (U.rank v = no_rank); *)
+  U.set_rank v state.young;
+  register_at_rank state v
 
 (* -------------------------------------------------------------------------- *)
 
