@@ -517,7 +517,7 @@ let instantiate state scheme =
 let freeze state { quantifiers; body } =
   let inScope : U.variable U.VarMap.t = List.fold_left (fun acc q ->
       assert (U.structure q == None);
-      let q' = U.fresh None generic (U.is_skolem q) in
+      let q' = U.fresh None generic false in
       U.VarMap.add acc q q';
       acc
     ) (U.VarMap.create 8) quantifiers in

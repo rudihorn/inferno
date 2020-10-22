@@ -488,6 +488,7 @@ let a6_dot =
    term               : choose id auto
    inferred type      : (∀ a. a → a) → (∀ a. a → a)
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
+   related bugs       : #3
  *)
 let a7 =
   { name = "A7"
@@ -923,6 +924,7 @@ let fml_quantifier_ordering_1 =
 (*
    term : (λ(f : ∀ a b. a → b → (a × b)). f 1 true) ~pair'
    type : X
+   bugs : #3
 *)
 let fml_quantifier_ordering_2 =
   { name = "quantifier_ordering_2"
