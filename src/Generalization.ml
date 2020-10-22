@@ -508,6 +508,7 @@ let instantiate use_skolems state { quantifiers; body } =
   in
   List.map copy quantifiers, copy body
 
+(* JSTOLAREK: this is dead code at the moment *)
 let instantiate_with_skolems state scheme =
   instantiate true state scheme
 
@@ -553,7 +554,7 @@ let freeze state { quantifiers; body } =
            presence of cyclic terms. *)
 
         let rank = if U.rank v = generic then generic else state.young in
-        let v'   = U.fresh None rank (U.is_skolem v) in
+        let v'   = U.fresh None rank false in
         if rank != generic then register_at_rank state v';
         U.VarMap.add visited v v';
         U.set_structure v' (Option.map (S.map copy) (U.structure v));
