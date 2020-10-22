@@ -887,12 +887,23 @@ let fml_id_annot_5 =
    term : λx. choose ~id x
    type : X
 *)
-let fml_mono_binder_constraint =
-  { name = "mono_binder_constraint"
+let fml_mono_binder_constraint_1 =
+  { name = "mono_binder_constraint_1"
   ; term = (fml_choose << fml_id)
            (abs "x" (app (app choose (frozen "id")) x))
   ; typ  = None
   }
+
+(*
+   term : let f = λx.x 1 in f
+   type : ∀ a. (Int → a) → a
+*)
+let fml_mono_binder_constraint_2 =
+  { name = "mono_binder_constraint_2"
+  ; term = ML.let_ ("f", abs "x" (app (var "x") one), var "f")
+  ; typ  = Some (TyForall ((), TyArrow (TyArrow (TyInt, (TyVar 0)), TyVar 0)))
+  }
+
 
 (*
    term : (λ(f : ∀ a b. a → b → (a × b)). f 1 true) ~pair
@@ -1001,7 +1012,8 @@ let () =
   test fml_id_annot_3;
   test fml_id_annot_4;
   test fml_id_annot_5;
-  test fml_mono_binder_constraint;
+  test fml_mono_binder_constraint_1;
+  test fml_mono_binder_constraint_2;
   test fml_quantifier_ordering_1;
   test fml_quantifier_ordering_2;
   test fml_type_annotations_1; (* JSTOALREK: assertion failure in generalize *)
