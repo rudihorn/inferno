@@ -56,6 +56,9 @@ let fresh t =
 let fresh_generic t =
   U.fresh t G.generic false
 
+let fresh_signature t =
+  U.fresh t G.signature false
+
 (* -------------------------------------------------------------------------- *)
 
 let print_var v =

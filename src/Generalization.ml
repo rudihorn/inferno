@@ -110,6 +110,9 @@ type scheme = {
 
 (* -------------------------------------------------------------------------- *)
 
+let signature =
+  -2
+
 (* The constant [generic] is defined as [-1]. This rank is used for the variables
    that form the generic (to-be-copied) part of a type scheme. *)
 

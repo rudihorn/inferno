@@ -75,6 +75,7 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
      construct. (Note: [register] can be called only if the current context
      is nonempty, i.e., the current [enter]/[exit] balance is at least one.) *)
 
+  val signature: int
   val no_rank: int
   val generic: int
   val register: state -> variable -> unit
