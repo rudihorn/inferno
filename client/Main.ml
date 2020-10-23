@@ -814,10 +814,11 @@ let fml_inst_2 =
 *)
 let fml_nested_forall_inst =
   { name = "nested_forall_inst"
-  ; term = fml_id (ML.Abs ("x",
-      Some (TyArrow ( TyForall (1, TyArrow (TyVar 1, TyVar 1))
-                    , TyForall (1, TyArrow (TyVar 1, TyVar 1)))),
-      app (ML.inst (app x (frozen "id"))) one))
+  ; term = (fml_id)
+           (ML.Abs ("x",
+                    Some (TyArrow ( TyForall (1, TyArrow (TyVar 1, TyVar 1))
+                                  , TyForall (1, TyArrow (TyVar 1, TyVar 1)))),
+                    app (ML.inst (app x (frozen "id"))) one))
   ; typ  = Some
       (TyArrow
         (TyArrow ( TyForall ((), TyArrow (TyVar 0, TyVar 0))
