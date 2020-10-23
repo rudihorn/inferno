@@ -253,6 +253,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
           else
             Debug.print( "Entering top-level binding" )
         end;
+        if Debug.hard then G.show_state "State before solving" state;
         (* Solve the constraint [c1]. *)
         solve env c1;
         (* Ask the generalization engine to perform an occurs check, to adjust the
@@ -261,7 +262,9 @@ let solve (rectypes : bool) (c : rawco) : unit =
            and to construct a list [ss] of type schemes for our entry points. The
            generalization engine also produces a list [generalizable] of the young
            variables that should be universally quantified here. *)
+        if Debug.hard then G.show_state "State after solving, before exiting" state;
         let generalizable, ss = G.exit rectypes state vs in
+        if Debug.hard then G.show_state "State after exiting" state;
         (* Check the inferred type scheme against the type annotation or accept
            the inferred type if no annotation present.  Checking algorithm:
 
