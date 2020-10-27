@@ -220,6 +220,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
         U.unify v w;
         debug_unify_after v
     | CDef (x, v, restrict_to_mono, c) ->
+       G.register_signatures state v;
        let scheme = G.scheme v in
        List.iter U.skolemize (G.quantifiers scheme);
        Debug.print_doc (

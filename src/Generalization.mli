@@ -79,6 +79,7 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
   val no_rank: int
   val generic: int
   val register: state -> variable -> unit
+  val register_signatures: state -> variable -> unit
 
   (* A variable can be turned into a trivial scheme, with no quantifiers and
      no generic part: in other words, a monomorphic type scheme. Non-trivial

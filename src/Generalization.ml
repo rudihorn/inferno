@@ -202,20 +202,23 @@ let show_state label state =
 
 let register_at_rank ({ pool; _ } as state) v =
   let rank = U.rank v in
-  (* JSTOLAREK: example fml_type_annotations_1 triggers this assertion but
-     otherwise looks fine *)
   assert (0 < rank && rank <= state.young);
   InfiniteArray.set pool rank (v :: InfiniteArray.get pool rank)
 
 (* The external function [register] assumes that [v]'s rank is uninitialized.
    It sets this rank to the current rank, [state.young], then registers [v]. *)
 
-(* JSTOLAREK: during registration we should check the structure recursively for
-   unbound type variables in signatures. *)
 let register state v =
   assert (U.rank v = no_rank || U.rank v = signature);
   U.set_rank v state.young;
   register_at_rank state v
+
+let register_signatures state v =
+  let rec go v =
+    if U.rank v = signature then
+      register state v;
+    Option.iter (S.iter go) (U.structure v)
+  in go v
 
 (* -------------------------------------------------------------------------- *)
 
