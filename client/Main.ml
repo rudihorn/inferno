@@ -963,6 +963,37 @@ let fml_id_appl =
   }
 
 
+(*
+   term : choose ~choose
+   type : (∀ a. a → a → a) → (∀ a. a → a → a)
+*)
+let fml_choose_choose =
+  { name = "choose_choose"
+  ; term = (fml_choose)
+           (app choose (frozen "choose"))
+  ; typ  = Some (TyArrow
+               ((TyForall ((), TyArrow (TyVar 0, TyArrow (TyVar 0, TyVar 0)))),
+                (TyForall ((), TyArrow (TyVar 0, TyArrow (TyVar 0, TyVar 0))))))
+  }
+
+(*
+   term : let (f : (∀ a. a → a → a) → (∀ a. a → a → a)) = choose ~choose
+          in f ~choose
+   type : (∀ a. a → a → a)
+*)
+let fml_choose_choose_let =
+  { name = "choose_choose_let"
+  ; term = (fml_choose)
+  (ML.Let ( "f"
+          , Some (TyArrow
+                ((TyForall (1, TyArrow (TyVar 1, TyArrow (TyVar 1, TyVar 1)))),
+                 (TyForall (1, TyArrow (TyVar 1, TyArrow (TyVar 1, TyVar 1))))))
+          , app choose (frozen "choose")
+          , app (var "f") (frozen "choose")))
+  ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyArrow (TyVar 0, TyVar 0))))
+  }
+
+
 let () =
   test env_test;
   (* PLDI paper examples *)
@@ -1020,4 +1051,6 @@ let () =
   test fml_quantifier_ordering_1;
   test fml_quantifier_ordering_2;
   test fml_type_annotations_1; (* JSTOALREK: assertion failure in generalize *)
-  test fml_id_appl
+  test fml_id_appl;
+  test fml_choose_choose;
+  test fml_choose_choose_let
