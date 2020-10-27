@@ -50,15 +50,14 @@ type ischeme =
 
 (* Creation of fresh variables. *)
 
-(* If a fresh variable has a pre-defined structure it must come from a type
-   signature *)
 let fresh t =
-  match t with
-  | None -> U.fresh t G.no_rank   false
-  | _    -> U.fresh t G.signature false
+  U.fresh t G.no_rank false
 
 let fresh_generic t =
   U.fresh t G.generic false
+
+let fresh_signature t =
+  U.fresh t G.signature false
 
 (* -------------------------------------------------------------------------- *)
 
