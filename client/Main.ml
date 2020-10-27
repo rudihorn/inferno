@@ -303,43 +303,43 @@ let (<<) f g x = f(g(x))
 
 (* Environment with some functions from Figure 2 *)
 
-(* id : forall a. a -> a *)
+(* id : ∀ a. a → a *)
 let fml_id k = ML.let_ ("id", abs "x" x, k)
 
-(* choose : forall a. a -> a -> a *)
+(* choose : ∀ a. a → a → a *)
 let fml_choose k = ML.Let ("choose",
   Some (TyForall (1, TyArrow (TyVar 1, TyArrow (TyVar 1, TyVar 1)))),
   abs "x" (abs "y" x), k)
 
-(* auto : (forall a. a -> a) -> (forall a. a -> a) *)
+(* auto : (∀ a. a → a) → (∀ a. a → a) *)
 let fml_auto k = ML.let_ ("auto", ML.Abs ("x", forall_a_a_to_a,
                                                app x (frozen "x")), k)
 
-(* auto' : forall b. (forall a. a -> a) -> b -> b *)
+(* auto' : ∀ b. (∀ a. a → a) → b → b *)
 let fml_autoprim k = ML.let_ ("auto'", ML.Abs ("x", forall_a_a_to_a, app x x), k)
 
-(* app : forall a b. (a -> b) -> a -> b *)
+(* app : ∀ a b. (a → b) → a → b *)
 let fml_app k = ML.let_ ("app", abs "f" (abs "x" (app f x)), k)
 
-(* revapp : forall a b. b -> (a -> b) -> b *)
+(* revapp : ∀ a b. b → (a → b) → b *)
 let fml_revapp k = ML.let_ ("revapp", abs "x" (abs "f" (app f x)), k)
 
-(* zero : Int -> Int.  Turns every Int into 0.  This function replaces `inc`
+(* zero : Int → Int.  Turns every Int into 0.  This function replaces `inc`
    from FreezeML paper for all intents and purposes, since we only care about
    typing *)
 let fml_zero k = ML.let_ ("zero", ML.Abs ("x", Some TyInt, ML.Int 0), k)
 
-(* poly : (forall a. a -> a) -> (Int × Bool) *)
+(* poly : (∀ a. a → a) → (Int × Bool) *)
 let fml_poly k = ML.let_ ("poly", ML.Abs ("f", forall_a_a_to_a,
    ML.Pair (app f one, app f (ML.Bool true))), k)
 
-(* pair : forall a b. a -> b -> (a × b) *)
+(* pair : ∀ a b. a → b → (a × b) *)
 let fml_pair k = ML.Let ("pair",
   Some (TyForall (1, TyForall (2, TyArrow (TyVar 1, TyArrow (TyVar 2,
                                   TyProduct (TyVar 1, TyVar 2)))))),
   abs "x" (abs "y" (ML.Pair (x, y))), k)
 
-(* pair' : forall b a. a -> b -> (a × b) *)
+(* pair' : ∀ b a. a → b → (a × b) *)
 let fml_pairprim k = ML.Let ("pair'",
   Some (TyForall (2, TyForall (1, TyArrow (TyVar 1, TyArrow (TyVar 2,
                                   TyProduct (TyVar 1, TyVar 2)))))),
