@@ -213,7 +213,7 @@ let register_at_rank ({ pool; _ } as state) v =
 (* JSTOLAREK: during registration we should check the structure recursively for
    unbound type variables in signatures. *)
 let register state v =
-  (* assert (U.rank v = no_rank); *)
+  assert (U.rank v = no_rank || U.rank v = signature);
   U.set_rank v state.young;
   register_at_rank state v
 
