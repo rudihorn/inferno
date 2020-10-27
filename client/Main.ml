@@ -370,7 +370,7 @@ let env_test =
 (* Section A: Polymorphic instantiation *)
 
 (* example            : A1
-   term               : λx y.y
+   term               : λx.λy.y
    inferred type      : ∀ b. ∀ a. a → b → b
    type in PLDI paper : a → b → b
 *)
@@ -382,7 +382,7 @@ let a1 =
   }
 
 (* example            : A1∘
-   term               : $(λx y.y)
+   term               : $(λx.λy.y)
    inferred type      : ∀ b. ∀ a. a → b → b
    type in PLDI paper : ∀ a b. a → b → b
  *)
