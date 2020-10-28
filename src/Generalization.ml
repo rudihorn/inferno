@@ -308,7 +308,7 @@ let exit rectypes state roots =
   List.iter (fun v ->
     U.VarMap.add young_generation v ();
     let rank = U.rank v in
-    (* assert (0 < rank && rank <= state.young); *)
+    assert (0 < rank && rank <= state.young);
     sorted.(rank) <- v :: sorted.(rank)
   ) vs;
 
@@ -378,7 +378,7 @@ let exit rectypes state roots =
              it is young but was not visited yet. Thus, it must have been
              at or above [k], and since we have just adjusted it, it must
              now be [k]. *)
-          (* assert (U.rank v = k); *)
+          assert (U.rank v = k);
           Option.iter (fun t ->
             U.adjust_rank v (
               S.fold (fun child accu ->
