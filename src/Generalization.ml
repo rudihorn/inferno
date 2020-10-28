@@ -494,7 +494,6 @@ let instantiate use_skolems state { quantifiers; body } =
 
     else begin
       try
-        (* JSTOLAREK: this assertion prevents E3 example from working *)
         assert (U.rank v = generic);
         U.VarMap.find visited v
       with Not_found ->
