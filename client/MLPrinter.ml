@@ -18,8 +18,8 @@ let print_type ty =
   match O.to_scheme ty with
   | ([], _) -> FPrinter.print_type ty
   | (qs, ty)  ->
-     string "forall " ^^
-     print_qs qs ^^
+     string "∀ " ^^
+     lbracket ^^ print_qs qs ^^ rbracket ^^
      dot ^^ space ^^
      FPrinter.print_type ty
 
