@@ -660,15 +660,17 @@ let f9 =
   }
 
 (* example            : F10†
-   term               : choose id (λ(x : ∀ a. a → a). $(auto' x))
-   inferred type      : INCORRECT: X
+   term               : choose id (λ(x : ∀ a. a → a). $(auto' ~x))
+   inferred type      : (∀ a. a → a) → (∀ a. a → a)
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
+
+   Note: example in the paper is incorrect since usage of x is not frozen.
  *)
 let f10_dagger =
   { name = "F10†"
   ; term = (fml_choose << fml_id << fml_autoprim)
            (app (app choose id) (ML.Abs ("x", forall_a_a_to_a,
-                                         ML.gen (app (var "auto'") x))))
+                                         ML.gen (app (var "auto'") (frozen "x")))))
   ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
                           TyForall ((), TyArrow (TyVar 0, TyVar 0))))
   }
@@ -1021,7 +1023,7 @@ let () =
   test e3_dot; (* JSTOLAREK: causes exception *)
 
   test f9;
-  test f10_dagger; (* JSTOLAREK: should typecheck but doesn't *)
+  test f10_dagger;
 
   test bad1;
   test bad2;
