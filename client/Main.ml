@@ -615,23 +615,15 @@ let d2_star =
  *)
 
 (* example            : E3
-   term               : let r : (∀ a. a → (∀ b. b → b)) → Int =
-                                      λ(x : ∀ a. a → (∀ b. b → b)).1
-                        in r (λx.λy.y)
+   term               : let r : (∀ a. a → (∀ b. b → b)) → Int = λx.1 in r (λx.λy.y)
    inferred type      : X
    type in PLDI paper : X
-
-   Note: correctly typechecking example E3 in FreezeML(X) requires a type
-   annotation on [x].  Otherwise the program gets rejected because the let
-   binding is incorrect, whereas the idea of original example is to reject it
-   because let body is incorect
  *)
 let e3 =
   { name = "E3"
   ; term = ML.Let ("r", Some (TyArrow (TyForall (1, TyArrow (TyVar 1,
                           TyForall (2, TyArrow (TyVar 2, TyVar 2)))), TyInt)),
-                        ML.Abs ("x", Some (TyForall (1, TyArrow (TyVar 1,
-                          TyForall (2, TyArrow (TyVar 2, TyVar 2))))), one),
+                        abs "x" one,
                    app (var "r") (abs "x" (abs "y" y)))
   ; typ  = None
   }
