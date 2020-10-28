@@ -1023,7 +1023,6 @@ let () =
   test f9;
   test f10_dagger;
 
-(* JSTOLAREK: these cause exception *)
   test bad1;
   test bad2;
 
