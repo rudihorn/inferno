@@ -120,8 +120,8 @@ let translate log t =
   (* JSTOLAREK: other exceptions are thrown due to bugs in the implementation.
      I'm catching them here to simplify testing by not having to comment out
      failing test cases.  No exceptions should ever happen in a correct
-     implementation (other than Client exceptions which are used to communicate
-     typechecking errors). *)
+     implementation other than Client exceptions, which are used to communicate
+     typechecking errors. *)
   | exn ->
      log_action log (fun () ->
         Printf.fprintf stdout "Implementation bug.\n";
@@ -677,7 +677,7 @@ let f10_dagger =
 
 (* example            : bad1
    term               : λf.(poly ~f, f 1)
-   inferred type      : INCORRECT: Exception
+   inferred type      : X
    type in PLDI paper : X
  *)
 let bad1 =
@@ -689,7 +689,7 @@ let bad1 =
 
 (* example            : bad2
    term               : λf.(f 1, poly ~f)
-   inferred type      : INCORRECT: Exception
+   inferred type      : X
    type in PLDI paper : X
  *)
 let bad2 =
@@ -701,7 +701,7 @@ let bad2 =
 
 (* example            : bad3
    term               : λ(bot : ∀ a. a). let f = bot bot in (poly ~f, f 1)
-   inferred type      : INCORRECT: segmentation fault
+   inferred type      : X
    type in PLDI paper : X
  *)
 let bad3 =
@@ -715,7 +715,7 @@ let bad3 =
 
 (* example            : bad4
    term               : λ(bot : ∀ a. a). let f = bot bot in (f 1, poly ~f)
-   inferred type      : INCORRECT: segmentation fault
+   inferred type      : X
    type in PLDI paper : X
  *)
 let bad4 =
@@ -1021,15 +1021,12 @@ let () =
   test e3_dot; (* JSTOLAREK: causes exception *)
 
   test f9;
-  test f10_dagger;
+  test f10_dagger; (* JSTOLAREK: should typecheck but doesn't *)
 
   test bad1;
   test bad2;
-
-(* JSTOLAREK: these cause segmentation fault
   test bad3;
   test bad4;
-*)
   test bad5;
   test bad6;
 
@@ -1049,7 +1046,7 @@ let () =
   test fml_mono_binder_constraint_2;
   test fml_quantifier_ordering_1;
   test fml_quantifier_ordering_2;
-  test fml_type_annotations_1; (* JSTOALREK: assertion failure in generalize *)
+  test fml_type_annotations_1;
   test fml_id_appl;
   test fml_choose_choose;
   test fml_choose_choose_let
