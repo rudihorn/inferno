@@ -297,8 +297,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
                 List.iter U.skolemize (G.quantifiers ovs);
                 debug_unify_before (string "Unifying let annotation with inferred type of let body.")
                   (G.body ovs) (G.body s);
-                (* BUG: see #2 *)
-                U.unify (G.body ovs) (G.body s);
+                U.unify (G.body ovs) (G.body s); (* See #2 *)
                 debug_unify_after (G.body ovs);
                 List.iter U.unskolemize (G.quantifiers ovs);
                 G.scheme ov :: acc
