@@ -295,6 +295,12 @@ let poly =
 let one =
   ML.Int 1
 
+let tru =
+  ML.Bool true
+
+let fals =
+  ML.Bool false
+
 let forall_a_a_to_a = Some (TyForall (1, TyArrow (TyVar 1, TyVar 1)))
 
 (* FreezeML examples from PLDI paper*)
@@ -331,7 +337,7 @@ let fml_zero k = ML.let_ ("zero", ML.Abs ("x", Some TyInt, ML.Int 0), k)
 
 (* poly : (∀ a. a → a) → (Int × Bool) *)
 let fml_poly k = ML.let_ ("poly", ML.Abs ("f", forall_a_a_to_a,
-   ML.Pair (app f one, app f (ML.Bool true))), k)
+   ML.Pair (app f one, app f tru)), k)
 
 (* pair : ∀ a b. a → b → (a × b) *)
 let fml_pair k = ML.Let ("pair",
@@ -558,7 +564,7 @@ let a12_star =
 let b1_star =
   { name = "B1⋆"
   ; term = ML.Abs ("f", forall_a_a_to_a, ML.Pair (app f one,
-                                                  app f (ML.Bool true)))
+                                                  app f tru))
   ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
                           TyProduct (TyInt, TyBool)))
   }
@@ -774,7 +780,7 @@ let fml_id_to_int =
 *)
 let fml_id_to_bool =
   { name = "id_to_bool"
-  ; term = ML.Abs ("x", forall_a_a_to_a, app x (ML.Bool false))
+  ; term = ML.Abs ("x", forall_a_a_to_a, app x fals)
   ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)), TyBool))
   }
 
@@ -784,7 +790,7 @@ let fml_id_to_bool =
 *)
 let fml_const_false =
   { name = "const_false"
-  ; term = ML.Abs ("x", Some TyBool, ML.Bool false)
+  ; term = ML.Abs ("x", Some TyBool, fals)
   ; typ  = Some (TyArrow (TyBool, TyBool))
   }
 
@@ -808,6 +814,32 @@ let fml_inst_2 =
   ; term = (fml_id << fml_auto)
            (app (ML.let_ ("x", app auto (frozen "id"), x)) one)
   ; typ  = Some TyInt
+  }
+
+(*
+   term : let id_int : Int → Int = λx.x in id_int 1
+   type : Int
+*)
+let fml_inst_sig_1 =
+  { name = "inst_sig_1"
+  ; term = ML.Let ("id_int",
+                   Some (TyArrow (TyInt, TyInt)),
+                   abs "x" x,
+                   app (var "id_int") one)
+  ; typ  = Some TyInt
+  }
+
+(*
+   term : let id_int : Int → Int = λx.x in id_int true
+   type : X
+*)
+let fml_inst_sig_2 =
+  { name = "inst_sig_2"
+  ; term = ML.Let ("id_int",
+                   Some (TyArrow (TyInt, TyInt)),
+                   abs "x" x,
+                   app (var "id_int") tru)
+  ; typ  = None
   }
 
 (*
@@ -919,7 +951,7 @@ let fml_quantifier_ordering_1 =
            (app (ML.Abs ("f", Some (TyForall (1, TyForall (2,
                                       TyArrow (TyVar 1, TyArrow (TyVar 2,
                                       TyProduct (TyVar 1, TyVar 2))))))
-                            , app (app (var "f") one) (ML.Bool true)))
+                            , app (app (var "f") one) tru))
                 (frozen "pair"))
   ; typ  = Some (TyProduct (TyInt, TyBool))
   }
@@ -935,7 +967,7 @@ let fml_quantifier_ordering_2 =
            (app (ML.Abs ("f", Some (TyForall (1, TyForall (2,
                                       TyArrow (TyVar 1, TyArrow (TyVar 2,
                                       TyProduct (TyVar 1, TyVar 2))))))
-                            , app (app (var "f") one) (ML.Bool true)))
+                            , app (app (var "f") one) tru))
                 (frozen "pair'"))
   ; typ  = None
   }
@@ -1038,6 +1070,8 @@ let () =
   test fml_const_false;
   test fml_inst_1;
   test fml_inst_2;
+  test fml_inst_sig_1;
+  test fml_inst_sig_2;
   test fml_nested_forall_inst;
   test fml_id_annot_1;
   test fml_id_annot_2;
