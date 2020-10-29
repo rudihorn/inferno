@@ -1,6 +1,8 @@
 (* This module defines facilities for working with syntax, in nominal and
    de Bruijn representations. *)
 
+open Result
+
 type index =
   int
 
@@ -156,11 +158,13 @@ module MakeTranslate
   include Nominal2deBruijn(N)
 
   let translate t =
+    Result.WellTyped (
     map
       lookup
       (fun env x -> extend env x, ())
       empty
       t
+    )
 
 end
 

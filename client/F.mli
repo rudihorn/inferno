@@ -1,5 +1,7 @@
 (* This is the target calculus of the sample client. It is a core System F. *)
 
+open Result
+
 (* -------------------------------------------------------------------------- *)
 
 (* Types. *)
@@ -86,6 +88,6 @@ val subst: debruijn_type -> DeBruijn.index -> debruijn_type -> debruijn_type
 
 (* Translation of nominal terms to de Bruijn terms. *)
 
-val translate: nominal_term -> debruijn_term
+val translate: nominal_term -> debruijn_term Result.t
 
 val decode_tyvar : nominal_type -> tyvar

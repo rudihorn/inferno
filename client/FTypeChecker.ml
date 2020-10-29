@@ -1,4 +1,5 @@
 open F
+open Result
 
 (* -------------------------------------------------------------------------- *)
 
@@ -179,5 +180,5 @@ let rec typeof env (t : debruijn_term) : debruijn_type =
   | Int _ -> TyInt
   | Bool _ -> TyBool
 
-let typeof =
-  typeof empty
+let typeof t =
+  Result.WellTyped (typeof empty t)

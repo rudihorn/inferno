@@ -1,5 +1,6 @@
 open Client
 open F
+open Result
 
 let verbose =
   false
@@ -41,26 +42,39 @@ let attempt log msg f x =
   try
     f x
   with e ->
-    print_log log;
     begin
     match e with
     | FTypeChecker.NotAnArrow ty ->
-       let doc = PPrint.(string "Exception: not an arrow type:" ^^ hardline ^^
-         string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
-       PPrint.ToChannel.pretty 0.9 80 stdout doc
+       log_action log (fun () ->
+           Printf.fprintf stdout "Implementation bug.\n";
+           PPrint.ToChannel.pretty 0.9 80 stdout PPrint.(
+               string "Exception: not an arrow type:" ^^ hardline ^^
+               string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline)
+         )
     | FTypeChecker.NotAProduct ty ->
-       let doc = PPrint.(string "Exception: not a product type:" ^^ hardline ^^
-         string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
-       PPrint.ToChannel.pretty 0.9 80 stdout doc
+       log_action log (fun () ->
+           Printf.fprintf stdout "Implementation bug.\n";
+           PPrint.ToChannel.pretty 0.9 80 stdout PPrint.(
+             string "Exception: not a product type:" ^^ hardline ^^
+             string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline)
+         )
     | FTypeChecker.NotAForall ty ->
-       let doc = PPrint.(string "Exception: not a forall type:" ^^ hardline ^^
-         string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
-       PPrint.ToChannel.pretty 0.9 80 stdout doc
-    | _ -> Printf.printf "%s\n" (Printexc.to_string e)
+       log_action log (fun () ->
+           Printf.fprintf stdout "Implementation bug.\n";
+           PPrint.ToChannel.pretty 0.9 80 stdout PPrint.(
+             string "Exception: not a forall type:" ^^ hardline ^^
+             string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline)
+         )
+    | exn ->
+       log_action log (fun () ->
+           Printf.fprintf stdout "Implementation bug.\n";
+           Printf.fprintf stdout "%s\n" (Printexc.to_string exn);
+           Printf.fprintf stdout "%s" (Printexc.get_backtrace ());
+         )
     end;
-    Printexc.print_backtrace stdout;
-    flush stdout;
-    exit 1
+    (* Any exception at this point is an implementation bug since it means we
+       generated an ill-typed System F program *)
+    Result.ImplementationBug
 
 (* -------------------------------------------------------------------------- *)
 
@@ -74,14 +88,9 @@ let print_type ty =
 let print_ml_term m =
   PPrint.(ToChannel.pretty 0.9 80 stdout (MLPrinter.print_term m ^^ hardline))
 
-type 'a result =
-  | WellTyped of 'a
-  | IllTyped
-  | ImplementationBug
-
 let translate log t =
   try
-    WellTyped (Client.translate t)
+    Result.WellTyped (Client.translate t)
   with
   | Client.Cycle ty ->
      log_action log (fun () ->
@@ -161,48 +170,63 @@ let test { name; term; typ } : unit =
      flush stdout
 
   | WellTyped (t : F.nominal_term), Some exp_ty ->
+      let works = ref false in
       log_action log (fun () ->
         Printf.printf "Formatting the System F term...\n%!";
         let doc = PPrint.(string "  " ^^ nest 2 (FPrinter.print_term t) ^^ hardline) in
         Printf.printf "Pretty-printing the System F term...\n%!";
         PPrint.ToChannel.pretty 0.9 80 stdout doc
       );
-      let t : F.debruijn_term =
-        attempt log
-          "Converting the System F term to de Bruijn style...\n"
-          F.translate t
-      in
-      let ty : F.debruijn_type =
-        attempt log
-          "Type-checking the System F term...\n"
-          FTypeChecker.typeof t
-      in
-      log_action log (fun () ->
-        if ( exp_ty = ty ) then
-          begin
-            Printf.printf "Pretty-printing the System F de Bruijn type...\n%!";
-            let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
-            PPrint.ToChannel.pretty 0.9 80 stdout doc;
-          end
-        else
-          begin
-            Printf.printf "Expected type does not match actual type!\n";
-            Printf.printf "Expected:\n";
-            let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type exp_ty ^^ hardline) in
-            PPrint.ToChannel.pretty 0.9 80 stdout doc;
-            Printf.printf "Actual:\n";
-            let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
-            PPrint.ToChannel.pretty 0.9 80 stdout doc;
-          end
-      );
+      begin
+      match attempt log
+              "Converting the System F term to de Bruijn style...\n"
+              F.translate t with
+      | IllTyped -> assert false
+      | ImplementationBug ->
+         (* Typechecking caused an exception *)
+         log_action log (fun () ->
+             Printf.printf "Example %s triggered an implementation bug!\n" name;
+           );
+      | WellTyped t ->
+         begin
+         match attempt log
+                 "Type-checking the System F term...\n"
+                 FTypeChecker.typeof t with
+         | IllTyped -> assert false
+         | ImplementationBug ->
+            (* Typechecking caused an exception *)
+            log_action log (fun () ->
+                Printf.printf "Example %s triggered an implementation bug!\n" name;
+              );
+         | WellTyped ty ->
+            log_action log (fun () ->
+                if ( exp_ty = ty ) then
+                  begin
+                    Printf.printf "Pretty-printing the System F de Bruijn type...\n%!";
+                    let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
+                    PPrint.ToChannel.pretty 0.9 80 stdout doc;
+                  end
+                else
+                  begin
+                    Printf.printf "Expected type does not match actual type!\n";
+                    Printf.printf "Expected:\n";
+                    let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type exp_ty ^^ hardline) in
+                    PPrint.ToChannel.pretty 0.9 80 stdout doc;
+                    Printf.printf "Actual:\n";
+                    let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
+                    PPrint.ToChannel.pretty 0.9 80 stdout doc;
+                  end
+              );
+            works := true
+         end;
+      end;
       if verbose then
         print_log log;
-      if ( exp_ty = ty ) then
+      if ( !works ) then
         Printf.printf "\027[32mExample %s works as expected\027[0m\n" name
       else
         Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name;
      flush stdout
-
   | IllTyped, Some exp_ty ->
      log_action log (fun () ->
          Printf.printf "Example %s expected to have a type:\n" name;
@@ -222,22 +246,36 @@ let test { name; term; typ } : unit =
         Printf.printf "Pretty-printing the System F term...\n%!";
         PPrint.ToChannel.pretty 0.9 80 stdout doc
       );
-      let t : F.debruijn_term =
-        attempt log
-          "Converting the System F term to de Bruijn style...\n"
-          F.translate t
-      in
-      let ty : F.debruijn_type =
-        attempt log
-          "Type-checking the System F term...\n"
-          FTypeChecker.typeof t
-      in
-      log_action log (fun () ->
-          Printf.printf "Pretty-printing the System F de Bruijn type...\n%!";
-          let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
-          PPrint.ToChannel.pretty 0.9 80 stdout doc;
-          Printf.printf "Example %s epected to be ill-typed but typechecks.\n" name;
-        );
+      begin
+      match attempt log
+              "Converting the System F term to de Bruijn style...\n"
+              F.translate t with
+      | IllTyped -> assert false
+      | ImplementationBug ->
+         (* Typechecking caused an exception *)
+         log_action log (fun () ->
+             Printf.printf "Example %s triggered an implementation bug!\n" name;
+           );
+      | WellTyped t ->
+         begin
+         match attempt log
+                 "Type-checking the System F term...\n"
+                 FTypeChecker.typeof t with
+         | IllTyped -> assert false
+         | ImplementationBug ->
+            (* Typechecking caused an exception *)
+            log_action log (fun () ->
+                Printf.printf "Example %s triggered an implementation bug!\n" name;
+              );
+         | WellTyped ty ->
+            log_action log (fun () ->
+                Printf.printf "Pretty-printing the System F de Bruijn type...\n%!";
+                let doc = PPrint.(string "  " ^^ FPrinter.print_debruijn_type ty ^^ hardline) in
+                PPrint.ToChannel.pretty 0.9 80 stdout doc;
+                Printf.printf "Example %s epected to be ill-typed but typechecks.\n" name;
+              );
+         end;
+      end;
       if verbose then
         print_log log;
       Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name;
@@ -252,7 +290,6 @@ let test { name; term; typ } : unit =
        print_log log;
      Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name;
      flush stdout
-
 
 (* -------------------------------------------------------------------------- *)
 

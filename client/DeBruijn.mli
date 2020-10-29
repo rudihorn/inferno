@@ -1,6 +1,8 @@
 (* This module defines facilities for working with syntax, in nominal and
    de Bruijn representations. *)
 
+open Result
+
 type index =
   int
 
@@ -126,7 +128,7 @@ module MakeTranslate
   (N : Map.OrderedType)
 : sig
 
-  val translate: (N.t, N.t) T.t -> (index, unit) T.t
+  val translate: (N.t, N.t) T.t -> (index, unit) T.t Result.t
 
 end
 
