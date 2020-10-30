@@ -470,6 +470,11 @@ let exit rectypes state roots =
    must be copied is determined by inspecting the rank -- [generic] means
    copy, a positive rank means don't copy. *)
 
+(* JSTOLAREK: RESUME HERE ON THURSDAY.  Instantiation of nested quantifiers does
+   not work as intended: we instantiate all the quantifiers even if they are not
+   top-level.  I implemented a quickfix in the form of checking for membership
+   but it still does not work as intended. *)
+
 let instantiate use_skolems state { quantifiers; body } =
 
   List.iter (fun q -> assert (U.structure q = None)) quantifiers;
@@ -477,17 +482,22 @@ let instantiate use_skolems state { quantifiers; body } =
   (* Prepare to mark which variables have been visited and record their copy. *)
   let visited : U.variable U.VarMap.t = U.VarMap.create 128 in
 
+(*
+  let isForall v =
+    Option.map S.isForall (U.structure v) = Some true in
+*)
+
   (* If the variable [v] has rank [generic], then [copy v] returns a copy of
      it, and copies its descendants recursively. If [v] has positive rank,
      then [copy v] returns [v]. Only one copy per variable is created, even if
      a variable is encountered several times during the traversal. *)
 
-  let rec copy v =
+  let rec copy (*toplevel*) v =
 
     (* If this variable has positive rank, then it is not generic: we must
        stop. *)
 
-    if U.rank v > 0 then
+    if (*(U.rank v != signature) &&*) (U.rank v > 0 (* || (not (List.mem v quantifiers))*)) then
       v
 
     (* If a copy of this variable has been created already, return it. *)
@@ -495,6 +505,7 @@ let instantiate use_skolems state { quantifiers; body } =
     else begin
       try
         assert (U.rank v = generic);
+        (* assert (List.mem v quantifiers); *)
         U.VarMap.find visited v
       with Not_found ->
 
@@ -504,14 +515,15 @@ let instantiate use_skolems state { quantifiers; body } =
            recursive call to [copy], so as to guarantee termination in the
            presence of cyclic terms. *)
 
+(*        let toplevel = toplevel && not (isForall v) in *)
         let v' = U.fresh None state.young (use_skolems && not (U.has_structure v)) in
         register_at_rank state v';
         U.VarMap.add visited v v';
-        U.set_structure v' (Option.map (S.map copy) (U.structure v));
+        U.set_structure v' (Option.map (S.map (copy (* toplevel *))) (U.structure v));
         v'
       end
   in
-  List.map copy quantifiers, copy body
+  List.map copy quantifiers, copy (*true*) body
 
 (* JSTOLAREK: this is dead code at the moment *)
 let instantiate_with_skolems state scheme =
