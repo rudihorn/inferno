@@ -68,15 +68,18 @@ let print_var v =
 
 let print_tevar v = X.print_tevar v
 
+let print_vars vs =
+  let open PPrint in
+  lbracket ^^
+  separate (comma ^^ space) (List.map print_var vs) ^^
+  rbracket
+
 let print_scheme scheme =
   let open PPrint in
   match G.quantifiers scheme with
   | [] -> print_var (G.body scheme)
-  | qs -> string "forall " ^^ lbracket ^^
-       separate (comma ^^ space) (List.map (fun q -> print_var q) qs) ^^
-       rbracket ^^
-       dot ^^ space ^^
-       print_var (G.body scheme)
+  | qs -> string "forall " ^^ print_vars qs ^^ dot ^^ space ^^
+            print_var (G.body scheme)
 
 (* -------------------------------------------------------------------------- *)
 
@@ -268,6 +271,8 @@ let solve (rectypes : bool) (c : rawco) : unit =
            variables that should be universally quantified here. *)
         if Debug.hard then G.show_state "State after solving, before exiting" state;
         let generalizable, ss = G.exit rectypes state vs in
+        Debug.print_doc (string "Generalizable vars from the generalization engine: "
+                         ^^ print_vars generalizable);
         if Debug.hard then G.show_state "State after exiting" state;
         (* Check the inferred type scheme against the type annotation or accept
            the inferred type if no annotation present.  Checking algorithm:
@@ -308,6 +313,15 @@ let solve (rectypes : bool) (c : rawco) : unit =
         (* Remove duplicate generalizable variables.  These can be introduced
            when unifying the inferred type with signature *)
         let generalizable = unduplicate U.equivalent generalizable in
+        (* Remove generalizable variables that were eliminated after unification
+           with a provided signature.  We recognize these variables by the fact
+           they have a structure. *)
+        Debug.print_doc (string "Generalizable vars before removing unified: "
+                         ^^ print_vars generalizable);
+        let generalizable = List.filter (fun g -> not (U.has_structure g))
+                              generalizable in
+        Debug.print_doc (string "Generalizable vars after all signature checks: "
+                         ^^ print_vars generalizable);
         (* Fill the write-once reference [generalizable_hook]. *)
         WriteOnceRef.set generalizable_hook generalizable;
         (* Extend the environment [env] and fill the write-once references
