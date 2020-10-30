@@ -3,6 +3,8 @@ let hard        = false
 let print_ranks = true
 let fuel        = 5
 
+(* JSTOLAREK: swap print_doc and print names since print_doc is used frequently
+   and should be shorter *)
 let print message =
   if enabled then prerr_endline message;
   flush stderr
