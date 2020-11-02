@@ -144,12 +144,12 @@ let postincrement r =
 
 let fresh =
   let id = ref 0 in
-  fun structure rank skolem ->
+  fun structure rank ->
     TUnionFind.fresh {
       id = postincrement id;
       structure = structure;
       rank = rank;
-      skolem = skolem;
+      skolem = false;
     }
 
 (* -------------------------------------------------------------------------- *)

@@ -51,13 +51,13 @@ type ischeme =
 (* Creation of fresh variables. *)
 
 let fresh t =
-  U.fresh t G.no_rank false
+  U.fresh t G.no_rank
 
 let fresh_generic t =
-  U.fresh t G.generic false
+  U.fresh t G.generic
 
 let fresh_signature t =
-  U.fresh t G.signature false
+  U.fresh t G.signature
 
 (* -------------------------------------------------------------------------- *)
 
