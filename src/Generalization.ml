@@ -470,12 +470,12 @@ let exit rectypes state roots =
    must be copied is determined by inspecting the rank -- [generic] means
    copy, a positive rank means don't copy. *)
 
-(* JSTOLAREK: RESUME HERE ON THURSDAY.  Instantiation of nested quantifiers does
-   not work as intended: we instantiate all the quantifiers even if they are not
-   top-level.  I implemented a quickfix in the form of checking for membership
-   but it still does not work as intended. *)
+(* JSTOLAREK: Instantiation of nested quantifiers might not work as intended: we
+   instantiate all the quantifiers even if they are not top-level.  I
+   implemented a quickfix in the form of checking for membership but it still
+   does not work as intended. *)
 
-let instantiate use_skolems state { quantifiers; body } =
+let instantiate state { quantifiers; body } =
 
   List.iter (fun q -> assert (U.structure q = None)) quantifiers;
 
@@ -516,7 +516,7 @@ let instantiate use_skolems state { quantifiers; body } =
            presence of cyclic terms. *)
 
 (*        let toplevel = toplevel && not (isForall v) in *)
-        let v' = U.fresh None state.young (use_skolems && not (U.has_structure v)) in
+        let v' = U.fresh None state.young false in
         register_at_rank state v';
         U.VarMap.add visited v v';
         U.set_structure v' (Option.map (S.map (copy (* toplevel *))) (U.structure v));
@@ -524,13 +524,6 @@ let instantiate use_skolems state { quantifiers; body } =
       end
   in
   List.map copy quantifiers, copy (*true*) body
-
-(* JSTOLAREK: this is dead code at the moment *)
-let instantiate_with_skolems state scheme =
-  instantiate true state scheme
-
-let instantiate state scheme =
-  instantiate false state scheme
 
 let freeze state { quantifiers; body } =
   let inScope : U.variable U.VarMap.t = List.fold_left (fun acc q ->
