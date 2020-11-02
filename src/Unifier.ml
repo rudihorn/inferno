@@ -272,13 +272,6 @@ module VarMap =
     let hash v = Hashtbl.hash (id v)
   end)
 
-module VarSet =
-  Set.Make(struct
-    type t = variable
-    let equal = TUnionFind.equivalent
-    let compare = TUnionFind.compare
-  end)
-
 (* -------------------------------------------------------------------------- *)
 
 let equivalent =
