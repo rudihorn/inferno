@@ -118,7 +118,7 @@ let annotation_to_structure (t : O.ty) : Lo.variable S.structure =
     let qs' = List.map (fun q -> O.TyVarMap.find q env) qs in
     match qs' with
     | [] -> O.to_structure (worker env)
-              (fun s -> Lo.fresh_signature (Some s)) env body
+              (fun s -> Lo.fresh (Some s)) env body
     | _  -> S.forall qs' (O.to_variable (worker env)
                             (fun s -> Lo.fresh_generic (Some s)) env body)
   in worker O.TyVarMap.empty t
@@ -148,14 +148,6 @@ let exist f =
 
 let construct t f =
   let v = fresh (Some t) in
-  let rc, k = f v in
-  CExist (v, rc),
-  fun env ->
-    let decode = env in
-    (decode v, k env)
-
-let construct_sig t f =
-  let v = fresh_signature (Some t) in
   let rc, k = f v in
   CExist (v, rc),
   fun env ->
@@ -252,10 +244,7 @@ let letn xs f1 (rc2, k2) =
      [CExist]. Also, create an uninitialized scheme hook, which will receive
      the type scheme of [x] after the solver runs. *)
   let xvss = List.map (fun (x, ty) ->
-    let v = match ty with
-      | None -> fresh ty
-      | _    -> fresh_signature ty in
-    x, v, WriteOnceRef.create()
+    x, fresh ty, WriteOnceRef.create()
   ) xs in
   (* Pass the vector of type variables to the user-supplied function [f1], as in
      [CExist].  These are fresh variables that we can later check against

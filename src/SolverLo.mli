@@ -39,8 +39,6 @@ module Make
   (* The type [variable] describes the solver's type variables. *)
   type variable
 
-  val fresh_signature: variable structure option -> variable
-
   (* [fresh t] creates a fresh type variable, with optional structure [t]. *)
   val fresh: variable structure option -> variable
 

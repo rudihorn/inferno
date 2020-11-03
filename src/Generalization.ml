@@ -110,9 +110,6 @@ type scheme = {
 
 (* -------------------------------------------------------------------------- *)
 
-let signature =
-  -2
-
 (* The constant [generic] is defined as [-1]. This rank is used for the variables
    that form the generic (to-be-copied) part of a type scheme. *)
 
@@ -238,13 +235,13 @@ let register_at_rank ({ pool; _ } as state) v =
    It sets this rank to the current rank, [state.young], then registers [v]. *)
 
 let register state v =
-  assert (U.rank v = no_rank || U.rank v = signature);
+  assert (U.rank v = no_rank);
   U.set_rank v state.young;
   register_at_rank state v
 
 let register_signatures state v =
   let rec go v =
-    if U.rank v = signature then
+    if U.rank v = no_rank then
       register state v;
     Option.iter (S.iter go) (U.structure v)
   in go v

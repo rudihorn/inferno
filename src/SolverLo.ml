@@ -56,9 +56,6 @@ let fresh t =
 let fresh_generic t =
   U.fresh t G.generic
 
-let fresh_signature t =
-  U.fresh t G.signature
-
 (* -------------------------------------------------------------------------- *)
 
 let print_var v =
@@ -298,6 +295,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
                    string "Annotation: " ^^ print_var ov ^^ hardline ^^
                    string "Inferred  : " ^^ print_var sv ^^ hardline ^^
                    string "Scheme    : " ^^ print_scheme s) );
+                G.register_signatures state ov;
                 let ovs = G.scheme ov in
                 List.iter U.skolemize (G.quantifiers ovs);
                 debug_unify_before (string "Unifying let annotation with inferred type of let body.")

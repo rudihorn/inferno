@@ -102,7 +102,6 @@ module Make
      the type variable [v] to be equal to the type [t]. So, it is really a
      way of constructing a variable that stands for a shallow term. *)
   val construct:  variable structure -> (variable -> 'a co) -> (ty * 'a) co
-  val construct_sig:  variable structure -> (variable -> 'a co) -> (ty * 'a) co
 
   (* ---------------------------------------------------------------------- *)
 

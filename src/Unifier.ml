@@ -160,10 +160,6 @@ exception Unify of variable * variable
 exception UnifySkolemInternal
 exception UnifySkolem of variable * variable
 
-let unify_rank r1 r2 = match r1, r2 with
-  | -2, r | r, -2 -> r
-  | _, _ -> min r1 r2
-
 (* The internal function [unify t v1 v2] equates the variables [v1] and [v2]
    and propagates the consequences of this equation until an inconsistency is
    found or a solved form is reached. In the former case, [S.Iter2] is
@@ -231,7 +227,7 @@ and unify_descriptors t desc1 desc2 =
                      then desc2.id
                      else desc1.id in
      let structure = unify_structures t desc1.structure desc2.structure in
-     let rank      = unify_rank desc1.rank desc2.rank in
+     let rank      = min desc1.rank desc2.rank in
      let skolem    = desc1.skolem || desc2.skolem in (* skolemize *)
        { id; structure; rank; skolem }
 

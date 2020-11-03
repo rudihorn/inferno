@@ -378,7 +378,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
      (* Construct an existential variable with structure defined by the type
         annotation. *)
 
-      construct_sig (annotation_to_structure ty) (fun v1 ->
+      construct (annotation_to_structure ty) (fun v1 ->
 
         (* Here, we could use [exist_], because we do not need [ty2]. I refrain
            from using it, just to simplify the paper. *)
