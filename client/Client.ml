@@ -425,9 +425,9 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
          [b] happen to be equal, no extra code is produced. *)
 
          (* JSTOLAREK: delete this, debugging only
-           Inferno.Debug.print_doc PPrint.(string "a: " ^^ (separate comma
+           Inferno.Debug.print PPrint.(string "a: " ^^ (separate comma
              (List.map (fun x -> string (string_of_int x)) a)));
-           Inferno.Debug.print_doc PPrint.(string "b: " ^^ (separate comma
+           Inferno.Debug.print PPrint.(string "b: " ^^ (separate comma
              (List.map (fun x -> string (string_of_int x)) b)));
          *)
 

@@ -151,7 +151,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
 
   let debug (str : string) (doc : PPrint.document) =
     let open PPrint in
-    Debug.print_doc (string str ^^ doc) in
+    Debug.print (string str ^^ doc) in
 
   let debug_unify_before str v w =
     let open PPrint in
@@ -160,7 +160,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
           string "Trying to unifying variables:" ^^ hardline ^^
           print_var v ^^ hardline ^^
           print_var w) in
-    Debug.print_doc message in
+    Debug.print message in
 
   let debug_unify_after v =
     let open PPrint in
@@ -169,7 +169,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
           string "Unification successful.  Variable after unification:" ^^
           hardline ^^
           print_var v) in
-    Debug.print_doc message in
+    Debug.print message in
 
   let state = G.init() in
 
@@ -182,11 +182,11 @@ let solve (rectypes : bool) (c : rawco) : unit =
     | CTrue ->
         ()
     | CConj (c1, c2) ->
-        Debug.print "Found constraint conjunction.  Solving first constraint.";
+        Debug.print_str "Found constraint conjunction.  Solving first constraint.";
         solve env c1;
-        Debug.print "First constraint in a conjunction solved, solving second.";
+        Debug.print_str "First constraint in a conjunction solved, solving second.";
         solve env c2;
-        Debug.print "Second constraint in a conjunction solved"
+        Debug.print_str "Second constraint in a conjunction solved"
     | CEq (v, w) ->
         debug_unify_before (string "Solving equality constraint.") v w;
         U.unify v w;
@@ -226,23 +226,23 @@ let solve (rectypes : bool) (c : rawco) : unit =
        G.register_signatures state v;
        let scheme = G.scheme v in
        List.iter U.skolemize (G.quantifiers scheme);
-       Debug.print_doc (
+       Debug.print (
            string "Adding binder " ^^ dquote ^^ (print_tevar x) ^^
            dquote ^^ string " with type scheme " ^^ print_scheme scheme);
        solve (XMap.add x scheme env) c;
 
-       Debug.print_doc (
+       Debug.print (
            string "Type scheme on binder " ^^ dquote ^^ (print_tevar x) ^^
              dquote ^^ string " after solving constraint in scope " ^^
              print_scheme scheme);
        if restrict_to_mono then
          begin
-           Debug.print_doc ( string "Testing monomorphic constraint on variable "
+           Debug.print ( string "Testing monomorphic constraint on variable "
                              ^^ print_tevar x);
            if not (isMono v) then
              raise (NotMono (x, v))
          end;
-       Debug.print_doc (string "Exiting scope of binding " ^^ print_tevar x)
+       Debug.print (string "Exiting scope of binding " ^^ print_tevar x)
     | CLet (xvss, vs, c1, c2, generalizable_hook) ->
         (* Warn the generalization engine that we entering the left-hand side of
            a [let] construct. *)
@@ -253,12 +253,12 @@ let solve (rectypes : bool) (c : rawco) : unit =
         List.iter (G.register state) vs;
         begin
           if ( List.length( xvss ) > 0 ) then
-            Debug.print_doc (nest 2
+            Debug.print (nest 2
               (string "Entering let binding LHS.  Defined bindings:" ^^
                hardline ^^ separate hardline (List.map (fun (x, v, _) ->
                print_tevar x ^^ space ^^ colon ^^ space ^^ print_var v) xvss)))
           else
-            Debug.print( "Entering top-level binding" )
+            Debug.print_str "Entering top-level binding"
         end;
         if Debug.hard then G.show_state "State before solving" state;
         (* Solve the constraint [c1]. *)
@@ -271,7 +271,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
            variables that should be universally quantified here. *)
         if Debug.hard then G.show_state "State after solving, before exiting" state;
         let generalizable, ss = G.exit rectypes state vs in
-        Debug.print_doc (string "Generalizable vars from the generalization engine: "
+        Debug.print (string "Generalizable vars from the generalization engine: "
                          ^^ print_vars generalizable);
         if Debug.hard then G.show_state "State after exiting" state;
         (* Check the inferred type scheme against the type annotation or accept
@@ -293,7 +293,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
             (* ov = original v, sv = solved v *)
             if ( U.has_structure ov ) then
               begin
-                Debug.print_doc (nest 2
+                Debug.print (nest 2
                   (string "Let-binder with type annottation:" ^^ hardline ^^
                    string "Annotation: " ^^ print_var ov ^^ hardline ^^
                    string "Inferred  : " ^^ print_var sv ^^ hardline ^^
@@ -316,30 +316,30 @@ let solve (rectypes : bool) (c : rawco) : unit =
         (* Remove generalizable variables that were eliminated after unification
            with a provided signature.  We recognize these variables by the fact
            they have a structure. *)
-        Debug.print_doc (string "Generalizable vars before removing unified: "
+        Debug.print (string "Generalizable vars before removing unified: "
                          ^^ print_vars generalizable);
         let generalizable = List.filter (fun g -> not (U.has_structure g))
                               generalizable in
-        Debug.print_doc (string "Generalizable vars after all signature checks: "
+        Debug.print (string "Generalizable vars after all signature checks: "
                          ^^ print_vars generalizable);
         (* Fill the write-once reference [generalizable_hook]. *)
         WriteOnceRef.set generalizable_hook generalizable;
         (* Extend the environment [env] and fill the write-once references
            [scheme_hook]. *)
         if ( List.length( xvss ) > 0 ) then
-          Debug.print "Typechecking of let bindings finished.  Adding bindings to environment:";
+          Debug.print_str "Typechecking of let bindings finished.  Adding bindings to environment:";
         let env =
           List.fold_left2 (fun env (x, _, scheme_hook) s ->
             WriteOnceRef.set scheme_hook s;
-            Debug.print_doc (string "  " ^^ print_tevar x ^^ space ^^ colon ^^
+            Debug.print (string "  " ^^ print_tevar x ^^ space ^^ colon ^^
                                space ^^ print_scheme s);
             XMap.add x s env
           ) env xvss ss
         in
         if ( List.length( xvss ) > 0 ) then
-          Debug.print "Proceeding with let body now"
+          Debug.print_str "Proceeding with let body now"
         else
-          Debug.print "Typechecking of top-level binding finished";
+          Debug.print_str "Typechecking of top-level binding finished";
         (* Proceed to solve [c2] in the extended environment. *)
         solve env c2
 

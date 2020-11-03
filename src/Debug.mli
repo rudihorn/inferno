@@ -3,5 +3,5 @@ val hard        : bool
 val print_ranks : bool
 val fuel        : int
 
-val print     : string -> unit
-val print_doc : PPrint.document -> unit
+val print_str : string -> unit
+val print     : PPrint.document -> unit
