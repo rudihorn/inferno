@@ -1,7 +1,7 @@
 let enabled     = false
-let hard        = false
+let hard        = true
 let print_ranks = true
-let fuel        = 5
+let fuel        = 8
 
 (* JSTOLAREK: swap print_doc and print names since print_doc is used frequently
    and should be shorter *)
