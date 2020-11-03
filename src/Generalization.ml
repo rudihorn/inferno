@@ -353,9 +353,7 @@ let exit rectypes state roots =
     (* A postcondition of [traverse v] is [U.rank v <= k]. (This is downward
        propagation.) *)
     let rec traverse v =
-      (* JSTOLAREK: rethink whether any assertion is possible here, given that
-         we can have generic quantified variables *)
-      (* assert (U.rank v >= 0); *)
+      assert (U.rank v <> no_rank);
       (* If [v] was visited before, then its rank must be below [k], as we
          adjust ranks on the way down already. *)
       if U.VarMap.mem visited v then
