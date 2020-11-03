@@ -230,11 +230,11 @@ let solve (rectypes : bool) (c : rawco) : unit =
            string "Adding binder " ^^ dquote ^^ (print_tevar x) ^^
            dquote ^^ string " with type scheme " ^^ print_scheme scheme);
        solve (XMap.add x scheme env) c;
-
        Debug.print (
            string "Type scheme on binder " ^^ dquote ^^ (print_tevar x) ^^
              dquote ^^ string " after solving constraint in scope " ^^
              print_scheme scheme);
+       assert (G.all_quantifiers_bound scheme);
        if restrict_to_mono then
          begin
            Debug.print ( string "Testing monomorphic constraint on variable "
@@ -333,6 +333,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
             WriteOnceRef.set scheme_hook s;
             Debug.print (string "  " ^^ print_tevar x ^^ space ^^ colon ^^
                                space ^^ print_scheme s);
+            assert (G.all_quantifiers_bound s);
             XMap.add x s env
           ) env xvss ss
         in

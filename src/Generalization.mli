@@ -88,6 +88,8 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
 
   val scheme : variable -> scheme
 
+  val all_quantifiers_bound : scheme -> bool
+
   (* [enter] updates the current state by pushing a new [CLet] construct. The
      the hole is replaced with [let exists vs. hole in ...], where the list
      [vs] of young variables is empty. This function is used when entering the

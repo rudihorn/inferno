@@ -168,6 +168,35 @@ let rec scheme body =
      | Some ([], body)          -> scheme body
      | Some (quantifiers, body) -> { quantifiers; body }
 
+(* Check whether a variable contains unbound quantifiers.  This means rank -1
+   variables that don't have a structure anywhere in the type or variables with
+   a structure not enclosed by a forall.  See #9. *)
+let all_quantifiers_bound { quantifiers; body } =
+  let extend_env env qs = List.fold_left (fun acc q ->
+      assert (U.structure q == None);
+      U.VarMap.add acc q ();
+      acc
+    ) env qs in
+  let rec go inScope v =
+    let toplevel = U.VarMap.length inScope == 0 in
+    try
+      U.VarMap.find inScope v;
+      true (* Bound variables are fine *)
+    with Not_found ->
+      if (U.rank v = generic && U.structure v = None)
+      then false (* Unbound generic quantifiers are bad *)
+      else if (U.rank v = generic && U.has_structure v && toplevel)
+      then false (* Generic variables at top level are bad *)
+      else
+        let { quantifiers; body } = scheme v in
+        match U.structure body with
+        | None -> true (* non-generic variables without structure are fine *)
+        | Some s ->
+             let inScope = extend_env inScope quantifiers in
+             S.fold (fun w ok -> ok && go inScope w) s true in
+  let inScope : unit U.VarMap.t = extend_env (U.VarMap.create 8) quantifiers
+  in go inScope body
+
 (* -------------------------------------------------------------------------- *)
 
 (* Debugging utilities. *)
@@ -436,26 +465,6 @@ let exit rectypes state roots =
   let is_generic v =
     U.rank v = generic
   in
-
-  (* The generic variables are now unreachable from the variables that still
-     have positive rank and inhabit one of the pools. *)
-(*
-  assert (
-    (* For every [v] in the young generation, *)
-    U.VarMap.fold (fun v () ok ->
-      ok && (
-        (* If [v] is not generic, *)
-        is_generic v ||
-        match U.structure v with
-        | None ->
-            true
-        | Some t ->
-            (* then its child [w] is not generic. *)
-            S.fold (fun w ok -> ok && not (is_generic w)) t true
-      )
-    ) young_generation true
-  );
-*)
 
   (* Return the list of unique generalizable variables that was constructed
      above, and a list of type schemes, obtained from the list [roots]. *)
