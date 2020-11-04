@@ -358,7 +358,7 @@ let fml_choose k = ML.Let ("choose",
 let fml_auto k = ML.let_ ("auto", ML.Abs ("x", forall_a_a_to_a,
                                                app x (frozen "x")), k)
 
-(* auto' : ∀ b. (∀ a. a → a) → b → b *)
+(* auto' : (∀ a. a → a) → b → b *)
 let fml_autoprim k = ML.let_ ("auto'", ML.Abs ("x", forall_a_a_to_a, app x x), k)
 
 (* app : ∀ a b. (a → b) → a → b *)
@@ -898,7 +898,7 @@ let fml_nested_forall_inst_1 =
 
 (*
    term : let (f : (∀ a. (∀ b. b → b) → a → a) → (∀ a. (∀ b. b → b) → a → a)) = id in
-          let g = f (id ~auto') in
+          let g = f $auto' in
           g ~id
    type : ∀ a. a → a
 *)
@@ -910,7 +910,7 @@ let fml_nested_forall_inst_2 =
                             ((TyForall (1, TyArrow ((TyForall (2, TyArrow (TyVar 2, TyVar 2))), TyArrow (TyVar 1, TyVar 1)))),
                              (TyForall (1, TyArrow ((TyForall (2, TyArrow (TyVar 2, TyVar 2))), TyArrow (TyVar 1, TyVar 1))))))
           , id
-          , ML.let_ ( "g", app (var "f") (app id (frozen "auto'"))
+          , ML.let_ ( "g", app (var "f") (ML.gen auto')
                     , app (var "g") (frozen "id"))))
   ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
   }
@@ -921,8 +921,6 @@ let fml_nested_forall_inst_2 =
           g ~id
    type : ∀ a. a → a
 *)
-(* JSTOLAREK: this example might be ill-typed but for now it's causing assertion
-   failures *)
 let fml_nested_forall_inst_3 =
   { name = "nested_forall_inst_3"
   ; term = (fml_id << fml_autoprim)

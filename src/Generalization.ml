@@ -169,7 +169,7 @@ let unbound_quantifiers { quantifiers; body } =
   let extend_env env qs = List.fold_left (fun acc q ->
       (* Only register quantifiers without structure, since quantifiers *with*
          structure are the ones that can introduce unboud quantifiers during
-         unification. *)
+         unification. See #10. *)
       if (not (U.has_structure q)) then U.VarMap.add acc q ();
       acc
     ) env qs in
