@@ -883,8 +883,8 @@ let fml_inst_sig_2 =
    term : λ(x : (∀ a. a → a) → (∀ a. a → a)). (x ~id)@ 1
    type : ((∀ a. a → a) → (∀ a. a → a)) → Int
 *)
-let fml_nested_forall_inst =
-  { name = "nested_forall_inst"
+let fml_nested_forall_inst_1 =
+  { name = "nested_forall_inst_1"
   ; term = (fml_id)
            (ML.Abs ("x",
                     Some (TyArrow ( TyForall (1, TyArrow (TyVar 1, TyVar 1))
@@ -895,6 +895,26 @@ let fml_nested_forall_inst =
         (TyArrow ( TyForall ((), TyArrow (TyVar 0, TyVar 0))
                  , TyForall ((), TyArrow (TyVar 0, TyVar 0))), TyInt))
   }
+
+(*
+   term : let (f : (∀ a. (∀ b. b → b) → a → a) → (∀ a. (∀ b. b → b) → a → a)) = id in
+          let g = f (id ~auto') in
+          g ~id
+   type : ∀ a. a → a
+*)
+let fml_nested_forall_inst_2 =
+  { name = "nested_forall_inst_2"
+  ; term = (fml_id << fml_autoprim)
+          ( ML.Let  ( "f"
+                    , Some (TyArrow
+                            ((TyForall (1, TyArrow ((TyForall (2, TyArrow (TyVar 2, TyVar 2))), TyArrow (TyVar 1, TyVar 1)))),
+                             (TyForall (1, TyArrow ((TyForall (2, TyArrow (TyVar 2, TyVar 2))), TyArrow (TyVar 1, TyVar 1))))))
+          , id
+          , ML.let_ ( "g", app (var "f") (app id (frozen "auto'"))
+                    , app (var "g") (frozen "id"))))
+  ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
+  }
+
 
 (* Correctness of type annotations on let binders *)
 (*
@@ -977,7 +997,6 @@ let fml_mono_binder_constraint_2 =
   ; typ  = Some (TyForall ((), TyArrow (TyArrow (TyInt, (TyVar 0)), TyVar 0)))
   }
 
-
 (*
    term : (λ(f : ∀ a b. a → b → (a × b)). f 1 true) ~pair
    type : Int × Bool
@@ -1033,7 +1052,6 @@ let fml_id_appl =
   ; typ  = None
   }
 
-
 (*
    term : choose ~choose
    type : (∀ a. a → a → a) → (∀ a. a → a → a)
@@ -1050,7 +1068,7 @@ let fml_choose_choose =
 (*
    term : let (f : (∀ a. a → a → a) → (∀ a. a → a → a)) = choose ~choose
           in f ~choose
-   type : (∀ a. a → a → a)
+   type : ∀ a. a → a → a
 *)
 let fml_choose_choose_let =
   { name = "choose_choose_let"
@@ -1109,7 +1127,8 @@ let () =
   test fml_inst_2;
   test fml_inst_sig_1;
   test fml_inst_sig_2;
-  test fml_nested_forall_inst;
+  test fml_nested_forall_inst_1;
+  test fml_nested_forall_inst_2;
   test fml_id_annot_1;
   test fml_id_annot_2;
   test fml_id_annot_3;
