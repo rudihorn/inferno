@@ -713,7 +713,7 @@ let f10_dagger =
   { name = "F10†"
   ; term = (fml_choose << fml_id << fml_autoprim)
            (app (app choose id) (ML.Abs ("x", forall_a_a_to_a,
-                                         ML.gen (app (var "auto'") (frozen "x")))))
+                                         ML.gen (app auto' (frozen "x")))))
   ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
                           TyForall ((), TyArrow (TyVar 0, TyVar 0))))
   }
@@ -911,6 +911,27 @@ let fml_nested_forall_inst_2 =
                              (TyForall (1, TyArrow ((TyForall (2, TyArrow (TyVar 2, TyVar 2))), TyArrow (TyVar 1, TyVar 1))))))
           , id
           , ML.let_ ( "g", app (var "f") (app id (frozen "auto'"))
+                    , app (var "g") (frozen "id"))))
+  ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
+  }
+
+(*
+   term : let (f : ∀ a. ((∀ b. b → b) → a → a) → ((∀ b. b → b) → a → a)) = id in
+          let g = f (id auto') in
+          g ~id
+   type : ∀ a. a → a
+*)
+(* JSTOLAREK: this example might be ill-typed but for now it's causing assertion
+   failures *)
+let fml_nested_forall_inst_3 =
+  { name = "nested_forall_inst_3"
+  ; term = (fml_id << fml_autoprim)
+           (ML.Let  ( "f"
+                    , Some (TyForall (1, (TyArrow
+                            (TyArrow ((TyForall (2, TyArrow (TyVar 2, TyVar 2))), TyArrow (TyVar 1, TyVar 1)),
+                             TyArrow ((TyForall (2, TyArrow (TyVar 2, TyVar 2))), TyArrow (TyVar 1, TyVar 1))))))
+          , id
+          , ML.let_ ( "g", app (var "f") (app id auto')
                     , app (var "g") (frozen "id"))))
   ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
   }
@@ -1129,6 +1150,7 @@ let () =
   test fml_inst_sig_2;
   test fml_nested_forall_inst_1;
   test fml_nested_forall_inst_2;
+  test fml_nested_forall_inst_3;
   test fml_id_annot_1;
   test fml_id_annot_2;
   test fml_id_annot_3;
