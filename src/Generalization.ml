@@ -486,22 +486,21 @@ let instantiate state { quantifiers; body } =
   (* Prepare to mark which variables have been visited and record their copy. *)
   let visited : U.variable U.VarMap.t = U.VarMap.create 128 in
 
-(*
+  (* Does the variable have a forall structure? *)
   let isForall v =
     Option.map S.isForall (U.structure v) = Some true in
-*)
 
   (* If the variable [v] has rank [generic], then [copy v] returns a copy of
      it, and copies its descendants recursively. If [v] has positive rank,
      then [copy v] returns [v]. Only one copy per variable is created, even if
      a variable is encountered several times during the traversal. *)
 
-  let rec copy (*toplevel*) v =
+  let rec copy toplevel v =
 
-    (* If this variable has positive rank, then it is not generic: we must
-       stop. *)
+    (* If this variable has positive rank, then it is not generic: we must stop.
+       We also don't instantiate anything nested inside a quantified type. *)
 
-    if (*(U.rank v != signature) &&*) (U.rank v > 0 (* || (not (List.mem v quantifiers))*)) then
+    if (U.rank v > 0 || not toplevel) then
       v
 
     (* If a copy of this variable has been created already, return it. *)
@@ -509,7 +508,6 @@ let instantiate state { quantifiers; body } =
     else begin
       try
         assert (U.rank v = generic);
-        (* assert (List.mem v quantifiers); *)
         U.VarMap.find visited v
       with Not_found ->
 
@@ -519,15 +517,16 @@ let instantiate state { quantifiers; body } =
            recursive call to [copy], so as to guarantee termination in the
            presence of cyclic terms. *)
 
-(*        let toplevel = toplevel && not (isForall v) in *)
         let v' = U.fresh None state.young in
         register_at_rank state v';
         U.VarMap.add visited v v';
-        U.set_structure v' (Option.map (S.map (copy (* toplevel *))) (U.structure v));
+        (* We're no longer at the top level if we enter a forall variable *)
+        let toplevel = toplevel && not (isForall v) in
+        U.set_structure v' (Option.map (S.map (copy toplevel)) (U.structure v));
         v'
       end
   in
-  List.map copy quantifiers, copy (*true*) body
+  List.map (copy true) quantifiers, copy true body
 
 let freeze state { quantifiers; body } =
   let inScope : U.variable U.VarMap.t = List.fold_left (fun acc q ->
