@@ -290,12 +290,12 @@ let solve (rectypes : bool) (c : rawco) : unit =
             (* ov = original v, sv = solved v *)
             if ( U.has_structure ov ) then
               begin
+                G.register_signatures state ov;
                 Debug.print (nest 2
-                  (string "Let-binder with type annottation:" ^^ hardline ^^
+                  (string "Let-binder with type annotation:" ^^ hardline ^^
                    string "Annotation: " ^^ print_var ov ^^ hardline ^^
                    string "Inferred  : " ^^ print_var sv ^^ hardline ^^
                    string "Scheme    : " ^^ print_scheme s) );
-                G.register_signatures state ov;
                 let ovs = G.scheme ov in
                 List.iter U.skolemize (G.quantifiers ovs);
                 debug_unify_before (string "Unifying let annotation with inferred type of let body.")
