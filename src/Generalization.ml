@@ -165,6 +165,30 @@ let rec scheme body =
      | Some ([], body)          -> scheme body
      | Some (quantifiers, body) -> { quantifiers; body }
 
+let unbound_quantifiers { quantifiers; body } =
+  let extend_env env qs = List.fold_left (fun acc q ->
+      (* Only register quantifiers without structure, since quantifiers *with*
+         structure are the ones that can introduce unboud quantifiers during
+         unification. *)
+      if (not (U.has_structure q)) then U.VarMap.add acc q ();
+      acc
+    ) env qs in
+  let rec go inScope v acc =
+    try
+      U.VarMap.find inScope v;
+      acc (* Quantifier in scope, all fine *)
+    with Not_found ->
+      if (U.rank v = generic && not (U.has_structure v))
+      then v :: acc (* Unbound generic quantifier that we're looking for *)
+      else
+        let { quantifiers; body } = scheme v in
+        match U.structure body with
+        | None   -> acc (* Non-generic variable without structure, all fine *)
+        | Some s -> S.fold (go (extend_env inScope quantifiers)) s acc in
+  let inScope : unit U.VarMap.t = extend_env (U.VarMap.create 8) quantifiers
+  in go inScope body []
+
+
 (* Check whether a variable contains unbound quantifiers.  This means rank -1
    variables that don't have a structure anywhere in the type or variables with
    a structure not enclosed by a forall.  See #9. *)
@@ -180,7 +204,7 @@ let all_quantifiers_bound { quantifiers; body } =
       U.VarMap.find inScope v;
       true (* Bound variables are fine *)
     with Not_found ->
-      if (U.rank v = generic && U.structure v = None)
+      if (U.rank v = generic && not (U.has_structure v))
       then false (* Unbound generic quantifiers are bad *)
       else if (U.rank v = generic && U.has_structure v && toplevel)
       then false (* Generic variables at top level are bad *)

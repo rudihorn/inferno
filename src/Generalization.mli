@@ -86,7 +86,7 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
   (* JSTOLAREK: documentation outdated, this is now an inteligent constructor *)
 
   val scheme : variable -> scheme
-
+  val unbound_quantifiers : scheme -> variable list
   val all_quantifiers_bound : scheme -> bool
 
   (* [enter] updates the current state by pushing a new [CLet] construct. The

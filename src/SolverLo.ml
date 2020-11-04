@@ -286,7 +286,8 @@ let solve (rectypes : bool) (c : rawco) : unit =
 
            - unskolemize variables in the type signature
          *)
-        let ss = List.fold_right2 (fun s ((_, ov, _), sv) acc ->
+        let ss, generalizable = List.fold_right2
+         (fun s ((_, ov, _), sv) (ss, generalizable) ->
             (* ov = original v, sv = solved v *)
             if ( U.has_structure ov ) then
               begin
@@ -303,11 +304,12 @@ let solve (rectypes : bool) (c : rawco) : unit =
                 U.unify (G.body ovs) (G.body s); (* See #2 *)
                 debug_unify_after (G.body ovs);
                 List.iter U.unskolemize (G.quantifiers ovs);
-                G.scheme ov :: acc
+                let qs = G.unbound_quantifiers s in
+                ovs :: ss, List.append qs generalizable
               end
             else
-                s :: acc
-          ) ss (List.combine xvss vs) [] in
+                s :: ss, generalizable
+          ) ss (List.combine xvss vs) ([], generalizable) in
         (* Remove duplicate generalizable variables.  These can be introduced
            when unifying the inferred type with signature *)
         let generalizable = unduplicate U.equivalent generalizable in
