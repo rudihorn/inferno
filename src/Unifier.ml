@@ -154,7 +154,7 @@ let fresh =
 
 (* -------------------------------------------------------------------------- *)
 
-exception UnifyInternal
+exception UnifyInternal (* JSTOLAREK: might be unused - see #8 *)
 exception Unify of variable * variable
 
 exception UnifySkolemInternal
