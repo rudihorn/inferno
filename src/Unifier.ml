@@ -194,6 +194,11 @@ and unify_descriptors t desc1 desc2 =
   |    { skolem = true; structure = Some _; _ }, _ ->
      assert false
 
+  (* We should never attempt to unify unregistered variables *)
+  | _, { rank = 0; _ }
+  |    { rank = 0; _ }, _ ->
+     assert false
+
   | { id = id1; skolem = true; _ }, { id = id2; skolem = true; _ } ->
      (* Skolem can't unify with other skolem but can unify with itself *)
      if (id1 <> id2) then raise UnifySkolemInternal;
