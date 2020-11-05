@@ -11,6 +11,7 @@
 
 open UnifierSig
 open SolverSig
+open Utility
 
 module Make
   (X : TEVAR)
@@ -79,11 +80,6 @@ let print_scheme scheme =
             print_var (G.body scheme)
 
 (* -------------------------------------------------------------------------- *)
-
-let rec unduplicate equal = function
-  | [] -> []
-  | elem :: elems -> (let _, others = List.partition (equal elem) elems in
-                      elem :: unduplicate equal others)
 
 let isMono v =
   let visited : unit U.VarMap.t = U.VarMap.create 128 in

@@ -10,6 +10,7 @@
 (******************************************************************************)
 
 open UnifierSig
+open Utility
 
 module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure) = struct
 
@@ -176,6 +177,7 @@ let rec scheme body =
      | Some ([], body)          -> scheme body
      | Some (quantifiers, body) -> { quantifiers; body }
 
+(* Returns all unbound quantifiers (rank -1, no structure) in a scheme *)
 let unbound_quantifiers { quantifiers; body } =
   let extend_env env qs = List.fold_left (fun acc q ->
       (* Only register quantifiers without structure, since quantifiers *with*
@@ -198,6 +200,16 @@ let unbound_quantifiers { quantifiers; body } =
         | Some s -> S.fold (go (extend_env inScope quantifiers)) s acc in
   let inScope : unit U.VarMap.t = extend_env (U.VarMap.create 8) quantifiers
   in go inScope body []
+
+(* Returns all bound quantifiers in a scheme, including nested ones. *)
+let bound_quantifiers { quantifiers; body } =
+  let rec go v acc =
+    let { quantifiers; body } = scheme v in
+    let acc = List.append quantifiers acc in
+    match U.structure body with
+    | None   -> acc
+    | Some s -> S.fold go s acc
+  in Utility.unduplicate U.equivalent (go body quantifiers)
 
 (* Returns a list of generic top-level variables, both with and without
    structure.  Top-level means not inside a forall. *)
