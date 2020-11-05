@@ -231,7 +231,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
            string "Type scheme on binder " ^^ dquote ^^ (print_tevar x) ^^
              dquote ^^ string " after solving constraint in scope " ^^
              print_scheme scheme);
-       assert (G.all_quantifiers_bound scheme);
+       assert (G.all_generic_vars_bound scheme);
        if restrict_to_mono then
          begin
            Debug.print ( string "Testing monomorphic constraint on variable "
@@ -346,7 +346,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
             WriteOnceRef.set scheme_hook s;
             Debug.print (string "  " ^^ print_tevar x ^^ space ^^ colon ^^
                                space ^^ print_scheme s);
-            assert (G.all_quantifiers_bound s);
+            assert (G.all_generic_vars_bound s);
             List.iter (fun q -> assert (not (U.has_structure q));
                                 assert (U.rank q = G.generic))
               (G.quantifiers s);

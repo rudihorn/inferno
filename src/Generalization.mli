@@ -89,7 +89,7 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
   val scheme                       : variable -> scheme
   val unbound_quantifiers          : scheme -> variable list
   val toplevel_generic_variables   : variable -> variable list
-  val all_quantifiers_bound        : scheme -> bool
+  val all_generic_vars_bound       : scheme -> bool
   val set_unbound_quantifiers_rank : scheme -> int -> unit
 
   (* [enter] updates the current state by pushing a new [CLet] construct. The

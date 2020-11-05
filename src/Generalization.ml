@@ -214,10 +214,10 @@ let toplevel_generic_variables body =
     else acc
   in go body []
 
-(* Check whether a variable contains unbound quantifiers.  This means rank -1
-   variables that don't have a structure anywhere in the type or variables with
-   a structure not enclosed by a forall.  See #9. *)
-let all_quantifiers_bound { quantifiers; body } =
+(* Check whether a variable contains unbound generic variables.  This means rank
+   -1 variables that don't have a structure anywhere in the type or variables
+   with a structure not enclosed by a forall.  See #9. *)
+let all_generic_vars_bound { quantifiers; body } =
   let extend_env env qs = List.fold_left (fun acc q ->
       assert (U.structure q == None);
       U.VarMap.add acc q ();
