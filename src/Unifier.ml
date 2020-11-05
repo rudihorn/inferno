@@ -218,23 +218,23 @@ and unify_descriptors t desc1 desc2 =
      raise UnifySkolemInternal
 
   | _, _ ->
-     (* JSTOLAREK: experimental unification restriction: variables with no
-        strcuture and rank -1 (quantified variables) can only be unified if one
-        of them is a skolem.
-     *)
+     (* Variables with no structure and rank -1 can only be unified if one of
+        them is a skolem.  Case where both variables are skolems is covered by a
+        branch above. *)
+     (* JSTOLAREK: at the moment enabling this assertion causes failure of
+        multiple examples.  In some earlier iterations it would only cause
+        failure of choose_choose_let test. See #8. *)
 (*
-     if not (desc1.skolem || desc2.skolem) &&
-        (desc1.rank = -1 ||  desc2.rank = -1) &&
-        (desc1.structure = None ||  desc2.structure = None) then
-       raise UnifyInternal;
+     assert( desc1.skolem || desc2.skolem ||
+            (desc1.rank <> -1 && desc2.rank <> -1) ||
+            (Option.is_some desc1.structure && Option.is_some desc2.structure));
 *)
-     let id        = if desc2.skolem (* We pick the skolem identifier *)
-                     then desc2.id
-                     else desc1.id in
-     let structure = unify_structures t desc1.structure desc2.structure in
-     let rank      = min desc1.rank desc2.rank in
-     let skolem    = desc1.skolem || desc2.skolem in (* skolemize *)
-       { id; structure; rank; skolem }
+     {            (* We pick the skolem identifier *)
+      id        = if desc2.skolem then desc2.id else desc1.id;
+      structure = unify_structures t desc1.structure desc2.structure;
+      rank      = min desc1.rank desc2.rank;
+      skolem    = desc1.skolem || desc2.skolem (* skolemize *)
+     }
 
 (* -------------------------------------------------------------------------- *)
 
