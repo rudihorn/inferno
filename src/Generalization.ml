@@ -560,9 +560,9 @@ let instantiate state { quantifiers; body } =
   let rec copy toplevel v =
 
     (* If this variable has positive rank, then it is not generic: we must stop.
-       We also don't instantiate anything nested inside a quantified type. *)
+       *)
 
-    if (U.rank v > 0 || not toplevel) then
+    if (U.rank v > 0) then
       v
 
     (* If a copy of this variable has been created already, return it. *)
@@ -580,7 +580,9 @@ let instantiate state { quantifiers; body } =
            presence of cyclic terms. *)
 
         let v' = U.fresh None state.young in
-        register_at_rank state v';
+        (* top-level generic variables are registered, non-top-level ones are
+           only freshened. *)
+        if toplevel then register_at_rank state v' else U.set_rank v' generic;
         U.VarMap.add visited v v';
         (* We're no longer at the top level if we enter a forall variable *)
         let toplevel = toplevel && not (isForall v) in
