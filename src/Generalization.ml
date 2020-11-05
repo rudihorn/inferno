@@ -149,6 +149,17 @@ let quantifiers { quantifiers; _ } =
 let body { body; _ } =
   body
 
+let has_quantifiers { quantifiers; _ } =
+  List.length quantifiers > 0
+
+(* -------------------------------------------------------------------------- *)
+
+(* Helper functions *)
+
+(* Does the variable have a forall structure? *)
+let isForall v =
+  Option.map S.isForall (U.structure v) = Some true
+
 (* -------------------------------------------------------------------------- *)
 
 (* A smart constructor of type schemes for variables constructed from type
@@ -188,6 +199,20 @@ let unbound_quantifiers { quantifiers; body } =
   let inScope : unit U.VarMap.t = extend_env (U.VarMap.create 8) quantifiers
   in go inScope body []
 
+(* Returns a list of generic top-level variables, both with and without
+   structure.  Top-level means not inside a forall. *)
+let toplevel_generic_variables body =
+  let rec go v acc =
+    let acc = if (U.rank v == generic) then v :: acc else acc in
+    if not (isForall v) then (* Don't descend into foralls. *)
+      begin
+        let { quantifiers; body } = scheme v in
+        match U.structure body with
+        | None   -> acc
+        | Some s -> S.fold go s acc
+      end
+    else acc
+  in go body []
 
 (* Check whether a variable contains unbound quantifiers.  This means rank -1
    variables that don't have a structure anywhere in the type or variables with
@@ -217,6 +242,11 @@ let all_quantifiers_bound { quantifiers; body } =
              S.fold (fun w ok -> ok && go inScope w) s true in
   let inScope : unit U.VarMap.t = extend_env (U.VarMap.create 8) quantifiers
   in go inScope body
+
+let set_unbound_quantifiers_rank { quantifiers; body } rank =
+  let vs = List.filter (fun x -> not (List.mem x quantifiers))
+                       (toplevel_generic_variables body) in
+  List.iter (fun v -> U.set_rank v rank) vs
 
 (* -------------------------------------------------------------------------- *)
 
@@ -509,10 +539,6 @@ let instantiate state { quantifiers; body } =
 
   (* Prepare to mark which variables have been visited and record their copy. *)
   let visited : U.variable U.VarMap.t = U.VarMap.create 128 in
-
-  (* Does the variable have a forall structure? *)
-  let isForall v =
-    Option.map S.isForall (U.structure v) = Some true in
 
   (* If the variable [v] has rank [generic], then [copy v] returns a copy of
      it, and copies its descendants recursively. If [v] has positive rank,

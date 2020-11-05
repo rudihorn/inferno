@@ -287,31 +287,37 @@ let solve (rectypes : bool) (c : rawco) : unit =
            - unskolemize variables in the type signature
          *)
         let ss, generalizable = List.fold_right2
-         (fun s ((_, ov, _), sv) (ss, generalizable) ->
-            (* ov = original v, sv = solved v *)
-            if ( U.has_structure ov ) then
+         (fun s (_, annotation, _) (ss, generalizable) ->
+            if ( U.has_structure annotation ) then
               begin
-                G.register_signatures state ov;
+                G.register_signatures state annotation;
+                let rank = U.rank annotation in
                 Debug.print (nest 2
                   (string "Let-binder with type annotation:" ^^ hardline ^^
-                   string "Annotation: " ^^ print_var ov ^^ hardline ^^
-                   string "Inferred  : " ^^ print_var sv ^^ hardline ^^
-                   string "Scheme    : " ^^ print_scheme s) );
-                let ovs = G.scheme ov in
-                List.iter U.skolemize (G.quantifiers ovs);
-                debug_unify_before (string "Unifying let annotation with inferred type of let body.")
-                  (G.body ovs) (G.body s);
-                U.unify (G.body ovs) (G.body s); (* See #2 *)
-                debug_unify_after (G.body ovs);
-                List.iter U.unskolemize (G.quantifiers ovs);
+                   string "Annotation: " ^^ print_var annotation ^^ hardline ^^
+                   string "Inferred  : " ^^ print_scheme s) );
+                let annotation_scheme = G.scheme annotation in
+                List.iter U.skolemize (G.quantifiers annotation_scheme);
+                debug_unify_before
+                  (string "Unifying let annotation with inferred type of let body.")
+                  (G.body annotation_scheme) (G.body s);
+                U.unify (G.body annotation_scheme) (G.body s); (* See #2 *)
+                debug_unify_after (G.body annotation_scheme);
+                List.iter U.unskolemize (G.quantifiers annotation_scheme);
+                (* If the signature has no quantifiers but the inferred type
+                   does then unification with the body of inferred type will
+                   introduce unbound quantifiers.  We fix this here. See #9 *)
+                let is_quantified = G.has_quantifiers annotation_scheme in
+                if not is_quantified
+                then G.set_unbound_quantifiers_rank annotation_scheme rank;
                 (* Unification with signature might introduce unbound
                    quantifiers that need to be generalized. *)
                 let qs = G.unbound_quantifiers s in
-                ovs :: ss, List.append qs generalizable
+                annotation_scheme :: ss, List.append qs generalizable
               end
             else
                 s :: ss, generalizable
-          ) ss (List.combine xvss vs) ([], generalizable) in
+          ) ss xvss ([], generalizable) in
         (* Remove duplicate generalizable variables.  These can be introduced
            when unifying the inferred type with signature *)
         let generalizable = unduplicate U.equivalent generalizable in
