@@ -38,3 +38,10 @@ let multiply m o1 o2 =
   | Some x1, Some x2 ->
       Some (m x1 x2)
 
+let is_none = function
+  | None   -> true
+  | Some _ -> false
+
+let is_some = function
+  | None   -> false
+  | Some _ -> true

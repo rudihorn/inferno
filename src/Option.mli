@@ -17,3 +17,6 @@ val map: ('a -> 'b) -> 'a option -> 'b option
 
 val multiply: ('a -> 'a -> 'a) -> 'a option -> 'a option -> 'a option
 
+val is_none: 'a option -> bool
+
+val is_some: 'a option -> bool
