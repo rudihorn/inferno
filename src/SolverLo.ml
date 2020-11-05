@@ -309,7 +309,12 @@ let solve (rectypes : bool) (c : rawco) : unit =
                    introduce unbound quantifiers.  We fix this here. See #9 *)
                 let is_quantified = G.has_quantifiers annotation_scheme in
                 if not is_quantified
-                then G.set_unbound_quantifiers_rank annotation_scheme rank;
+                then
+                  begin
+                    G.set_unbound_quantifiers_rank annotation_scheme rank;
+                    Debug.print (string "Unbound quantifiers rank fix: " ^^
+                                 print_scheme annotation_scheme)
+                  end;
                 (* Unification with signature might introduce unbound
                    quantifiers that need to be generalized. *)
                 let qs = G.unbound_quantifiers s in
@@ -342,6 +347,9 @@ let solve (rectypes : bool) (c : rawco) : unit =
             Debug.print (string "  " ^^ print_tevar x ^^ space ^^ colon ^^
                                space ^^ print_scheme s);
             assert (G.all_quantifiers_bound s);
+            List.iter (fun q -> assert (not (U.has_structure q));
+                                assert (U.rank q = G.generic))
+              (G.quantifiers s);
             XMap.add x s env
           ) env xvss ss
         in
