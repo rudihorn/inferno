@@ -304,6 +304,8 @@ let solve (rectypes : bool) (c : rawco) : unit =
                 U.unify (G.body ovs) (G.body s); (* See #2 *)
                 debug_unify_after (G.body ovs);
                 List.iter U.unskolemize (G.quantifiers ovs);
+                (* Unification with signature might introduce unbound
+                   quantifiers that need to be generalized. *)
                 let qs = G.unbound_quantifiers s in
                 ovs :: ss, List.append qs generalizable
               end
