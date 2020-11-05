@@ -630,9 +630,7 @@ let freeze state { quantifiers; body } =
            recursive call to [copy], so as to guarantee termination in the
            presence of cyclic terms. *)
 
-        let rank = if U.rank v = generic then generic else state.young in
-        let v'   = U.fresh None rank in
-        if rank != generic then register_at_rank state v';
+        let v' = U.fresh None generic in
         U.VarMap.add visited v v';
         U.set_structure v' (Option.map (S.map copy) (U.structure v));
         v'
