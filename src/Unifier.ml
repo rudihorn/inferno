@@ -273,6 +273,13 @@ module VarMap =
     let hash v = Hashtbl.hash (id v)
   end)
 
+module PureVarMap =
+  Map.Make(struct
+    type t      = variable
+    let equal   = TUnionFind.equivalent
+    let compare = TUnionFind.compare
+  end)
+
 (* -------------------------------------------------------------------------- *)
 
 let equivalent =

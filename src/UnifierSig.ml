@@ -132,7 +132,8 @@ val unify: variable -> variable -> unit
    stable only as long as no unification is performed. So, a hash table should
    not be used across a call to [unify]. *)
 
-module VarMap : Hashtbl.S with type key = variable
+module VarMap     : Hashtbl.S with type key = variable
+module PureVarMap : Map.S with type key = variable
 
 (* -------------------------------------------------------------------------- *)
 
