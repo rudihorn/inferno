@@ -218,18 +218,7 @@ and unify_descriptors t desc1 desc2 =
      raise UnifySkolemInternal
 
   | _, _ ->
-     (* Variables with no structure and rank -1 can only be unified if one of
-        them is a skolem.  Case where both variables are skolems is covered by a
-        branch above. *)
-     (* JSTOLAREK: at the moment enabling this assertion causes failure of
-        multiple examples.  In some earlier iterations it would only cause
-        failure of choose_choose_let test. See #8. *)
-(*
-     assert( desc1.skolem || desc2.skolem ||
-            (desc1.rank <> -1 && desc2.rank <> -1) ||
-            (Option.is_some desc1.structure && Option.is_some desc2.structure));
-*)
-     {            (* We pick the skolem identifier *)
+     { (* We pick the skolem identifier if there is such *)
       id        = if desc2.skolem then desc2.id else desc1.id;
       structure = unify_structures t desc1.structure desc2.structure;
       rank      = min desc1.rank desc2.rank;
