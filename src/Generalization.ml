@@ -214,7 +214,7 @@ let unbound_quantifiers { quantifiers; body } =
         | None   -> acc (* Non-generic variable without structure, all fine *)
         | Some s -> S.fold (go (extend_env inScope quantifiers)) s acc in
   let inScope : unit U.VarMap.t = extend_env (U.VarMap.create 8) quantifiers
-  in go inScope body []
+  in Utility.unduplicate U.equivalent (go inScope body [])
 
 (* Returns all bound quantifiers in a scheme, including nested ones. *)
 let bound_quantifiers { quantifiers; body } =
