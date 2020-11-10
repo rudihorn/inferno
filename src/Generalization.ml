@@ -347,6 +347,7 @@ let enter state =
 (* The order in which the quantifiers appear is determined in an arbitrary
    manner. *)
 
+(* JSTOLAREK: unused, remove *)
 let make_scheme (is_generic : U.variable -> bool) (body : U.variable) : scheme =
 
   (* Prepare to mark which variables have been visited. *)
@@ -538,16 +539,16 @@ let exit rectypes state roots =
   InfiniteArray.set state.pool state.young [];
   state.young <- state.young - 1;
 
-  (* This auxiliary function recognizes the variables that we have just
-     marked as generic. *)
-  let is_generic v =
-    U.rank v = generic
-  in
+  Debug.print_str "Ending generalize.exit";
 
   (* Return the list of unique generalizable variables that was constructed
      above, and a list of type schemes, obtained from the list [roots]. *)
   vs,
-  List.map (make_scheme is_generic) roots
+  List.map (fun body ->
+      let s  = flatten_outer_foralls (degenerate_scheme body) in
+      let qs = unbound_quantifiers s in
+      append_quantifiers qs s)
+    roots
 
 (* -------------------------------------------------------------------------- *)
 
