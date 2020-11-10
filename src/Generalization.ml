@@ -166,16 +166,31 @@ let isForall v =
 (* A smart constructor of type schemes for variables constructed from type
    annotation. *)
 
+(* Turn a variable into a scheme with no quantifiers *)
+let degenerate_scheme body = { quantifiers = []; body }
+
+let append_quantifiers qs { quantifiers; body } =
+  { quantifiers = List.append qs quantifiers ; body }
+
 (* JSTOLAREK: document how this works on structure created by
    SolverHi.annotation_to_structure *)
 let rec scheme body =
   match U.structure body with
-  | None   -> { quantifiers = []; body }
+  | None   -> degenerate_scheme body
   | Some s ->
      match S.maybeForall s with
-     | None                     -> { quantifiers = []; body }
-     | Some ([], body)          -> scheme body
-     | Some (quantifiers, body) -> { quantifiers; body }
+     | None            -> degenerate_scheme body
+     | Some ([], body) -> scheme body
+     | Some (qs, body) -> append_quantifiers qs (scheme body)
+
+let rec flatten_outer_foralls { quantifiers; body } =
+  match U.structure body with
+  | None   -> { quantifiers; body }
+  | Some s ->
+     match S.maybeForall s with
+     | None            -> { quantifiers; body }
+     | Some ([], body) -> flatten_outer_foralls (degenerate_scheme body)
+     | Some (qs, body) -> flatten_outer_foralls (append_quantifiers qs {quantifiers; body})
 
 (* Returns all unbound quantifiers (rank -1, no structure) in a scheme *)
 let unbound_quantifiers { quantifiers; body } =
