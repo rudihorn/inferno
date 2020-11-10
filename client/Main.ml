@@ -410,11 +410,22 @@ let env_test =
 
 (* PLDI paper examples (Figure 2) *)
 
+(* Note: inferno does not permit unbound type variables.  Therefore in the
+   inferred types all free type variables are bound at the program's top level.
+   In the examples below type variables bound at program top level are placed in
+   braces to explicitly mark they are not per se part of the type inferred for
+   the term.  Concretely, if the inferred type is:
+
+     [∀ b. ∀ a.] a → b → b
+
+   it means that the inferred type is `a → b → b` and the quantifiers `∀ b. ∀
+   a.` are added at the program top level.  *)
+
 (* Section A: Polymorphic instantiation *)
 
 (* example            : A1
    term               : λx.λy.y
-   inferred type      : ∀ b. ∀ a. a → b → b
+   inferred type      : [∀ b. ∀ a.] a → b → b
    type in PLDI paper : a → b → b
 *)
 let a1 =
@@ -438,7 +449,7 @@ let a1_dot =
 
 (* example            : A2
    term               : choose id
-   inferred type      : ∀a. (a → a) → (a → a)
+   inferred type      : [∀ a.] (a → a) → (a → a)
    type in PLDI paper : (a → a) → (a → a)
  *)
 let a2 =
@@ -466,7 +477,7 @@ let a2_dot =
 
 (* example            : A4
    term               : λ(x : ∀ a. a → a). x x
-   inferred type      : ∀b. (∀a. a → a) → b → b
+   inferred type      : [∀ b.] (∀ a. a → a) → b → b
    type in PLDI paper : (∀ a. a → a) → (b → b)
  *)
 let a4 =
@@ -503,7 +514,7 @@ let a5 =
 
 (* example            : A6
    term               : id auto'
-   inferred type      : ∀b. (∀a. a → a) → b → b
+   inferred type      : [∀ b.] (∀a. a → a) → b → b
    type in PLDI paper : (∀ a. a → a) → (b → b)
  *)
 let a6 =
@@ -673,7 +684,7 @@ let e3 =
 
 (* example            : E3∘
    term               : let r : (∀ a. a → (∀ b. b → b)) → Int = λx.1 in r $(λx.$(λy.y))
-   inferred type      : FAILING WITH EXCEPTION
+   inferred type      : ASSERTION FAILURE
    type in PLDI paper : Int
  *)
 let e3_dot =
