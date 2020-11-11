@@ -235,6 +235,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
            if not (isMono v) then
              raise (NotMono (x, v))
          end;
+       List.iter U.unskolemize (G.quantifiers scheme);
        Debug.print (string "Exiting scope of binding " ^^ print_tevar x)
     | CLet (xvss, vs, c1, c2, generalizable_hook) ->
         (* Warn the generalization engine that we entering the left-hand side of
