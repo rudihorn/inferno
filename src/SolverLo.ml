@@ -302,7 +302,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
                 List.iter U.unskolemize (G.quantifiers annotation_scheme);
                 (* If the signature has no quantifiers but the inferred type
                    does then unification with the body of inferred type will
-                   introduce unbound quantifiers.  We fix this here. See #9 *)
+                   introduce unbound quantifiers.  We fix this here.  See #9 *)
                 let is_quantified = G.has_quantifiers annotation_scheme in
                 if not is_quantified
                 then
@@ -311,8 +311,9 @@ let solve (rectypes : bool) (c : rawco) : unit =
                     Debug.print (string "Unbound quantifiers rank fix: " ^^
                                  print_scheme annotation_scheme)
                   end;
+
                 (* Unification with signature might introduce unbound
-                   quantifiers that need to be generalized. *)
+                   quantifiers that need to be generalized.  See #10 *)
                 let qs = G.unbound_quantifiers s in
                 annotation_scheme :: ss, List.append qs generalizable
               end
