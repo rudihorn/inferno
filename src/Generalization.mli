@@ -131,7 +131,9 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
      was last called) plus the length of the list [roots] plus the current
      nesting depth of [CLet] constructs (usually considered a constant). *)
 
-  val exit: bool -> state -> variable list -> variable list * scheme list
+  val exit: bool -> state -> variable list ->
+            (* JSTOLAREK: debug only, remove *) (variable list -> PPrint.document) ->
+            variable list * scheme list
 
   (* [instantiate] takes a fresh copy of a type scheme. The generic variables
      of the type scheme are replaced with freshly created variables, which are
