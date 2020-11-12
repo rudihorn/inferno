@@ -246,7 +246,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
         List.iter (G.register state) vs;
 
         (* Record variable ranks to later set them for unbound quantifiers. *)
-        let let_ranks = List.map U.rank vs in
+        let let_ranks = List.map (fun v -> U.rank v - 1) vs in
 
         begin
           if ( List.length( xvss ) > 0 ) then
