@@ -1114,7 +1114,6 @@ let fml_choose_choose_let =
 
 
 let () =
-(*
   test env_test;
   (* PLDI paper examples *)
   test a1;
@@ -1174,5 +1173,3 @@ let () =
   test fml_id_appl;
   test fml_choose_choose;
   test fml_choose_choose_let
-*)
-  test bad3
