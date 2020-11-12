@@ -225,7 +225,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
        solve (XMap.add x scheme env) c;
        Debug.print (
            string "Type scheme on binder " ^^ dquote ^^ (print_tevar x) ^^
-             dquote ^^ string " after solving constraint in scope " ^^
+             dquote ^^ string " after solving constraint in scope: " ^^
              print_scheme scheme);
        assert (G.all_generic_vars_bound scheme);
        if restrict_to_mono then
@@ -257,7 +257,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
           else
             Debug.print_str "Entering top-level binding"
         end;
-        if Debug.hard then G.show_state "State before solving" state;
+        if Debug.hard then G.show_state "State before solving:" state;
         (* Solve the constraint [c1]. *)
         solve env c1;
         (* Ask the generalization engine to perform an occurs check, to adjust the
@@ -266,7 +266,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
            and to construct a list [ss] of type schemes for our entry points. The
            generalization engine also produces a list [generalizable] of the young
            variables that should be universally quantified here. *)
-        if Debug.hard then G.show_state "State after solving, before exiting" state;
+        if Debug.hard then G.show_state "State after solving, before exiting:" state;
         let generalizable, ss = G.exit rectypes state vs print_vars in
         Debug.print (string "Generalizable vars from the generalization engine: "
                          ^^ print_vars generalizable);
