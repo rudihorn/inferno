@@ -400,6 +400,8 @@ let exit rectypes state roots print_vars =
   (* Get the list [vs] of all variables in the young generation. *)
   let vs = InfiniteArray.get state.pool state.young in
 
+  Debug.print (string "Young variables: " ^^ print_vars vs);
+
   (* This hash table stores all of these variables, so that we may check
      membership in the young generation in constant time. *)
   let young_generation : unit U.VarMap.t = U.VarMap.create 128 in
@@ -503,7 +505,8 @@ let exit rectypes state roots print_vars =
                 then max (U.rank v    ) accu
                 else max (U.rank child) accu
               ) t base_rank (* the base rank is neutral for [max] *)
-            )
+            );
+          Debug.print (string "Young rank adjusted : " ^^ print_vars [v]);
 (*
             Debug.print (string "Max child rank = " ^^ string (string_of_int max_child_rank));
             if max_child_rank != generic then U.adjust_rank v max_child_rank
@@ -512,7 +515,10 @@ let exit rectypes state roots print_vars =
         end
         (* If [v] is old, stop. *)
         else
+          begin
+          Debug.print (string "Found old : " ^^ print_vars [v]);
           assert (U.rank v < state.young)
+          end
       end
 
     in
