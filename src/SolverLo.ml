@@ -244,6 +244,10 @@ let solve (rectypes : bool) (c : rawco) : unit =
            they were existentially bound in [c1]. This is what they are, basically,
            but they also serve as named entry points. *)
         List.iter (G.register state) vs;
+
+        (* Record variable ranks to later set them for unbound quantifiers. *)
+        let let_ranks = List.map U.rank vs in
+
         begin
           if ( List.length( xvss ) > 0 ) then
             Debug.print (nest 2
@@ -287,7 +291,6 @@ let solve (rectypes : bool) (c : rawco) : unit =
             if ( U.has_structure annotation ) then
               begin
                 G.register_signatures state annotation;
-                let rank = U.rank annotation in
                 Debug.print (nest 2
                   (string "Let-binder with type annotation:" ^^ hardline ^^
                    string "Annotation: " ^^ print_var annotation ^^ hardline ^^
@@ -300,18 +303,6 @@ let solve (rectypes : bool) (c : rawco) : unit =
                 U.unify (G.body annotation_scheme) (G.body s); (* See #2 *)
                 debug_unify_after (G.body annotation_scheme);
                 List.iter U.unskolemize (G.quantifiers annotation_scheme);
-                (* If the signature has no quantifiers but the inferred type
-                   does then unification with the body of inferred type will
-                   introduce unbound quantifiers.  We fix this here.  See #9 *)
-                let is_quantified = G.has_quantifiers annotation_scheme in
-                if not is_quantified
-                then
-                  begin
-                    G.set_unbound_quantifiers_rank annotation_scheme rank;
-                    Debug.print (string "Unbound quantifiers rank fix: " ^^
-                                 print_scheme annotation_scheme)
-                  end;
-
                 (* Unification with signature might introduce unbound
                    quantifiers that need to be generalized.  See #10 *)
                 let qs = G.unbound_quantifiers s in
@@ -332,6 +323,24 @@ let solve (rectypes : bool) (c : rawco) : unit =
                               generalizable in
         Debug.print (string "Generalizable vars after all signature checks: "
                          ^^ print_vars generalizable);
+
+        (* At this point some types may have unbound generic variables.  For let
+           bindings with signatures this happens when the signature has no
+           quantifiers but the inferred type does.  In such case unification
+           with the body of inferred type introduces unbound quantifiers.  For
+           let bindings without a signature this can happen when the inferred
+           type contains only generic variables.  In this case the rank of the
+           variable itself will be set to -1, making it an unbound generic
+           variable.  See #9 and #6. *)
+        List.iter2 (fun s rank ->
+            if (not (G.has_quantifiers s)) then
+              begin
+                G.set_unbound_quantifiers_rank s rank;
+                Debug.print (string "Unbound quantifiers rank fix: " ^^
+                             print_scheme s)
+              end
+          ) ss let_ranks;
+
         (* Fill the write-once reference [generalizable_hook]. *)
         WriteOnceRef.set generalizable_hook generalizable;
         (* Extend the environment [env] and fill the write-once references
