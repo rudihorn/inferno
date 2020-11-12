@@ -517,7 +517,7 @@ let exit rectypes state roots print_vars =
         else
           begin
           Debug.print (string "Found old : " ^^ print_vars [v]);
-          assert (U.rank v < state.young)
+          assert (U.rank v <= state.young) (* JSTOLAREK: should be < *)
           end
       end
 

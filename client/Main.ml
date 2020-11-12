@@ -1137,7 +1137,7 @@ let () =
   test d2_star;
 
   test e3;
-  test e3_dot; (* JSTOLAREK: causes exception *)
+  test e3_dot;
 
   test f9;
   test f10_dagger;
