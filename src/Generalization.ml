@@ -499,7 +499,9 @@ let exit rectypes state roots print_vars =
             U.adjust_rank v (
               S.fold (fun child accu ->
                 traverse child;
-                max (U.rank child) accu
+                if U.rank child = generic
+                then max (U.rank v    ) accu
+                else max (U.rank child) accu
               ) t base_rank (* the base rank is neutral for [max] *)
             )
 (*
