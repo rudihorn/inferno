@@ -893,6 +893,18 @@ let fml_inst_sig_2 =
   }
 
 (*
+   term : let one = (λx.x) 1 in one
+   type : Int
+*)
+let fml_id_app =
+  { name = "id_app"
+  ; term = ML.let_ ("one",
+                    app (abs "x" x) one,
+                    var "one")
+  ; typ  = Some TyInt
+  }
+
+(*
    term : λ(x : (∀ a. a → a) → (∀ a. a → a)). (x ~id)@ 1
    type : ((∀ a. a → a) → (∀ a. a → a)) → Int
 *)
@@ -1187,6 +1199,7 @@ let () =
   test fml_inst_2;
   test fml_inst_sig_1;
   test fml_inst_sig_2;
+  test fml_id_app;
   test fml_nested_forall_inst_1;
   test fml_nested_forall_inst_2;
   test fml_nested_forall_inst_3;
