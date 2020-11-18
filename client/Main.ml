@@ -893,38 +893,38 @@ let fml_inst_sig_2 =
   }
 
 (*
-   term : let one = (λx.x) 1 in one
+   term : let f = (λx.x) 1 in f
    type : Int
 *)
 let fml_id_app =
   { name = "id_app"
-  ; term = ML.let_ ("one",
+  ; term = ML.let_ ("f",
                     app (abs "x" x) one,
-                    var "one")
+                    var "f")
   ; typ  = Some TyInt
   }
 
 (*
-   term : let foo = (λx.1) in foo
+   term : let f = (λx.1) in f
    type : [∀ a.] a → Int
 *)
 let fml_quantifier_placement_1 =
   { name = "quantifier_placement_1"
-  ; term = ML.let_ ("foo",
+  ; term = ML.let_ ("f",
                     abs "x" one,
-                    var "foo")
+                    var "f")
   ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyInt)))
   }
 
 (*
-   term : let foo = (λx.1) in ~foo
+   term : let f = (λx.1) in ~f
    type : [∀ a.] a → Int
 *)
 let fml_quantifier_placement_2 =
   { name = "quantifier_placement_2"
-  ; term = ML.let_ ("foo",
+  ; term = ML.let_ ("f",
                     abs "x" one,
-                    var "foo")
+                    var "f")
   ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyInt)))
   }
 
