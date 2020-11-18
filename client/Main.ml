@@ -905,6 +905,30 @@ let fml_id_app =
   }
 
 (*
+   term : let foo = (λx.1) in foo
+   type : [∀ a.] a → Int
+*)
+let fml_quantifier_placement_1 =
+  { name = "quantifier_placement_1"
+  ; term = ML.let_ ("foo",
+                    abs "x" one,
+                    var "foo")
+  ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyInt)))
+  }
+
+(*
+   term : let foo = (λx.1) in ~foo
+   type : [∀ a.] a → Int
+*)
+let fml_quantifier_placement_2 =
+  { name = "quantifier_placement_2"
+  ; term = ML.let_ ("foo",
+                    abs "x" one,
+                    var "foo")
+  ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyInt)))
+  }
+
+(*
    term : λ(x : (∀ a. a → a) → (∀ a. a → a)). (x ~id)@ 1
    type : ((∀ a. a → a) → (∀ a. a → a)) → Int
 *)
@@ -1200,6 +1224,8 @@ let () =
   test fml_inst_sig_1;
   test fml_inst_sig_2;
   test fml_id_app;
+  test fml_quantifier_placement_1;
+  test fml_quantifier_placement_2;
   test fml_nested_forall_inst_1;
   test fml_nested_forall_inst_2;
   test fml_nested_forall_inst_3;
