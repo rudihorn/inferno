@@ -684,8 +684,10 @@ let e3 =
 
 (* example            : E3∘
    term               : let r : (∀ a. a → (∀ b. b → b)) → Int = λx.1 in r $(λx.$(λy.y))
-   inferred type      : ASSERTION FAILURE
+   inferred type      : Int
    type in PLDI paper : Int
+   note               : differs from FreezeML specification, assigns polymorphic
+                        type to unannotated binder
  *)
 let e3_dot =
   { name = "E3∘"
@@ -717,8 +719,8 @@ let f9 =
    term               : choose id (λ(x : ∀ a. a → a). $(auto' ~x))
    inferred type      : (∀ a. a → a) → (∀ a. a → a)
    type in PLDI paper : (∀ a. a → a) → (∀ a. a → a)
-
-   Note: example in the paper is incorrect since usage of x is not frozen.
+   note               : example in the paper is incorrect since usage of x is
+                        not frozen.
  *)
 let f10_dagger =
   { name = "F10†"
@@ -1113,6 +1115,34 @@ let fml_choose_choose_let =
   }
 
 
+(*
+   term : (λx.x) ~auto
+   type : ∀ a. a → a
+   note : differs from FreezeML specification, assigns polymorphic type to
+          unannotated binder
+*)
+let fml_id_auto_1 =
+  { name = "id_auto_1"
+  ; term = (fml_auto)
+           (app (abs "x" x) (frozen "auto"))
+  ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
+  }
+
+
+(*
+   term : (id (λx.x)) ~auto
+   type : ∀ a. a → a
+   note : differs from FreezeML specification, assigns polymorphic type to
+          unannotated binder
+*)
+let fml_id_auto_2 =
+  { name = "id_auto_2"
+  ; term = (fml_auto << fml_id)
+           (app (app id (abs "x" x)) (frozen "auto"))
+  ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
+  }
+
+
 let () =
   test env_test;
   (* PLDI paper examples *)
@@ -1172,4 +1202,6 @@ let () =
   test fml_type_annotations_1;
   test fml_id_appl;
   test fml_choose_choose;
-  test fml_choose_choose_let
+  test fml_choose_choose_let;
+  test fml_id_auto_1;
+  test fml_id_auto_2
