@@ -424,13 +424,6 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
          coercion to [x]. We use smart constructors so that, if the lists [a] and
          [b] happen to be equal, no extra code is produced. *)
 
-         (* JSTOLAREK: delete this, debugging only
-           Inferno.Debug.print PPrint.(string "a: " ^^ (separate comma
-             (List.map (fun x -> string (string_of_int x)) a)));
-           Inferno.Debug.print PPrint.(string "b: " ^^ (separate comma
-             (List.map (fun x -> string (string_of_int x)) b)));
-         *)
-
       (* JSTOLAREK: The above no longer holds in FreezeML.  Consider:
 
            let x = auto ~id in ...
