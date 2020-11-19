@@ -228,12 +228,12 @@ let frozen_instance x v =
    as a special case of [CLet] would be more costly (by a constant factor). *)
 
 let def x v (rc, k) =
-  CDef (x, v, false, rc),
+  CDef (x, v, rc),
   k
 
-let mono_def x v (rc, k) =
-  CDef (x, v, true, rc),
-  k
+let mono x v =
+  PMono (x, v),
+  fun _env -> ()
 
 (* The general form of [CLet] involves two constraints, the left-hand side and
    the right-hand side, yet it defines a *family* of constraint abstractions,

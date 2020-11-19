@@ -365,9 +365,11 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
           w --- arrow v1 v2 ^&
           (* Under the assumption that [x] has type [domain], the term [u] must
              have type [codomain]. *)
-          mono_def x v1 (hastype u v2)
+          def x v1 (hastype u v2) ^&
+          (* Monomorphic predicate on an unannotated binder *)
+          mono x v1
         )
-      ) <$$> fun (ty1, (_ty2, ((), u'))) ->
+      ) <$$> fun (ty1, (_ty2, ((), (u',())))) ->
       (* Once these constraints are solved, we obtain the translated function
          body [u']. There remains to construct an explicitly-typed abstraction
          in the target calculus. *)

@@ -143,7 +143,7 @@ module Make
      scheme [v] in the constraint [c]. *)
   val def: tevar -> variable -> 'a co -> 'a co
 
-  val mono_def: tevar -> variable -> 'a co -> 'a co
+  val mono: tevar -> variable -> unit co
 
   (* [let1 x c1 c2] binds the term variable [x] to the constraint abstraction
      [c1] in the constraint [c2]. (Technically, [c1] is a function of a fresh

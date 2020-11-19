@@ -109,18 +109,21 @@ let isMono v =
    modified if desired. *)
 
 type rawco =
+  (* Constraints *)
   | CTrue
   | CConj of rawco * rawco
   | CEq of variable * variable
   | CExist of variable * rawco
   | CInstance of tevar * variable * variable list WriteOnceRef.t
   | CFrozen   of tevar * variable
-  | CDef of tevar * variable * bool * rawco
+  | CDef of tevar * variable * rawco
   | CLet of (tevar * variable * ischeme WriteOnceRef.t) list
         * variable list
         * rawco
         * rawco
         * variable list WriteOnceRef.t
+  (* Predicates *)
+  | PMono of tevar * variable
 
 (* -------------------------------------------------------------------------- *)
 
@@ -215,7 +218,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
           hardline) v w;
         U.unify v w;
         debug_unify_after v
-    | CDef (x, v, restrict_to_mono, c) ->
+    | CDef (x, v, c) ->
        G.register_signatures state v;
        let scheme = G.scheme v in
        List.iter U.skolemize (G.quantifiers scheme);
@@ -228,13 +231,6 @@ let solve (rectypes : bool) (c : rawco) : unit =
              dquote ^^ string " after solving constraint in scope: " ^^
              print_scheme scheme);
        assert (G.all_generic_vars_bound scheme);
-       if restrict_to_mono then
-         begin
-           Debug.print ( string "Testing monomorphic constraint on variable "
-                             ^^ print_tevar x);
-           if not (isMono v) then
-             raise (NotMono (x, v))
-         end;
        Debug.print (string "Exiting scope of binding " ^^ print_tevar x)
     | CLet (xvss, vs, c1, c2, generalizable_hook) ->
         (* Warn the generalization engine that we entering the left-hand side of
@@ -365,6 +361,11 @@ let solve (rectypes : bool) (c : rawco) : unit =
           Debug.print_str "Typechecking of top-level binding finished";
         (* Proceed to solve [c2] in the extended environment. *)
         solve env c2
+
+    | PMono (x, v) ->
+       Debug.print ( string "Testing monomorphic constraint on variable "
+                  ^^ print_tevar x);
+       if not (isMono v) then raise (NotMono (x, v))
 
   in
   solve XMap.empty c
