@@ -482,6 +482,7 @@ let exit rectypes state roots print_vars =
            its rank so as to be at most [k]. (This is important if cyclic
            graphs are allowed.) *)
         U.VarMap.add visited v ();
+        (* Downward propagation *)
         U.adjust_rank v k;
         (* If [v] is part of the young generation, and if it has structure,
            then traverse its children (updating their ranks) and on the way
@@ -498,6 +499,7 @@ let exit rectypes state roots print_vars =
           assert (U.rank v = k);
           Debug.print (string "Found young : " ^^ print_vars [v]);
           Option.iter (fun t ->
+            (* Upward propagation *)
             U.adjust_rank v (
               S.fold (fun child accu ->
                 traverse child;
