@@ -584,11 +584,6 @@ let exit rectypes state roots print_vars =
    must be copied is determined by inspecting the rank -- [generic] means
    copy, a positive rank means don't copy. *)
 
-(* JSTOLAREK: Instantiation of nested quantifiers might not work as intended: we
-   instantiate all the quantifiers even if they are not top-level.  I
-   implemented a quickfix in the form of checking for membership but it still
-   does not work as intended. *)
-
 let instantiate state { quantifiers; body } =
 
   List.iter (fun q -> assert (U.structure q = None)) quantifiers;
