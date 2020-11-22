@@ -81,6 +81,9 @@ val has_structure: variable -> bool
 val is_skolem    : variable -> bool
 val skolemize    : variable -> unit
 val unskolemize  : variable -> unit
+val is_monomorphic    : variable -> bool
+val monomorphize    : variable -> unit
+val unmonomorphize  : variable -> unit
 
 val          rank: variable -> int
 val      set_rank: variable -> int -> unit
@@ -122,6 +125,7 @@ val fresh: variable structure option -> int -> variable
 
 exception Unify of variable * variable
 exception UnifySkolem of variable * variable
+exception UnifyMono
 
 val unify: variable -> variable -> unit
 

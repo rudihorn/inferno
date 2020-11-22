@@ -196,6 +196,8 @@ module ML = struct
 
   let let_ (x, m, n) = Let (x, None, m, n)
 
+  let let_asc (x, ty, m, n) = Let (x, Some ty, m, n)
+
   (* FreezeML syntactic sugar *)
   let gen v =
     let x = fresh_tevar () in
@@ -349,8 +351,6 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
 
     (* Abstraction. *)
   | ML.Abs (x, None, u) ->
-     (* JSTOLAREK: v1 below needs to be restricted to be monomorphic.  Requires
-        introducing a new type of constraint or a predicate. *)
 
       (* We do not know a priori what the domain and codomain of this function
          are, so we must infer them. We introduce two type variables to stand
@@ -469,6 +469,7 @@ exception Unbound = Solver.Unbound
 exception NotMono = Solver.NotMono
 exception Unify = Solver.Unify
 exception UnifySkolem = Solver.UnifySkolem
+exception UnifyMono = Solver.UnifyMono
 exception Cycle = Solver.Cycle
 
 let translate (t : ML.term) : F.nominal_term =

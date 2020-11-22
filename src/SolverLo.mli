@@ -114,6 +114,7 @@ module Make
   exception NotMono of tevar * variable
   exception Unify of variable * variable
   exception UnifySkolem of variable * variable
+  exception UnifyMono
   exception Cycle of variable
   val solve: bool -> rawco -> unit
 

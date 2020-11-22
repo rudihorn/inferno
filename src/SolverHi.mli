@@ -198,6 +198,7 @@ module Make
   exception Unify of ty * ty
   exception UnifySkolem of ty * ty
   exception Cycle of ty
+  exception UnifyMono
   val solve: bool -> 'a co -> 'a
 
 (* END *)

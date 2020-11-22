@@ -126,6 +126,10 @@ let translate log t =
         print_ml_term t
        );
      IllTyped
+  | Client.UnifyMono ->
+     log_action log (fun () ->
+         Printf.fprintf stdout  "Type error: Violated monomorphism constraint" );
+     IllTyped
   (* JSTOLAREK: other exceptions are thrown due to bugs in the implementation.
      I'm catching them here to simplify testing by not having to comment out
      failing test cases.  No exceptions should ever happen in a correct
@@ -686,8 +690,6 @@ let e3 =
    term               : let r : (∀ a. a → (∀ b. b → b)) → Int = λx.1 in r $(λx.$(λy.y))
    inferred type      : Int
    type in PLDI paper : Int
-   note               : differs from FreezeML specification, assigns polymorphic
-                        type to unannotated binder
  *)
 let e3_dot =
   { name = "E3∘"
@@ -695,7 +697,7 @@ let e3_dot =
                           TyForall (2, TyArrow (TyVar 2, TyVar 2)))), TyInt)),
                         abs "x" one,
                    app (var "r") (ML.gen (abs "x" (ML.gen (abs "y" y)))))
-  ; typ  = Some TyInt
+  ; typ  = None
   }
 
 (* Section F : FreezeML Programs *)
@@ -1154,28 +1156,49 @@ let fml_choose_choose_let =
 (*
    term : (λx.x) ~auto
    type : ∀ a. a → a
-   note : differs from FreezeML specification, assigns polymorphic type to
-          unannotated binder
 *)
 let fml_id_auto_1 =
   { name = "id_auto_1"
   ; term = (fml_auto)
            (app (abs "x" x) (frozen "auto"))
-  ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
+  ; typ  = None
   }
 
 
 (*
    term : (id (λx.x)) ~auto
    type : ∀ a. a → a
-   note : differs from FreezeML specification, assigns polymorphic type to
-          unannotated binder
 *)
 let fml_id_auto_2 =
   { name = "id_auto_2"
   ; term = (fml_auto << fml_id)
            (app (app id (abs "x" x)) (frozen "auto"))
+  ; typ  = None
+  }
+
+
+(* FIXME: The next two tests are probably duplicates of existing ones! *)
+
+(*
+   term : let id = (λx.x) in id ~id
+   type : ∀ a. a → a
+*)
+let fml_mono_gen_test1 =
+  { name = "mono_test"
+  ; term = ML.let_ ("id", abs "x" x, app (var "id") (frozen "id"))
   ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
+  }
+
+(*
+   term : let id : \= (λx.x) in id ~id
+   type : (∀ a. a → a → a)
+*)
+let fml_mono_gen_test2 =
+    { name = "fml_skolem_with_non_skolem"
+    ; term =  ML.let_asc ("id", (TyForall (1, TyArrow (TyVar 1, TyVar 1))),
+                (abs "x" x),
+                app (var "id") (frozen "id"))
+    ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
   }
 
 
@@ -1308,4 +1331,7 @@ let () =
   test fml_alpha_equiv_2;
   test fml_alpha_equiv_3;
   test fml_alpha_equiv_4;
-  test fml_alpha_equiv_5
+  test fml_alpha_equiv_5;
+
+  test fml_mono_gen_test1;
+  test fml_mono_gen_test2;

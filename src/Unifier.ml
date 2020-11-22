@@ -56,6 +56,8 @@ and descriptor = {
 
   mutable rank : int;
 
+  mutable monomorphic : bool;
+
   mutable skolem : bool;
 
 }
@@ -91,10 +93,17 @@ let is_skolem v =
   (TUnionFind.find v).skolem
 
 let skolemize v =
+  assert (not ((TUnionFind.find v).monomorphic));
   (TUnionFind.find v).skolem <- true
 
 let unskolemize v =
   (TUnionFind.find v).skolem <- false
+
+let is_monomorphic v =
+  (TUnionFind.find v).monomorphic
+
+let unmonomorphize v =
+  (TUnionFind.find v).monomorphic <- false
 
 (* -------------------------------------------------------------------------- *)
 
@@ -122,12 +131,36 @@ let print (fuel : int) f v =
     else
       empty
   end ^^
+  begin
+    if ( (TUnionFind.find v).monomorphic ) then
+      comma ^^ space ^^ string "mono"
+    else
+      empty
+  end ^^
   rbrace
   end
   else
     lbrace ^^
     string "⋯" ^^
     rbrace
+
+(* -------------------------------------------------------------------------- *)
+
+(* Hash tables whose keys are variables. *)
+
+module VarMap =
+  Hashtbl.Make(struct
+    type t = variable
+    let equal = TUnionFind.equivalent
+    let hash v = Hashtbl.hash (id v)
+  end)
+
+module PureVarMap =
+  Map.Make(struct
+    type t      = variable
+    let equal   = TUnionFind.equivalent
+    let compare = TUnionFind.compare
+  end)
 
 (* -------------------------------------------------------------------------- *)
 
@@ -150,6 +183,7 @@ let fresh =
       structure = structure;
       rank = rank;
       skolem = false;
+      monomorphic = false;
     }
 
 (* -------------------------------------------------------------------------- *)
@@ -159,6 +193,14 @@ exception Unify of variable * variable
 
 exception UnifySkolemInternal
 exception UnifySkolem of variable * variable
+
+(* FIXME FEMRICH: We probably want to add more info to this, to aid error
+  messages.
+  It can't be just a term variable: We may unify two type vars that are both
+  monomorphic and whose mono constraints originate from different term
+  variables. Further, if we consider non-generalizing let at some point, there
+  isn't a term variable imposing the monomorphism. *)
+exception UnifyMono
 
 (* The internal function [unify t v1 v2] equates the variables [v1] and [v2]
    and propagates the consequences of this equation until an inconsistency is
@@ -184,6 +226,35 @@ let rec unify (t : _ TRef.transaction) (v1 : variable) (v2 : variable) : unit =
 
 (* -------------------------------------------------------------------------- *)
 
+and monomorphize_variable visited v =
+  if VarMap.mem visited v then
+    () (* cyclic types considered not monomorphic *)
+  else
+    let desc = TUnionFind.find v in
+    if desc.skolem then
+      (* nothing to do, skolems are never monomorphic *)
+      ()
+    else
+      begin
+        if desc.skolem then
+          ()
+        else
+          desc.monomorphic <- true;
+        VarMap.add visited v ();
+        monomorphize_structure visited desc.structure
+      end
+
+
+and monomorphize_structure visited s_opt =
+  match s_opt with
+  | None   -> ()
+  | Some s ->
+     if S.isForall s then
+       raise UnifyMono
+     else
+       S.iter (fun v ->  monomorphize_variable visited v) s
+
+
 (* [unify_descriptors desc1 desc2] combines the descriptors [desc1] and
    [desc2], producing a descriptor for the merged equivalence class. *)
 
@@ -200,16 +271,18 @@ and unify_descriptors t desc1 desc2 =
      assert false
 
   | { id = id1; skolem = true; _ }, { id = id2; skolem = true; _ } ->
-     (* Skolem can't unify with other skolem but can unify with itself *)
+     (* Skolem can't unify with other skolem but can unify with itself.
+        Skolems are never monomorphic. *)
      if (id1 <> id2) then raise UnifySkolemInternal;
      assert (desc1.structure = None);
      assert (desc2.structure = None);
      assert (desc1.rank = desc2.rank);
      {
-      id        = id1;
-      structure = None;
-      rank      = desc1.rank;
-      skolem    = true
+      id          = id1;
+      structure   = None;
+      rank        = desc1.rank;
+      skolem      = true;
+      monomorphic = false
      }
 
   | { id = id1; skolem = true; _ }, { structure = Some _; _ }
@@ -218,12 +291,23 @@ and unify_descriptors t desc1 desc2 =
      raise UnifySkolemInternal
 
   | _, _ ->
-     { (* We pick the skolem identifier if there is such *)
-      id        = if desc2.skolem then desc2.id else desc1.id;
-      structure = unify_structures t desc1.structure desc2.structure;
-      rank      = min desc1.rank desc2.rank;
-      skolem    = desc1.skolem || desc2.skolem (* skolemize *)
-     }
+      (* skolemize *)
+     let skolem = desc1.skolem || desc2.skolem in
+     let new_desc =
+       { (* We pick the skolem identifier if there is such *)
+         id          = if desc2.skolem then desc2.id else desc1.id;
+         structure   = unify_structures t desc1.structure desc2.structure;
+         rank        = min desc1.rank desc2.rank;
+         skolem;
+         monomorphic = not skolem && (desc1.monomorphic || desc2.monomorphic)
+       }
+       in
+       if new_desc.monomorphic then
+         (* Propagate the monomorphism to all type vars used on the
+          structure, if it exists. *)
+         monomorphize_structure (VarMap.create 128) new_desc.structure;
+       new_desc
+
 
 (* -------------------------------------------------------------------------- *)
 
@@ -253,21 +337,8 @@ let unify v1 v2 =
 
 (* -------------------------------------------------------------------------- *)
 
-(* Hash tables whose keys are variables. *)
-
-module VarMap =
-  Hashtbl.Make(struct
-    type t = variable
-    let equal = TUnionFind.equivalent
-    let hash v = Hashtbl.hash (id v)
-  end)
-
-module PureVarMap =
-  Map.Make(struct
-    type t      = variable
-    let equal   = TUnionFind.equivalent
-    let compare = TUnionFind.compare
-  end)
+let monomorphize v =
+  monomorphize_variable (VarMap.create 128) v
 
 (* -------------------------------------------------------------------------- *)
 

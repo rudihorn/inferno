@@ -325,6 +325,7 @@ exception NotMono of X.tevar * O.ty
 exception Unify of O.ty * O.ty
 exception UnifySkolem of O.ty * O.ty
 exception Cycle of O.ty
+exception UnifyMono
 (* END EXC *)
 
 (* BEGIN SOLVE *)
@@ -354,6 +355,8 @@ let solve rectypes (rc, k) =
   | Lo.Cycle v ->
       let decode = new_decoder true (* cyclic decoder *) in
       raise (Cycle (decode v))
+  | Lo.UnifyMono ->
+     raise (UnifyMono)
   end;
   (* Create a suitable decoder. *)
   let decode = new_decoder rectypes in
