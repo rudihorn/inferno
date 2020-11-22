@@ -56,6 +56,17 @@ and descriptor = {
 
   mutable rank : int;
 
+
+  (* FEMRICH:
+     We may consider merging {skolem} and {monomorphic} into one flag, whose value
+     can be one of
+      - Skolem: skolem, therefore it doesn't make sense to track monomorphism
+      - Monomorphic
+      - Unconstrained: "flexible", non-monomorphic variable
+
+     This would exclude the case that {monomorphic} and {skolem} are true at the
+     same time, which is an invalid state. On the other hand, it seems more
+     confusing. *)
   mutable monomorphic : bool;
 
   mutable skolem : bool;
