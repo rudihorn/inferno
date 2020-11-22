@@ -337,8 +337,6 @@ let rec hastype (env : int list) (t : ML.term) (w : variable) : F.nominal_term c
 
     (* Abstraction. *)
   | ML.Abs (x, None, u) ->
-     (* JSTOLAREK: v1 below needs to be restricted to be monomorphic.  Requires
-        introducing a new type of constraint or a predicate. *)
 
       (* We do not know a priori what the domain and codomain of this function
          are, so we must infer them. We introduce two type variables to stand
@@ -461,6 +459,7 @@ exception Unbound = Solver.Unbound
 exception NotMono = Solver.NotMono
 exception Unify = Solver.Unify
 exception UnifySkolem = Solver.UnifySkolem
+exception UnifyMono = Solver.UnifyMono
 exception Cycle = Solver.Cycle
 
 let translate (t : ML.term) : F.nominal_term =

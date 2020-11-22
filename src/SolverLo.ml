@@ -79,28 +79,11 @@ let print_scheme scheme =
   | qs -> string "forall " ^^ print_vars qs ^^ dot ^^ space ^^
             print_var (G.body scheme)
 
-(* -------------------------------------------------------------------------- *)
-
-let isMono v =
-  let visited : unit U.VarMap.t = U.VarMap.create 128 in
-
-  let rec checkMono v =
-    if U.VarMap.mem visited v then
-      false (* cyclic types considered not monomorphic *)
-    else
-      begin
-        U.VarMap.add visited v ();
-        match U.structure v with
-        | None   -> true
-        | Some s ->
-           if S.isForall s then
-             false
-           else
-             S.fold (fun v acc -> acc && checkMono v) s true
-      end
-  in checkMono v
-
-(* -------------------------------------------------------------------------- *)
+let print_schemes vs =
+  let open PPrint in
+  lbracket ^^
+  separate (comma ^^ space) (List.map print_scheme vs) ^^
+  rbracket
 
 (* The syntax of constraints is as follows. *)
 
@@ -137,6 +120,7 @@ exception Unbound of tevar
 exception NotMono of tevar * variable
 exception Unify = U.Unify
 exception UnifySkolem = U.UnifySkolem
+exception UnifyMono = U.UnifyMono
 exception Cycle = U.Cycle
 
 let solve (rectypes : bool) (c : rawco) : unit =
@@ -264,6 +248,8 @@ let solve (rectypes : bool) (c : rawco) : unit =
         let generalizable, ss = G.exit rectypes state vs in
         Debug.print (string "Generalizable vars from the generalization engine: "
                          ^^ print_vars generalizable);
+        Debug.print (string "Generalizable schemes from the generalization engine: "
+                         ^^ print_schemes ss);
         if Debug.hard then G.show_state "State after exiting" state;
         (* Check the inferred type scheme against the type annotation or accept
            the inferred type if no annotation present.  Checking algorithm:
@@ -305,6 +291,21 @@ let solve (rectypes : bool) (c : rawco) : unit =
             else
                 s :: ss, generalizable
           ) ss xvss ([], generalizable) in
+
+        (* Technically, this step isn't necessary: We may as well leave quantified
+           type variables monomorphic, because we make them polymorphic when
+           instantiating them. This would be closer to what FreezeML does: In
+           FreezeML, quantifed type vars are collected in a type var env \Delta,
+           which makes them all monomorphic. This is not just a coincidence,
+           but the type inference algo utilizes this subtle fact.
+           But here, I just wanted to see if removing the monomorphism
+           constraint works.
+           Also, note that this is only possible here because all variables
+           in |generalizable| are indeed generalized.
+           If we had the value restriction, it would be crucial not to
+           un-monomorphize type variables that aren't generalized. *)
+        List.iter U.unmonomorphize generalizable;
+
         Debug.print (string "Generalizable vars after signature check: "
                          ^^ print_vars generalizable);
         if Debug.hard then G.show_state "State after signature check" state;
@@ -373,9 +374,10 @@ let solve (rectypes : bool) (c : rawco) : unit =
         solve env c2
 
     | PMono (x, v) ->
-       Debug.print ( string "Testing monomorphic constraint on variable "
-                  ^^ print_tevar x);
-       if not (isMono v) then raise (NotMono (x, v))
+       Debug.print ( string "Imposing monomorphic constraint on variable "
+                  ^^ print_tevar x
+                  ^^ string ", represented by type variable " ^^ print_var v);
+       U.monomorphize v
 
   in
   solve XMap.empty c
@@ -447,4 +449,3 @@ let decode_scheme decode (s : ischeme) : O.ty =
     (decode (G.body s))
 
 end
-
