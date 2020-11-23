@@ -128,7 +128,7 @@ let translate log t =
      IllTyped
   | Client.UnifyMono ->
      log_action log (fun () ->
-         Printf.fprintf stdout  "Type error: Violated monomorphism constraint" );
+         Printf.fprintf stdout  "Type error: Violated monomorphism constraint\n" );
      IllTyped
   (* JSTOLAREK: other exceptions are thrown due to bugs in the implementation.
      I'm catching them here to simplify testing by not having to comment out
