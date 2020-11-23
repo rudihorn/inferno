@@ -249,20 +249,6 @@ let solve (rectypes : bool) (c : rawco) : unit =
                          ^^ print_vars generalizable);
         Debug.print (string "Generalizable scheme from the generalization engine: "
                          ^^ print_schemes ss);
-        (* FIXME FEMRICH:
-           Technically, this step isn't necessary: We may as well leave quantified
-           type variables monomorphic, because we make them polymorphic when
-           instantiating them. This would be closer to what FreezeML does: In
-           FreezeML, quantifed type vars are collected in a type var env \Delta,
-           which makes them all monomorphic. This is not just a coincidence,
-           but the type inference algo utilizes this subtle fact.
-           But here, I just wanted to see if removing the monomorphism
-           constraint works.
-           Also, note that this is only possible here because all variables
-           in |generalizable| are indeed generalized.
-           If we had the value restriction, it would be crucial not to
-           un-monomorphize type variables that aren't generalized. *)
-        List.iter U.unmonomorphize generalizable;
         if Debug.hard then G.show_state "State after exiting" state;
         (* Check the inferred type scheme against the type annotation or accept
            the inferred type if no annotation present.  Checking algorithm:
@@ -314,6 +300,22 @@ let solve (rectypes : bool) (c : rawco) : unit =
                          ^^ print_vars generalizable);
         let generalizable = List.filter (fun g -> not (U.has_structure g))
                               generalizable in
+
+        (* FIXME FEMRICH:
+           Technically, this step isn't necessary: We may as well leave quantified
+           type variables monomorphic, because we make them polymorphic when
+           instantiating them. This would be closer to what FreezeML does: In
+           FreezeML, quantifed type vars are collected in a type var env \Delta,
+           which makes them all monomorphic. This is not just a coincidence,
+           but the type inference algo utilizes this subtle fact.
+           But here, I just wanted to see if removing the monomorphism
+           constraint works.
+           Also, note that this is only possible here because all variables
+           in |generalizable| are indeed generalized.
+           If we had the value restriction, it would be crucial not to
+           un-monomorphize type variables that aren't generalized. *)
+        List.iter U.unmonomorphize generalizable;
+
         Debug.print (string "Generalizable vars after all signature checks: "
                          ^^ print_vars generalizable);
 
