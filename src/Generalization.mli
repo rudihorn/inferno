@@ -86,13 +86,13 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
      type schemes are created by the functions [enter] and [exit] below. *)
   (* JSTOLAREK: documentation outdated, this is now an inteligent constructor *)
 
-  val scheme                       : variable -> scheme
-  val bound_quantifiers            : scheme -> variable list
-  val unbound_quantifiers          : scheme -> variable list
-  val toplevel_generic_variables   : variable -> variable list
-  val all_generic_vars_bound       : scheme -> bool
-  val set_unbound_quantifiers_rank : scheme -> int -> unit
-  val freshen_nested_quantifiers   : state -> scheme -> scheme
+  val scheme                        : variable -> scheme
+  val bound_quantifiers             : scheme -> variable list
+  val unbound_quantifiers           : scheme -> variable list
+  val toplevel_generic_variables    : variable -> variable list
+  val all_generic_vars_bound        : scheme -> bool
+  val set_unbound_generic_vars_rank : scheme -> int -> unit
+  val freshen_nested_quantifiers    : state -> scheme -> scheme
 
   (* [enter] updates the current state by pushing a new [CLet] construct. The
      the hole is replaced with [let exists vs. hole in ...], where the list

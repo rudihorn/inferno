@@ -331,8 +331,8 @@ let solve (rectypes : bool) (c : rawco) : unit =
         List.iter2 (fun s rank ->
             if (not (G.has_quantifiers s)) then
               begin
-                G.set_unbound_quantifiers_rank s rank;
-                Debug.print (string "Unbound quantifiers rank fix: " ^^
+                G.set_unbound_generic_vars_rank s rank;
+                Debug.print (string "Unbound generic variables rank fix: " ^^
                              print_scheme s)
               end
           ) ss let_ranks;

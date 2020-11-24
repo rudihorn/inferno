@@ -270,7 +270,7 @@ let all_generic_vars_bound { quantifiers; body } =
   let inScope : unit U.VarMap.t = extend_env (U.VarMap.create 8) quantifiers
   in go inScope body
 
-let set_unbound_quantifiers_rank { quantifiers; body } rank =
+let set_unbound_generic_vars_rank { quantifiers; body } rank =
   let vs = List.filter (fun x -> not (List.mem x quantifiers))
                        (toplevel_generic_variables body) in
   List.iter (fun v -> U.set_rank v rank) vs
