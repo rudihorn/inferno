@@ -600,10 +600,10 @@ let instantiate state { quantifiers; body } =
 
   let rec copy toplevel v =
 
-    (* If this variable has positive rank, then it is not generic: we must stop.
-       We also don't instantiate anything nested inside a quantified type. *)
+    (* If this variable has positive rank, then it is not generic: we must
+       stop. *)
 
-    if (U.rank v > 0 || not toplevel) then
+    if (U.rank v > 0) then
       v
 
     (* If a copy of this variable has been created already, return it. *)
@@ -613,6 +613,8 @@ let instantiate state { quantifiers; body } =
         assert (U.rank v = generic);
         U.VarMap.find visited v
       with Not_found ->
+        (* Don't instantiate nested quantifiers. *)
+        if not toplevel then v else begin
 
         (* The variable must be copied, and has not been copied yet. Create a
            new variable, register it, and update the mapping. Then, copy its
@@ -627,6 +629,7 @@ let instantiate state { quantifiers; body } =
         let toplevel = toplevel && not (isForall v) in
         U.set_structure v' (Option.map (S.map (copy toplevel)) (U.structure v));
         v'
+      end
       end
   in
   List.map (copy true) quantifiers, copy true body
