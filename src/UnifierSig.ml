@@ -81,7 +81,7 @@ val has_structure: variable -> bool
 val is_skolem    : variable -> bool
 val skolemize    : variable -> unit
 val unskolemize  : variable -> unit
-val is_monomorphic    : variable -> bool
+val is_monomorphic  : variable -> bool
 val monomorphize    : variable -> unit
 val unmonomorphize  : variable -> unit
 
@@ -201,4 +201,3 @@ val new_cyclic_decoder:
                     (      variable -> 'a)
 
 end
-

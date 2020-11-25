@@ -255,7 +255,6 @@ and monomorphize_variable visited v =
         monomorphize_structure visited desc.structure
       end
 
-
 and monomorphize_structure visited s_opt =
   match s_opt with
   | None   -> ()
