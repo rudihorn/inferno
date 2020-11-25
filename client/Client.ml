@@ -413,7 +413,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
     (* Generalization. *)
   | ML.Let (x, ty, t, u) ->
 
-     let ty = Option.map annotation_to_structure ty in
+     let ty = Inferno.Option.map annotation_to_structure ty in
 
       (* Construct a ``let'' constraint. *)
       let1 x ty (hastype t)
