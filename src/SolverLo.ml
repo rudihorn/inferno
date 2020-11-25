@@ -241,9 +241,6 @@ let solve (rectypes : bool) (c : rawco) : unit =
            but they also serve as named entry points. *)
         List.iter (G.register state) vs;
 
-        (* Record variable ranks to later set them for unbound quantifiers. *)
-        let let_ranks = List.map (fun v -> U.rank v - 1) vs in
-
         begin
           if ( List.length( xvss ) > 0 ) then
             Debug.print (nest 2
@@ -327,15 +324,19 @@ let solve (rectypes : bool) (c : rawco) : unit =
            let bindings without a signature this can happen when the inferred
            type contains only generic variables.  In this case the rank of the
            variable itself will be set to -1, making it an unbound generic
-           variable.  See #9 and #6. *)
-        List.iter2 (fun s rank ->
+           variable.  These unbound generic variables need to be properly
+           registered now.  See #9. *)
+        List.iter (fun s ->
             if (not (G.has_quantifiers s)) then
               begin
-                G.set_unbound_generic_vars_rank s rank;
+                (* Set unbound generic variables as unregistered... *)
+                G.set_unbound_generic_vars_rank s 0;
+                (* ...and register them in the pool. *)
+                G.register_signatures state (G.body s);
                 Debug.print (string "Unbound generic variables rank fix: " ^^
                              print_scheme s)
               end
-          ) ss let_ranks;
+          ) ss;
 
         (* Fill the write-once reference [generalizable_hook]. *)
         WriteOnceRef.set generalizable_hook generalizable;
