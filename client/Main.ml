@@ -3,7 +3,7 @@ open F
 open Result
 
 let verbose =
-  false
+ true 
 
 (* -------------------------------------------------------------------------- *)
 
@@ -1206,7 +1206,7 @@ let fml_alpha_equiv_1 =
   { name = "alpha_equiv_1"
       ; term = ML.Let ( "x"
                           ,  Some (TyArrow (TyForall (1, TyArrow (TyVar 1, TyVar 1)), TyInt))
-                          , ML.Abs ("y", None, ML.Int 42)
+                          , ML.Abs ("y", Some (TyForall (1, TyArrow (TyVar 1, TyVar 1))), ML.Int 42)
                           , ML.Let ("z"
                                       , Some (TyForall (2, TyArrow (TyVar 2, TyVar 2)))
                                       , ML.Abs( "w", None, ML.Var("w"))
@@ -1218,7 +1218,7 @@ let fml_alpha_equiv_2 =
   { name = "alpha_equiv_2"
       ; term = ML.Let ( "x"
                           ,  Some (TyArrow (TyForall(1, TyForall (2, TyArrow (TyVar 1, TyVar 1))), TyInt))
-                          , ML.Abs ("y", None, ML.Int 42)
+                          , ML.Abs ("y",Some (TyForall (1, TyArrow (TyVar 1, TyVar 1))),  ML.Int 42)
                           , ML.Let ("z"
                                       , Some (TyForall(3, TyForall (4, TyArrow (TyVar 3, TyVar 3))))
                                       , ML.Abs( "w", None, ML.Var("w"))
@@ -1230,7 +1230,7 @@ let fml_alpha_equiv_3 =
   { name = "alpha_equiv_3"
       ; term = ML.Let ( "x"
                           ,  Some (TyArrow (TyForall(1, TyForall (2, TyArrow (TyVar 2, TyVar 2))), TyInt))
-                          , ML.Abs ("y", None, ML.Int 42)
+                          , ML.Abs ("y", Some(TyForall (1, TyArrow (TyVar 1, TyVar 1))), ML.Int 42)
                           , ML.Let ("z"
                                       , Some (TyForall(3, TyForall (4, TyArrow (TyVar 4, TyVar 4))))
                                       , ML.Abs( "w", None, ML.Var("w"))
@@ -1242,7 +1242,7 @@ let fml_alpha_equiv_4 =
   { name = "alpha_equiv_4"
       ; term = ML.Let ( "x"
                           ,  Some (TyArrow (TyForall(1, TyForall (1, TyArrow (TyVar 1, TyVar 1))), TyInt))
-                          , ML.Abs ("y", None, ML.Int 42)
+                          , ML.Abs ("y", Some(TyForall (1, TyArrow (TyVar 1, TyVar 1))), ML.Int 42)
                           , ML.Let ("z"
                                       , Some (TyForall(2, TyForall (2, TyArrow (TyVar 2, TyVar 2))))
                                       , ML.Abs( "w", None, ML.Var("w"))
@@ -1254,7 +1254,7 @@ let fml_alpha_equiv_5 =
   { name = "alpha_equiv_5"
       ; term = ML.Let ( "x"
                           ,  Some (TyArrow (TyForall(1, TyForall (1, TyArrow (TyVar 1, TyVar 1))), TyInt))
-                          , ML.Abs ("y", None, ML.Int 42)
+                          , ML.Abs ("y", Some(TyForall (1, TyArrow (TyVar 1, TyVar 1))), ML.Int 42)
                           , ML.Let ("z"
                                       , Some (TyForall(1, TyForall (2, TyArrow (TyVar 1, TyVar 1))))
                                       , ML.Abs( "w", None, ML.Var("w"))
