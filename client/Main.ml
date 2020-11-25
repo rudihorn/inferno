@@ -1179,6 +1179,66 @@ let fml_id_auto_2 =
   }
 
 
+let fml_alpha_equiv_1 =
+  { name = "alpha_equiv_1"
+      ; term = ML.Let ( "x"
+                          ,  Some (TyArrow (TyForall (1, TyArrow (TyVar 1, TyVar 1)), TyInt))
+                          , ML.Abs ("y", None, ML.Int 42)
+                          , ML.Let ("z"
+                                      , Some (TyForall (2, TyArrow (TyVar 2, TyVar 2)))
+                                      , ML.Abs( "w", None, ML.Var("w"))
+                                      , ML.App (ML.Var "x", ML.FrozenVar "z")))
+      ; typ = Some TyInt
+  }
+
+let fml_alpha_equiv_2 =
+  { name = "alpha_equiv_2"
+      ; term = ML.Let ( "x"
+                          ,  Some (TyArrow (TyForall(1, TyForall (2, TyArrow (TyVar 1, TyVar 1))), TyInt))
+                          , ML.Abs ("y", None, ML.Int 42)
+                          , ML.Let ("z"
+                                      , Some (TyForall(3, TyForall (4, TyArrow (TyVar 3, TyVar 3))))
+                                      , ML.Abs( "w", None, ML.Var("w"))
+                                      , ML.App (ML.Var "x", ML.FrozenVar "z")))
+      ; typ = Some TyInt
+  }
+
+let fml_alpha_equiv_3 =
+  { name = "alpha_equiv_3"
+      ; term = ML.Let ( "x"
+                          ,  Some (TyArrow (TyForall(1, TyForall (2, TyArrow (TyVar 2, TyVar 2))), TyInt))
+                          , ML.Abs ("y", None, ML.Int 42)
+                          , ML.Let ("z"
+                                      , Some (TyForall(3, TyForall (4, TyArrow (TyVar 4, TyVar 4))))
+                                      , ML.Abs( "w", None, ML.Var("w"))
+                                      , ML.App (ML.Var "x", ML.FrozenVar "z")))
+      ; typ = Some TyInt
+  }
+
+let fml_alpha_equiv_4 =
+  { name = "alpha_equiv_4"
+      ; term = ML.Let ( "x"
+                          ,  Some (TyArrow (TyForall(1, TyForall (1, TyArrow (TyVar 1, TyVar 1))), TyInt))
+                          , ML.Abs ("y", None, ML.Int 42)
+                          , ML.Let ("z"
+                                      , Some (TyForall(2, TyForall (2, TyArrow (TyVar 2, TyVar 2))))
+                                      , ML.Abs( "w", None, ML.Var("w"))
+                                      , ML.App (ML.Var "x", ML.FrozenVar "z")))
+      ; typ = Some TyInt
+  }
+
+let fml_alpha_equiv_5 =
+  { name = "alpha_equiv_5"
+      ; term = ML.Let ( "x"
+                          ,  Some (TyArrow (TyForall(1, TyForall (1, TyArrow (TyVar 1, TyVar 1))), TyInt))
+                          , ML.Abs ("y", None, ML.Int 42)
+                          , ML.Let ("z"
+                                      , Some (TyForall(1, TyForall (2, TyArrow (TyVar 1, TyVar 1))))
+                                      , ML.Abs( "w", None, ML.Var("w"))
+                                      , ML.App (ML.Var "x", ML.FrozenVar "z")))
+      ; typ = None
+  }
+
 let () =
   test env_test;
   (* PLDI paper examples *)
@@ -1243,4 +1303,9 @@ let () =
   test fml_choose_choose;
   test fml_choose_choose_let;
   test fml_id_auto_1;
-  test fml_id_auto_2
+  test fml_id_auto_2;
+  test fml_alpha_equiv_1;
+  test fml_alpha_equiv_2;
+  test fml_alpha_equiv_3;
+  test fml_alpha_equiv_4;
+  test fml_alpha_equiv_5
