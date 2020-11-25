@@ -391,11 +391,7 @@ let make_scheme (is_generic : U.variable -> bool) (body : U.variable) : scheme =
 
 (* [exit] is where the moderately subtle generalization work takes place. *)
 
-let exit rectypes state roots print_vars =
-  let open PPrint in
-  Debug.print_str "Beginning generalize.exit";
-
-  Debug.print (string "Generalization roots: " ^^ print_vars roots);
+let exit rectypes state roots =
 
   (* Get the list [vs] of all variables in the young generation. *)
   let vs = InfiniteArray.get state.pool state.young in
@@ -423,11 +419,6 @@ let exit rectypes state roots print_vars =
     assert (0 < rank && rank <= state.young);
     sorted.(rank) <- v :: sorted.(rank)
   ) vs;
-
-  Debug.print_str "Displaying sorted array";
-  for k = base_rank to state.young do
-    Debug.print PPrint.(string "k = " ^^ string (string_of_int k) ^^ string " : " ^^ print_vars sorted.(k));
-  done;
 
   (* Define a membership test for the young generation. *)
   let is_young v =
@@ -495,7 +486,6 @@ let exit rectypes state roots print_vars =
              at or above [k], and since we have just adjusted it, it must
              now be [k]. *)
           assert (U.rank v = k);
-          Debug.print (string "Found young : " ^^ print_vars [v]);
           Option.iter (fun t ->
             (* Upward propagation *)
             U.adjust_rank v (
@@ -506,10 +496,6 @@ let exit rectypes state roots print_vars =
                 else max (U.rank child) accu
               ) t base_rank (* the base rank is neutral for [max] *)
             )
-(*
-            Debug.print (string "Max child rank = " ^^ string (string_of_int max_child_rank));
-            if max_child_rank != generic then U.adjust_rank v max_child_rank
-*)
           ) (U.structure v)
         end
         (* If [v] is old, stop. *)
@@ -521,12 +507,6 @@ let exit rectypes state roots print_vars =
     List.iter traverse sorted.(k)
 
   done;
-
-  Debug.print_str "Displaying sorted array after traverse";
-  for k = base_rank to state.young do
-    Debug.print PPrint.(string "k = " ^^ string (string_of_int k) ^^ string " : " ^^ print_vars sorted.(k));
-  done;
-
 
   (* The rank of every variable in the young generation has now been
      determined as precisely as possible.

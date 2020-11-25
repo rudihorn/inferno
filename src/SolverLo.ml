@@ -260,7 +260,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
            generalization engine also produces a list [generalizable] of the young
            variables that should be universally quantified here. *)
         if Debug.hard then G.show_state "State after solving, before exiting:" state;
-        let generalizable, ss = G.exit rectypes state vs print_vars in
+        let generalizable, ss = G.exit rectypes state vs in
         Debug.print (string "Generalizable vars from the generalization engine: "
                          ^^ print_vars generalizable);
         if Debug.hard then G.show_state "State after exiting" state;
