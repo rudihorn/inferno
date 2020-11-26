@@ -1179,7 +1179,7 @@ let fml_id_auto_2 =
   }
 
 (*
-  let (x : (∀ a.  a → a) -> int) = λy. 42 in
+  let (x : (∀ a.  a → a) → int) = λ(y: ∀ a.  a → a)). 42 in
   let (z : ∀ b.  b → b) =  λw. w in
   x (~z)
  *)
@@ -1197,7 +1197,7 @@ let fml_alpha_equiv_1 =
   }
 
 (*
-  let (x : (∀ a.∀ b.  a → a) -> int) = λy. 42 in
+  let (x : (∀ a.∀ b.  a → a) → int) = λ(y:∀ a.∀ b.  a → a). 42 in
   let (z : ∀ c.∀ d.  c → c) =  λw. w in
   x (~z)
  *)
@@ -1215,7 +1215,7 @@ let fml_alpha_equiv_2 =
   }
 
 (*
-  let (x : (∀ a.∀ b.  b → b) -> int) = λy. 42 in
+  let (x : (∀ a.∀ b.  b → b) → int) = λ(y:∀ a.∀ b.  b → b). 42 in
   let (z : ∀ c.∀ d.  d → d) =  λw. w in
   x (~z)
  *)
@@ -1233,7 +1233,7 @@ let fml_alpha_equiv_3 =
   }
 
 (*
-  let (x : (∀ a.∀ a.  a → a) -> int) = λy. 42 in
+  let (x : (∀ a.∀ a.  a → a) → int) = λy(y:∀ a.∀ a.  a → a). 42 in
   let (z : ∀ b.∀ b.  b → b) =  λw. w in
   x (~z)
     *)
@@ -1251,7 +1251,7 @@ let fml_alpha_equiv_4 =
   }
 
     (*
-  let (x : (∀ a.∀ a.  a → a) -> int) = λy. 42 in
+  let (x : (∀ a.∀ a.  a → a) → int) = λ(y:∀ a.∀ a.  a → a). 42 in
   let (z : ∀ a.∀ b.  a → a) =  λw. w in
   x (~z)
      *)
@@ -1270,8 +1270,8 @@ let fml_alpha_equiv_5 =
 
 
 (*
-  let (x : (∀ a.∀ b.  a → a) -> int) = λy. 42 in
-  let (z : ∀ b.  a → a) =  λw. w in
+  let (x : ∀ a.((∀ b.  a → a) → int)) = λ(y:∀ b.  a → a). 42 in
+  let (z : ∀ b.  b → b) =  λw. w in
   x (~z)
     *)
 let fml_mixed_prefix_1 =
@@ -1287,8 +1287,8 @@ let fml_mixed_prefix_1 =
   }
 
 (*
-  let (x : (∀ a.∀ b.  b → a) -> int) = λ(y:∀ a.∀ b.  b → a). 42 in
-  let (z : ∀ b.  b → Int) =  λw. w in
+  let (x : (∀ a.((∀ b.  b → a) → int)) = λ(y:∀ b.  b → a). 42 in
+  let (z : ∀ b.  b → Int) =  λw. 42 in
   x (~z)
  *)
 
@@ -1305,7 +1305,7 @@ let fml_mixed_prefix_2 =
   }
 
 (*
-  let (x : (∀ a.∀ b.  b → b) -> int) = λ(y:∀ a.∀ b.  b → b). 42 in
+  let (x : ∀ a.((∀ b.  b → b) → int)) = λ(y:∀ b.  b → b). 42 in
   let (z : ∀ a.  a → a) =  λw. w in
   x (~z)
  *)
@@ -1315,24 +1315,6 @@ let fml_poly_binding_1 =
       ; term = ML.Let ( "x"
                           ,  Some (TyForall(1, TyArrow(TyForall(2,TyArrow(TyVar 2, TyVar 2)),TyInt)))
                           , ML.Abs ("z", Some(TyForall(2,TyArrow(TyVar 2, TyVar 2))), ML.Int 42)
-                          , ML.Let ("y"
-                                      , Some (TyForall(1, TyArrow (TyVar 1, TyVar 1)))
-                                      , ML.Abs( "w", None, ML.Var "w")
-                                      , ML.App (ML.Var "x", ML.FrozenVar "y")))
-      ; typ = Some TyInt
-  }
-
-(*
-  let (x : (∀ a.  a → a) -> int) = λ(y:∀ c.  c → c). 42 in
-  let (z : ∀ b.  b → b) =  λw. w in
-  x (~z)
- *)
-
-let fml_mixed_prefix_3 =
-  { name = "mixed_prefix_3"
-      ; term = ML.Let ( "x"
-                          ,  Some (TyArrow(TyForall(2,TyArrow(TyVar 2, TyVar 2)),TyInt))
-                          , ML.Abs ("z", Some(TyForall(3,TyArrow(TyVar 3, TyVar 3))), ML.Int 42)
                           , ML.Let ("y"
                                       , Some (TyForall(1, TyArrow (TyVar 1, TyVar 1)))
                                       , ML.Abs( "w", None, ML.Var "w")
@@ -1419,6 +1401,7 @@ let () =
   test fml_choose_choose_let;
   test fml_id_auto_1;
   test fml_id_auto_2;
+  
   test fml_alpha_equiv_1;
   test fml_alpha_equiv_2;
   test fml_alpha_equiv_3;
