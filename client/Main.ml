@@ -1239,6 +1239,55 @@ let fml_alpha_equiv_5 =
       ; typ = None
   }
 
+let fml_mixed_prefix_1 =
+  { name = "mixed_prefix_1"
+      ; term = ML.Let ( "x"
+                          ,  Some (TyForall(1, TyArrow (TyForall(2,TyArrow(TyVar 1, TyVar 1)), TyInt)))
+                          , ML.Abs ("z", Some(TyForall(2,TyArrow(TyVar 1, TyVar 1))), ML.Int 42)
+                          , ML.Let ("y"
+                                      , Some (TyForall(1, TyArrow (TyVar 1, TyVar 1)))
+                                      , ML.Abs( "w", None, ML.Var("y"))
+                                      , ML.App (ML.Var "x", ML.FrozenVar "y")))
+      ; typ = None
+  }
+
+let fml_mixed_prefix_2 =
+  { name = "mixed_prefix_2"
+      ; term = ML.Let ( "x"
+                          ,  Some (TyForall(1, TyArrow(TyForall(2,TyArrow(TyVar 2, TyVar 1)), TyInt)))
+                          , ML.Abs ("z", Some(TyForall(2,TyArrow(TyVar 2, TyVar 1))), ML.Int 42)
+                          , ML.Let ("y"
+                                      , Some (TyForall(1, TyArrow (TyVar 1, TyInt)))
+                                      , ML.Abs( "w", None,ML.Int 42)
+                                      , ML.App (ML.Var "x", ML.FrozenVar "y")))
+      ; typ = Some TyInt
+  }
+
+let fml_mixed_prefix_3 =
+  { name = "mixed_prefix_3"
+      ; term = ML.Let ( "x"
+                          ,  Some (TyForall(1, TyArrow(TyForall(2,TyArrow(TyVar 2, TyVar 2)),TyInt)))
+                          , ML.Abs ("z", Some(TyForall(2,TyArrow(TyVar 2, TyVar 2))), ML.Int 42)
+                          , ML.Let ("y"
+                                      , Some (TyForall(1, TyArrow (TyVar 1, TyVar 1)))
+                                      , ML.Abs( "w", None, ML.Var "w")
+                                      , ML.App (ML.Var "x", ML.FrozenVar "y")))
+      ; typ = Some TyInt
+  }
+
+let fml_mixed_prefix_4 =
+  { name = "mixed_prefix_4"
+      ; term = ML.Let ( "x"
+                          ,  Some (TyArrow(TyForall(2,TyArrow(TyVar 2, TyVar 2)),TyInt))
+                          , ML.Abs ("z", Some(TyForall(2,TyArrow(TyVar 2, TyVar 2))), ML.Int 42)
+                          , ML.Let ("y"
+                                      , Some (TyForall(1, TyArrow (TyVar 1, TyVar 1)))
+                                      , ML.Abs( "w", None, ML.Var "w")
+                                      , ML.App (ML.Var "x", ML.FrozenVar "y")))
+      ; typ = Some TyInt
+  }
+
+
 let () =
   test env_test;
   (* PLDI paper examples *)
@@ -1308,4 +1357,9 @@ let () =
   test fml_alpha_equiv_2;
   test fml_alpha_equiv_3;
   test fml_alpha_equiv_4;
-  test fml_alpha_equiv_5
+  test fml_alpha_equiv_5;
+
+  test fml_mixed_prefix_1;
+  test fml_mixed_prefix_2;
+  test fml_mixed_prefix_3;
+  test fml_mixed_prefix_4
