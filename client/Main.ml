@@ -3,7 +3,7 @@ open F
 open Result
 
 let verbose =
-  true
+  false
 
 (* -------------------------------------------------------------------------- *)
 
@@ -1410,6 +1410,5 @@ let () =
 
   test fml_mixed_prefix_1;
   test fml_mixed_prefix_2;
-  test fml_mixed_prefix_3;
   test fml_poly_binding_1;
   test fml_poly_binding_2
