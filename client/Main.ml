@@ -305,11 +305,17 @@ let app x y =
 let abs x y =
   ML.abs (x, y)
 
+let w =
+  var "w"
+
 let x =
   var "x"
 
 let y =
   var "y"
+
+let z =
+  var "z"
 
 let f =
   var "f"
@@ -1179,21 +1185,22 @@ let fml_id_auto_2 =
   }
 
 (*
-  let (x : (∀ a.  a → a) → int) = λ(y: ∀ a.  a → a)). 42 in
-  let (z : ∀ b.  b → b) =  λw. w in
-  x (~z)
- *)
+   term: let (x : (∀ a.  a → a) → int) = λ(y: ∀ a.  a → a)). 42 in
+         let (z : ∀ b.  b → b) =  λw. w in
+         x (~z)
+   type: Int
+*)
 
 let fml_alpha_equiv_1 =
   { name = "alpha_equiv_1"
-      ; term = ML.Let ( "x"
-                          ,  Some (TyArrow (TyForall (1, TyArrow (TyVar 1, TyVar 1)), TyInt))
-                          , ML.Abs ("y", Some(TyForall (1, TyArrow (TyVar 1, TyVar 1))), ML.Int 42)
-                          , ML.Let ("z"
-                                      , Some (TyForall (2, TyArrow (TyVar 2, TyVar 2)))
-                                      , ML.Abs( "w", None, ML.Var("w"))
-                                      , ML.App (ML.Var "x", ML.FrozenVar "z")))
-      ; typ = Some TyInt
+  ; term = ML.Let ( "x"
+                  , Some (TyArrow (TyForall (1, TyArrow (TyVar 1, TyVar 1)), TyInt))
+                  , ML.Abs ("y", Some (TyForall (1, TyArrow (TyVar 1, TyVar 1))), ML.Int 42)
+                  , ML.Let ("z"
+                           , Some (TyForall (2, TyArrow (TyVar 2, TyVar 2)))
+                           , abs "w" w
+                           , app x (frozen "z")))
+  ; typ = Some TyInt
   }
 
 (*
