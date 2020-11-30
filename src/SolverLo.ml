@@ -299,6 +299,11 @@ let solve (rectypes : bool) (c : rawco) : unit =
                 (* Unification with signature might introduce unbound
                    quantifiers that need to be generalized.  See #10 *)
                 let qs = G.unbound_quantifiers s in
+                (* Signature might contain unused quantifiers.  These need to be
+                   propagated to the inferred term to ensure that we generate
+                   Λ-abstractions for these unused variables.  Importantly, we
+                   must unduplicate later! *)
+                let qs = List.append (G.quantifiers annotation_scheme) qs in
                 annotation_scheme :: ss, List.append qs generalizable
               end
             else
