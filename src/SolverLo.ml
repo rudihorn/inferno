@@ -296,30 +296,15 @@ let solve (rectypes : bool) (c : rawco) : unit =
                 U.unify (G.body annotation_scheme) (G.body s); (* See #2 *)
                 debug_unify_after (G.body annotation_scheme);
                 List.iter U.unskolemize (G.quantifiers annotation_scheme);
-                (* Unification with signature might introduce unbound
-                   quantifiers that need to be generalized.  See #10 *)
-                let qs = G.unbound_quantifiers s in
-                (* Signature might contain unused quantifiers.  These need to be
-                   propagated to the inferred term to ensure that we generate
-                   Λ-abstractions for these unused variables.  Importantly, we
-                   must unduplicate later! *)
-                let qs = List.append (G.quantifiers annotation_scheme) qs in
-                annotation_scheme :: ss, List.append qs generalizable
+                (* When a type annotation is present we discard generalizable
+                   variables from the generalization engine and use quantifiers
+                   from the provided type signature. *)
+                annotation_scheme :: ss, G.quantifiers annotation_scheme
               end
             else
                 s :: ss, generalizable
           ) ss xvss ([], generalizable) in
-        (* Remove duplicate generalizable variables.  These can be introduced
-           when unifying the inferred type with signature *)
-        let generalizable = unduplicate U.equivalent generalizable in
-        (* Remove generalizable variables that were eliminated after unification
-           with a provided signature.  We recognize these variables by the fact
-           they have a structure. *)
-        Debug.print (string "Generalizable vars before removing unified: "
-                         ^^ print_vars generalizable);
-        let generalizable = List.filter (fun g -> not (U.has_structure g))
-                              generalizable in
-        Debug.print (string "Generalizable vars after all signature checks: "
+        Debug.print (string "Generalizable vars after signature check: "
                          ^^ print_vars generalizable);
 
         (* At this point some types may have unbound generic variables.  For let
