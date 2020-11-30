@@ -211,17 +211,18 @@ let solve (rectypes : bool) (c : rawco) : unit =
     | CFrozen (x, w) ->
         let s = try XMap.find x env with Not_found -> raise (Unbound x) in
         let qs, body = G.freeze state s in
+        List.iter U.skolemize qs;
         let v = fresh (Some (S.forall qs body)) in
         G.register state v;
         debug_unify_before (string "Freezing variable " ^^
           print_tevar x ^^ space ^^ colon ^^ space ^^ print_scheme s ^^ dot ^^
           hardline) v w;
         U.unify v w;
+        List.iter U.unskolemize qs;
         debug_unify_after v
     | CDef (x, v, c) ->
        G.register_signatures state v;
        let scheme = G.scheme v in
-       List.iter U.skolemize (G.quantifiers scheme);
        Debug.print (
            string "Adding binder " ^^ dquote ^^ (print_tevar x) ^^
            dquote ^^ string " with type scheme " ^^ print_scheme scheme);
