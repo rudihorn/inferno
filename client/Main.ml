@@ -1237,7 +1237,7 @@ let fml_alpha_equiv_3 =
   let (z : ∀ b.∀ b.  b → b) =  λw. w in
   x (~z)
     *)
-    
+
 let fml_alpha_equiv_4 =
   { name = "alpha_equiv_4"
       ; term = ML.Let ( "x"
@@ -1255,7 +1255,7 @@ let fml_alpha_equiv_4 =
   let (z : ∀ a.∀ b.  a → a) =  λw. w in
   x (~z)
      *)
-    
+
 let fml_alpha_equiv_5 =
   { name = "alpha_equiv_5"
       ; term = ML.Let ( "x"
@@ -1326,7 +1326,7 @@ let fml_poly_binding_1 =
   let (x :(∀ a.  a → a) = λ(y:a). y in
   x 42
      *)
-    
+
 let fml_poly_binding_2 =
   { name = "poly_binding_2"
       ; term = ML.Let ( "x"
@@ -1401,7 +1401,7 @@ let () =
   test fml_choose_choose_let;
   test fml_id_auto_1;
   test fml_id_auto_2;
-  
+
   test fml_alpha_equiv_1;
   test fml_alpha_equiv_2;
   test fml_alpha_equiv_3;
