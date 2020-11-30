@@ -1185,8 +1185,8 @@ let fml_id_auto_2 =
   }
 
 (*
-   term: let (x : (∀ a.  a → a) → int) = λ(y: ∀ a.  a → a)). 42 in
-         let (z : ∀ b.  b → b) =  λw. w in
+   term: let (x : (∀ a. a → a) → Int) = λ(y: ∀ a. a → a)). 1 in
+         let (z : ∀ b. b → b) =  λw. w in
          x (~z)
    type: Int
 *)
@@ -1195,7 +1195,7 @@ let fml_alpha_equiv_1 =
   { name = "alpha_equiv_1"
   ; term = ML.Let ( "x"
                   , Some (TyArrow (TyForall (1, TyArrow (TyVar 1, TyVar 1)), TyInt))
-                  , ML.Abs ("y", Some (TyForall (1, TyArrow (TyVar 1, TyVar 1))), ML.Int 42)
+                  , ML.Abs ("y", forall_a_a_to_a, one)
                   , ML.Let ("z"
                            , Some (TyForall (2, TyArrow (TyVar 2, TyVar 2)))
                            , abs "w" w
@@ -1204,21 +1204,22 @@ let fml_alpha_equiv_1 =
   }
 
 (*
-  let (x : (∀ a.∀ b.  a → a) → int) = λ(y:∀ a.∀ b.  a → a). 42 in
-  let (z : ∀ c.∀ d.  c → c) =  λw. w in
-  x (~z)
+   term: let (x : (∀ a. ∀ b. a → a) → Int) = λ(y:∀ a. ∀ b. a → a). 1 in
+         let (z : ∀ c. ∀ d.  c → c) =  λw. w in
+         x (~z)
+   type: Int
  *)
 
 let fml_alpha_equiv_2 =
   { name = "alpha_equiv_2"
-      ; term = ML.Let ( "x"
-                          ,  Some (TyArrow (TyForall(1, TyForall (2, TyArrow (TyVar 1, TyVar 1))), TyInt))
-                          , ML.Abs ("y", Some(TyForall(1, TyForall (2, TyArrow (TyVar 1, TyVar 1)))), ML.Int 42)
-                          , ML.Let ("z"
-                                      , Some (TyForall(3, TyForall (4, TyArrow (TyVar 3, TyVar 3))))
-                                      , ML.Abs( "w", None, ML.Var("w"))
-                                      , ML.App (ML.Var "x", ML.FrozenVar "z")))
-      ; typ = Some TyInt
+  ; term = ML.Let ( "x"
+                  , Some (TyArrow (TyForall (1, TyForall (2, TyArrow (TyVar 1, TyVar 1))), TyInt))
+                  , ML.Abs ("y", Some (TyForall (1, TyForall (2, TyArrow (TyVar 1, TyVar 1)))), one)
+                  , ML.Let ("z"
+                           , Some (TyForall(3, TyForall (4, TyArrow (TyVar 3, TyVar 3))))
+                           , abs "w" w
+                           , app x (frozen "z")))
+  ; typ = Some TyInt
   }
 
 (*
