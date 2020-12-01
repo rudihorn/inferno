@@ -217,7 +217,7 @@ let test { name; term; typ } : unit =
                     PPrint.ToChannel.pretty 0.9 80 stdout doc;
                   end
               );
-            works := true
+            if ( exp_ty = ty ) then works := true else works := false
          end;
       end;
       if verbose then
