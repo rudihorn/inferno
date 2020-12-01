@@ -324,7 +324,7 @@ let coerce (vs1 : O.tyvar list) (vs2 : O.tyvar list) : coercion =
    suitable combinators, such as [def]. *)
 
 (* BEGIN HASTYPE *)
-let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
+let rec hastype (env : int list) (t : ML.term) (w : variable) : F.nominal_term co
 = match t with
 
   | ML.Int x ->
@@ -365,7 +365,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
           w --- arrow v1 v2 ^&
           (* Under the assumption that [x] has type [domain], the term [u] must
              have type [codomain]. *)
-          def x v1 (hastype u v2) ^&
+          def x v1 (hastype env u v2) ^&
           (* Monomorphic predicate on an unannotated binder *)
           mono x v1
         )
@@ -380,7 +380,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
      (* Construct an existential variable with structure defined by the type
         annotation. *)
 
-      construct (annotation_to_structure ty) (fun v1 ->
+      construct (annotation_to_structure env ty) (fun v1 ->
 
         (* Here, we could use [exist_], because we do not need [ty2]. I refrain
            from using it, just to simplify the paper. *)
@@ -392,7 +392,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
           w --- arrow v1 v2 ^&
           (* Under the assumption that [x] has type [domain], the term [u] must
              have type [codomain]. *)
-          def x v1 (hastype u v2)
+          def x v1 (hastype env u v2)
         )
       ) <$$> fun (ty1, (_ty2, ((), u'))) ->
         (* Once these constraints are solved, we obtain the translated function
@@ -405,19 +405,23 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
 
       (* Introduce a type variable to stand for the unknown argument type. *)
       exist (fun v ->
-        lift hastype t1 (arrow v w) ^&
-        hastype t2 v
+        lift (hastype env) t1 (arrow v w) ^&
+        (hastype env) t2 v
       ) <$$> fun (_ty, (t1', t2')) ->
       F.App (t1', t2')
 
     (* Generalization. *)
   | ML.Let (x, ty, t, u) ->
 
-     let ty = Inferno.Option.map annotation_to_structure ty in
+     let bound_env = match ty with
+         | Some ann -> let (qs, _) = O.to_scheme ann in List.append qs env
+         | _        -> env in
+
+     let ty = Inferno.Option.map (annotation_to_structure bound_env) ty in
 
       (* Construct a ``let'' constraint. *)
-      let1 x ty (hastype t)
-        (hastype u w)
+      let1 x ty (hastype bound_env t)
+        (hastype env u w)
       <$$> fun (t, a, t', u') ->
       (* [a] are the type variables that we must introduce (via Lambda-abstractions)
          while type-checking [t]. [(b, _)] is the type scheme that [x] must receive
@@ -447,8 +451,8 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
           (* [w] must be the product type [v1 * v2]. *)
           w --- product v1 v2 ^^
           (* [t1] must have type [t1], and [t2] must have type [t2]. *)
-          hastype t1 v1 ^&
-          hastype t2 v2
+          hastype env t1 v1 ^&
+          hastype env t2 v2
         )
       ) <$$> fun (t1, t2) ->
       (* The System F term. *)
@@ -458,7 +462,7 @@ let rec hastype (t : ML.term) (w : variable) : F.nominal_term co
   | ML.Proj (i, t) ->
 
       exist_ (fun other ->
-        lift hastype t (product_i i w other)
+        lift (hastype env) t (product_i i w other)
       ) <$$> fun t ->
       F.Proj (i, t)
 
@@ -473,7 +477,7 @@ exception Cycle = Solver.Cycle
 
 let translate (t : ML.term) : F.nominal_term =
   solve false (
-    let0 (exist_ (hastype t)) <$$> fun (vs, t) ->
+    let0 (exist_ (hastype [] t)) <$$> fun (vs, t) ->
     (* [vs] are the binders that we must introduce *)
     F.ftyabs vs t
   )

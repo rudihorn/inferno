@@ -84,7 +84,7 @@ module Make
 
   (* ---------------------------------------------------------------------- *)
 
-  val annotation_to_structure : ty -> variable structure
+  val annotation_to_structure : int list -> ty -> variable structure
 
   (* ---------------------------------------------------------------------- *)
 
