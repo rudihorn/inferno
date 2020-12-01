@@ -1281,6 +1281,26 @@ let fml_alpha_equiv_5 =
 
 
 (*
+   term: let (x : (∀ a.∀ b. b → b) → Int) = λ(y:∀ a. ∀ b. b → b). 1 in
+         let (z : ∀ c.∀ d. d → d) = ~id in
+         x (~z)
+   type: Int
+*)
+
+let fml_alpha_equiv_6 =
+  { name = "alpha_equiv_6"
+  ; term = (fml_id)
+           (ML.Let ( "x"
+                   , Some (TyArrow (TyForall(1, TyForall (2, TyArrow (TyVar 2, TyVar 2))), TyInt))
+                   , ML.Abs ( "y", Some (TyForall (1, TyForall (2, TyArrow (TyVar 2, TyVar 2)))), one)
+                   , ML.Let ( "z"
+                            , Some (TyForall(3, TyForall (4, TyArrow (TyVar 4, TyVar 4))))
+                            , frozen "id"
+                            , app x (frozen "z"))))
+  ; typ = Some TyInt
+  }
+
+(*
   let (x : ∀ a.((∀ b.  a → a) → int)) = λ(y:∀ b.  a → a). 42 in
   let (z : ∀ b.  b → b) =  λw. w in
   x (~z)
@@ -1419,6 +1439,7 @@ let () =
   test fml_alpha_equiv_3;
   test fml_alpha_equiv_4;
   test fml_alpha_equiv_5;
+  test fml_alpha_equiv_6;
 
   test fml_mixed_prefix_1;
   test fml_mixed_prefix_2;
