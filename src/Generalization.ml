@@ -331,6 +331,15 @@ let register_signatures state v =
     Option.iter (S.iter go) (U.structure v)
   in go v
 
+let remove_from_pool ({ pool; _ } as state) vs =
+  let vs : unit U.VarMap.t = List.fold_left (fun acc v ->
+    U.VarMap.add acc v (); acc) (U.VarMap.create 128) vs in
+  for k = base_rank to state.young do
+    InfiniteArray.set pool k (List.filter (fun v -> not (U.VarMap.mem vs v))
+                                          (InfiniteArray.get pool k))
+  done
+
+
 (* -------------------------------------------------------------------------- *)
 
 (* [enter] simply increments the current rank by one. The corresponding pool is
