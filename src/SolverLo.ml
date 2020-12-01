@@ -317,14 +317,32 @@ let solve (rectypes : bool) (c : rawco) : unit =
            type contains only generic variables.  In this case the rank of the
            variable itself will be set to -1, making it an unbound generic
            variable.  These unbound generic variables need to be properly
-           registered now.  See #9. *)
+           registered now.  See #9.
+
+           An alternative approach is to remove unbound generic variables from
+           the pool and instantiate them at every use site.  This is lest
+           efficient since removing variables from the pool has O(n^2)
+           complexity (assuming that mutable hash has constant access time) and
+           then instantiating at every use sites means unnecessary copying.
+           However, if a type has unused quantifiers only then this is necessary
+           - see #16.
+         *)
         List.iter (fun s ->
-            if (not (G.has_quantifiers s)) then
+            let has_any_quantifiers = G.has_quantifiers s in
+            let s = G.drop_unused_quantifiers (G.flatten_outer_foralls s) in
+            let has_used_quantifiers = G.has_quantifiers s in
+            if (not has_any_quantifiers) then
               begin
                 (* Set unbound generic variables as unregistered... *)
                 G.set_unbound_generic_vars_rank s 0;
                 (* ...and register them in the pool. *)
                 G.register_signatures state (G.body s);
+                Debug.print (string "Unbound generic variables rank fix: " ^^
+                             print_scheme s)
+              end
+            else if (not has_used_quantifiers) then
+              begin
+                G.remove_from_pool state (G.toplevel_generic_variables (G.body s));
                 Debug.print (string "Unbound generic variables rank fix: " ^^
                              print_scheme s)
               end

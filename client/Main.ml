@@ -1319,7 +1319,7 @@ let fml_mixed_prefix_2 =
    term: let (x : ∀ a.(∀ b. b → b) → Int) = λ(y:∀ b. b → b). 1 in
          let (z : ∀ a. a → a) = λw. w in
          x (~z)
-   type: Int
+   type: [∀ a.] Int
 *)
 
 let fml_poly_binding_1 =
@@ -1331,7 +1331,7 @@ let fml_poly_binding_1 =
                            , Some (TyForall (1, TyArrow (TyVar 1, TyVar 1)))
                            , abs "w" w
                            , app x (frozen "y")))
-  ; typ  = Some TyInt
+  ; typ  = Some (TyForall ((), TyInt))
   }
 
 (*
