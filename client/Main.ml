@@ -1026,14 +1026,13 @@ let fml_id_annot_3 =
   }
 
 (*
-   term : let id = λx.x in let (y : ∀ a. a → a) = ~id in y
+   term : let (y : ∀ a. a → a) = ~id in y
    type : ∀ a. a → a
 *)
 let fml_id_annot_4 =
   { name = "id_annot_4"
-  ; term = ML.let_ ("id", abs "x" x,
-      ML.Let ("y", Some (TyForall (1, TyArrow (TyVar 1, TyVar 1))),
-                   frozen "id", y))
+  ; term = (fml_id)
+           (ML.Let ("y", forall_a_a_to_a, frozen "id", y))
   ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
   }
 
@@ -1159,7 +1158,7 @@ let fml_choose_choose_let =
 
 (*
    term : (λx.x) ~auto
-   type : ∀ a. a → a
+   type : (∀ a. a → a) → (∀ a. a → a)
    note : differs from FreezeML specification, assigns polymorphic type to
           unannotated binder
 *)
@@ -1167,7 +1166,8 @@ let fml_id_auto_1 =
   { name = "id_auto_1"
   ; term = (fml_auto)
            (app (abs "x" x) (frozen "auto"))
-  ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
+  ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
+                          TyForall ((), TyArrow (TyVar 0, TyVar 0))))
   }
 
 
@@ -1181,7 +1181,8 @@ let fml_id_auto_2 =
   { name = "id_auto_2"
   ; term = (fml_auto << fml_id)
            (app (app id (abs "x" x)) (frozen "auto"))
-  ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
+  ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
+                          TyForall ((), TyArrow (TyVar 0, TyVar 0))))
   }
 
 (*
@@ -1315,8 +1316,8 @@ let fml_mixed_prefix_2 =
   }
 
 (*
-   term: let (x : ∀ a.((∀ b.  b → b) → int)) = λ(y:∀ b.  b → b). 1 in
-         let (z : ∀ a.  a → a) =  λw. w in
+   term: let (x : ∀ a.(∀ b. b → b) → Int) = λ(y:∀ b. b → b). 1 in
+         let (z : ∀ a. a → a) = λw. w in
          x (~z)
    type: Int
 *)
@@ -1330,7 +1331,7 @@ let fml_poly_binding_1 =
                            , Some (TyForall (1, TyArrow (TyVar 1, TyVar 1)))
                            , abs "w" w
                            , app x (frozen "y")))
-  ; typ = Some TyInt
+  ; typ  = Some TyInt
   }
 
 (*
