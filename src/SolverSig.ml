@@ -70,11 +70,8 @@ module type OUTPUT = sig
      of the functor [\X. tyvar + t X]. *)
   val structure: ty structure -> ty
 
-  val to_variable : (ty -> 'a structure) -> ('a structure -> 'a)
+  val to_variable : (ty -> 'a) -> ('a structure -> 'a)
                  -> 'a TyVarMap.t -> ty -> 'a
-
-  val to_structure: (ty -> 'a structure) -> ('a structure -> 'a)
-                 -> 'a TyVarMap.t -> ty -> 'a structure
 
   (* If [v] is a type variable and [t] is a type, then [mu v t] is a
      representation of the recursive type [mu v.t]. This function is used in
