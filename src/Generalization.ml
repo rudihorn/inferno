@@ -275,6 +275,10 @@ let set_unbound_generic_vars_rank { quantifiers; body } rank =
                        (toplevel_generic_variables body) in
   List.iter (fun v -> U.set_rank v rank) vs
 
+(* Remove unused quantifiers from a scheme *)
+let drop_unused_quantifiers { body; _ } =
+  { quantifiers = unbound_quantifiers (degenerate_scheme body); body }
+
 (* -------------------------------------------------------------------------- *)
 
 (* Debugging utilities. *)
