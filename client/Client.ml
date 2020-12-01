@@ -194,6 +194,8 @@ module ML = struct
   (* Unannotated abstraction and let *)
   let abs (x, m) = Abs (x, None, m)
 
+  let abs_asc (x, t, m) = Abs (x, Some t, m)
+
   let let_ (x, m, n) = Let (x, None, m, n)
 
   let let_asc (x, ty, m, n) = Let (x, Some ty, m, n)

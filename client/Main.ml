@@ -392,6 +392,18 @@ let fml_pairprim k = ML.let_asc ("pair'",
                                   TyProduct (TyVar 1, TyVar 2)))))),
   abs "x" (abs "y" (ML.Pair (x, y))), k)
 
+let fml_e3_r k =
+  ML.let_asc
+    ("r",
+     (TyArrow (TyForall (1, TyArrow (TyVar 1,
+                 TyForall (2, TyArrow (TyVar 2, TyVar 2)))), TyInt)),
+     ML.abs_asc
+       ("x",
+        (TyForall (1, TyArrow (TyVar 1,
+           TyForall (2, TyArrow (TyVar 2, TyVar 2))))),
+        one),
+     k)
+
 let env k = (
     fml_id       <<
     fml_choose   <<
@@ -673,31 +685,29 @@ let d2_star =
  *)
 
 (* example            : E3
-   term               : let r : (∀ a. a → (∀ b. b → b)) → Int = λx.1 in r (λx.λy.y)
+   term               : let r : (∀ a. a → (∀ b. b → b)) → Int =
+                          λ(x : (∀ a. a → (∀ b. b → b))).1
+                        in r (λx.λy.y)
    inferred type      : X
    type in PLDI paper : X
  *)
 let e3 =
   { name = "E3"
-  ; term = ML.let_asc ("r", (TyArrow (TyForall (1, TyArrow (TyVar 1,
-                          TyForall (2, TyArrow (TyVar 2, TyVar 2)))), TyInt)),
-                        abs "x" one,
-                   app (var "r") (abs "x" (abs "y" y)))
+  ; term = fml_e3_r (app (var "r") (abs "x" (abs "y" y)))
   ; typ  = None
   }
 
 (* example            : E3∘
-   term               : let r : (∀ a. a → (∀ b. b → b)) → Int = λx.1 in r $(λx.$(λy.y))
+   term               :  let r : (∀ a. a → (∀ b. b → b)) → Int =
+                           λ(x : (∀ a. a → (∀ b. b → b))).1
+                         in $(λx.$(λy.y))
    inferred type      : Int
    type in PLDI paper : Int
  *)
 let e3_dot =
   { name = "E3∘"
-  ; term = ML.let_asc ("r", (TyArrow (TyForall (1, TyArrow (TyVar 1,
-                          TyForall (2, TyArrow (TyVar 2, TyVar 2)))), TyInt)),
-                        abs "x" one,
-                   app (var "r") (ML.gen (abs "x" (ML.gen (abs "y" y)))))
-  ; typ  = None
+  ; term = fml_e3_r (app (var "r") (ML.gen (abs "x" (ML.gen (abs "y" y)))))
+  ; typ  = Some TyInt
   }
 
 (* Section F : FreezeML Programs *)
@@ -1201,6 +1211,20 @@ let fml_mono_gen_test2 =
     ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
   }
 
+(*
+   Like e3, but no type annotation on the lambda defining r
+
+   term      : let r : (∀ a. a → (∀ b. b → b)) → Int = λx.1 in r $(λx.$(λy.y))
+   type      : None
+ *)
+let fml_e3_dot_no_lambda_sig =
+  { name = "E3∘"
+  ; term = ML.let_asc ("r", (TyArrow (TyForall (1, TyArrow (TyVar 1,
+                          TyForall (2, TyArrow (TyVar 2, TyVar 2)))), TyInt)),
+                        abs "x" one,
+                   app (var "r") (ML.gen (abs "x" (ML.gen (abs "y" y)))))
+  ; typ  = None
+  }
 
 let fml_alpha_equiv_1 =
   { name = "alpha_equiv_1"
@@ -1332,6 +1356,6 @@ let () =
   test fml_alpha_equiv_3;
   test fml_alpha_equiv_4;
   test fml_alpha_equiv_5;
-
   test fml_mono_gen_test1;
   test fml_mono_gen_test2;
+  test fml_e3_dot_no_lambda_sig
