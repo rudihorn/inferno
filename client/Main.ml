@@ -1260,11 +1260,11 @@ let fml_alpha_equiv_4 =
   ; typ = Some TyInt
   }
 
-    (*
+(*
   let (x : (∀ a.∀ a.  a → a) → int) = λ(y:∀ a.∀ a.  a → a). 42 in
   let (z : ∀ a.∀ b.  a → a) =  λw. w in
   x (~z)
-     *)
+*)
 
 let fml_alpha_equiv_5 =
   { name = "alpha_equiv_5"
@@ -1315,35 +1315,36 @@ let fml_mixed_prefix_2 =
   }
 
 (*
-  let (x : ∀ a.((∀ b.  b → b) → int)) = λ(y:∀ b.  b → b). 42 in
-  let (z : ∀ a.  a → a) =  λw. w in
-  x (~z)
- *)
+   term: let (x : ∀ a.((∀ b.  b → b) → int)) = λ(y:∀ b.  b → b). 1 in
+         let (z : ∀ a.  a → a) =  λw. w in
+         x (~z)
+   type: Int
+*)
 
 let fml_poly_binding_1 =
   { name = "poly_binding_1"
-      ; term = ML.Let ( "x"
-                          ,  Some (TyForall(1, TyArrow(TyForall(2,TyArrow(TyVar 2, TyVar 2)),TyInt)))
-                          , ML.Abs ("z", Some(TyForall(2,TyArrow(TyVar 2, TyVar 2))), ML.Int 42)
-                          , ML.Let ("y"
-                                      , Some (TyForall(1, TyArrow (TyVar 1, TyVar 1)))
-                                      , ML.Abs( "w", None, ML.Var "w")
-                                      , ML.App (ML.Var "x", ML.FrozenVar "y")))
-      ; typ = Some TyInt
+  ; term = ML.Let ( "x"
+                  , Some (TyForall (1, TyArrow (TyForall (2, TyArrow(TyVar 2, TyVar 2)), TyInt)))
+                  , ML.Abs ( "z", Some (TyForall (2, TyArrow (TyVar 2, TyVar 2))), one )
+                  , ML.Let ( "y"
+                           , Some (TyForall (1, TyArrow (TyVar 1, TyVar 1)))
+                           , abs "w" w
+                           , app x (frozen "y")))
+  ; typ = Some TyInt
   }
 
-    (*
-  let (x :(∀ a.  a → a) = λ(y:a). y in
-  x 42
-     *)
+(*
+   term: let (x : ∀ a. a → a) = λ(y : a). y in x 1
+   type: Int
+*)
 
 let fml_poly_binding_2 =
   { name = "poly_binding_2"
-      ; term = ML.Let ( "x"
-                          ,  Some (TyForall(2,TyArrow(TyVar 2, TyVar 2)))
-                          , ML.Abs ("z", Some(TyVar 2), ML.Var "z")
-                          , ML.App (ML.Var "x", ML.Int 42))
-      ; typ = Some TyInt
+  ; term = ML.Let ( "x"
+                  , Some (TyForall (2, TyArrow (TyVar 2, TyVar 2)))
+                  , ML.Abs ("z", Some (TyVar 2), z)
+                  , app x one)
+  ; typ = Some TyInt
   }
 
 let () =
