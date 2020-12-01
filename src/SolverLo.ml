@@ -251,7 +251,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
           else
             Debug.print_str "Entering top-level binding"
         end;
-        if Debug.hard then G.show_state "State before solving:" state;
+        if Debug.hard then G.show_state "State before solving" state;
         (* Solve the constraint [c1]. *)
         solve env c1;
         (* Ask the generalization engine to perform an occurs check, to adjust the
@@ -260,7 +260,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
            and to construct a list [ss] of type schemes for our entry points. The
            generalization engine also produces a list [generalizable] of the young
            variables that should be universally quantified here. *)
-        if Debug.hard then G.show_state "State after solving, before exiting:" state;
+        if Debug.hard then G.show_state "State after solving, before exiting" state;
         let generalizable, ss = G.exit rectypes state vs in
         Debug.print (string "Generalizable vars from the generalization engine: "
                          ^^ print_vars generalizable);
@@ -307,6 +307,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
           ) ss xvss ([], generalizable) in
         Debug.print (string "Generalizable vars after signature check: "
                          ^^ print_vars generalizable);
+        if Debug.hard then G.show_state "State after signature check" state;
 
         (* At this point some types may have unbound generic variables.  For let
            bindings with signatures this happens when the signature has no
@@ -329,6 +330,8 @@ let solve (rectypes : bool) (c : rawco) : unit =
               end
           ) ss;
 
+        if Debug.hard then G.show_state "State after unbound vars fix" state;
+
         (* Fill the write-once reference [generalizable_hook]. *)
         WriteOnceRef.set generalizable_hook generalizable;
         (* Extend the environment [env] and fill the write-once references
@@ -347,6 +350,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
             XMap.add x s env
           ) env xvss ss
         in
+        if Debug.hard then G.show_state "State before proceeding with body" state;
         if ( List.length( xvss ) > 0 ) then
           Debug.print_str "Proceeding with let body now"
         else
