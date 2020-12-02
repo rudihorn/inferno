@@ -3,7 +3,7 @@ open F
 open Result
 
 let verbose =
-  true
+  false
 
 (* -------------------------------------------------------------------------- *)
 
@@ -1336,9 +1336,9 @@ let fml_mixed_prefix_2 =
   }
 
 (*
-   term: let (x : ∀ a.(∀ b. b → b) → Int) = λ(y:∀ b. b → b). 1 in
-         let (z : ∀ a. a → a) = λw. w in
-         x (~z)
+   term: let (x : ∀ a.(∀ b. b → b) → Int) = λ(z:∀ b. b → b). 1 in
+         let (y : ∀ a. a → a) = λw. w in
+         x (~y)
    type: [∀ a.] Int
 *)
 
@@ -1355,10 +1355,9 @@ let fml_poly_binding_1 =
   }
 
 (*
-   term: let (x : ∀ a. a → a) = λ(y : a). y in x 1
+   term: let (x : ∀ a. a → a) = λ(z : a). z in x 1
    type: Int
 *)
-
 let fml_poly_binding_2 =
   { name = "poly_binding_2"
   ; term = ML.Let ( "x"
@@ -1368,8 +1367,34 @@ let fml_poly_binding_2 =
   ; typ = Some TyInt
   }
 
-let () =
 (*
+   term: let (x : ∀ a. (∀ b. a → b) → Int) = λ(z : (∀ b. a → b)). 1 in 1
+   type: Int
+*)
+let fml_poly_binding_3 =
+  { name = "poly_binding_3"
+  ; term = ML.Let ( "x"
+                  , Some (TyForall (1, (TyArrow (TyForall (2, TyArrow (TyVar 1, TyVar 2)), TyInt))))
+                  , ML.Abs ("z", Some (TyForall (2, TyArrow (TyVar 1, TyVar 2))), one)
+                  , one)
+  ; typ = Some TyInt
+  }
+
+(*
+   term: let (x : ∀ a. (∀ b. a → b → Int) → Int) = λ(z : (∀ b. a → b → Int)). 1 in 1
+   type: Int
+*)
+let fml_poly_binding_4 =
+  { name = "poly_binding_4"
+  ; term = ML.Let ( "x"
+                  , Some (TyForall (1, (TyArrow (TyForall (2, TyArrow (TyVar 1, TyArrow (TyVar 2, TyInt))), TyInt))))
+                  , ML.Abs ("z", Some (TyForall (2, TyArrow (TyVar 1, TyArrow (TyVar 2, TyInt)))), one)
+                  , one)
+  ; typ = Some TyInt
+  }
+
+
+let () =
   test env_test;
   (* PLDI paper examples *)
   test a1;
@@ -1445,6 +1470,6 @@ let () =
   test fml_mixed_prefix_1;
   test fml_mixed_prefix_2;
   test fml_poly_binding_1;
-  test fml_poly_binding_2
-*)
-  test fml_poly_binding_2
+  test fml_poly_binding_2;
+  test fml_poly_binding_3;
+  test fml_poly_binding_4

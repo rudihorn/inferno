@@ -368,7 +368,7 @@ let rec hastype (env : int list) (t : ML.term) (w : variable) : F.nominal_term c
      (* Construct an existential variable with structure defined by the type
         annotation. *)
 
-      exists_sig (annotation_to_variable env ty) (fun v1 ->
+      exists_sig (annotation_to_variable false env ty) (fun v1 ->
 
         (* Here, we could use [exist_], because we do not need [ty2]. I refrain
            from using it, just to simplify the paper. *)
@@ -405,7 +405,7 @@ let rec hastype (env : int list) (t : ML.term) (w : variable) : F.nominal_term c
          | Some ann -> let (qs, _) = O.to_scheme ann in List.append qs env
          | _        -> env in
 
-     let ty = Inferno.Option.map (annotation_to_variable bound_env) ty in
+     let ty = Inferno.Option.map (annotation_to_variable true bound_env) ty in
 
       (* Construct a ``let'' constraint. *)
       let1 x ty (hastype bound_env t)

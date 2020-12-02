@@ -84,7 +84,7 @@ module Make
 
   (* ---------------------------------------------------------------------- *)
 
-  val annotation_to_variable : int list -> ty -> variable
+  val annotation_to_variable : bool -> int list -> ty -> variable
 
   (* ---------------------------------------------------------------------- *)
 
