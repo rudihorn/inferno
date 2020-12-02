@@ -243,18 +243,15 @@ and monos_tuple =
       () (* cyclic types considered not monomorphic *)
     else
       let desc = TUnionFind.find v in
-      if desc.skolem then
-        (* nothing to do, skolems are never monomorphic *)
-        ()
-      else
-        begin
-          if desc.skolem then
-            ()
-          else
-            desc.monomorphic <- true;
-          VarMap.add visited v ();
-          mono_structure visited desc.structure
-        end
+      begin
+        if desc.skolem then
+          (* nothing to do, skolems are never monomorphic *)
+          ()
+        else
+          desc.monomorphic <- true;
+        VarMap.add visited v ();
+        mono_structure visited desc.structure
+      end
   and mono_structure visited s_opt =
     match s_opt with
     | None   -> ()
