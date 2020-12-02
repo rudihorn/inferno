@@ -1200,7 +1200,7 @@ let fml_mono_gen_test1 =
   }
 
 (*
-   term : let id : \= (λx.x) in id ~id
+   term : let (id : ∀ a. a → a) = (λx.x) in id ~id
    type : (∀ a. a → a → a)
 *)
 let fml_mono_gen_test2 =
