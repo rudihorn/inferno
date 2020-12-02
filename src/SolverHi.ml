@@ -114,16 +114,16 @@ let annotation_to_variable (env : int list) (t : O.ty) : Lo.variable =
     List.fold_left
       (fun env q -> O.TyVarMap.add q (Lo.fresh_generic None) env)
       env qs in
-  let rec worker init_env t =
+  let rec worker init_env t : Lo.variable =
     let (qs, body) = O.to_scheme t in
     let env = extend_env init_env qs in
     let qs' = List.map (fun q -> O.TyVarMap.find q env) qs in
     match qs' with
-    | [] -> O.to_structure (worker env)
+    | [] -> O.to_variable (worker env)
               (fun s -> Lo.fresh (Some s)) env body
-    | _  -> S.forall qs' (O.to_variable (worker env)
-                            (fun s -> Lo.fresh_generic (Some s)) env body)
-  in Lo.fresh (Some (worker (extend_env O.TyVarMap.empty env) t))
+    | _  -> Lo.fresh (Some (S.forall qs' (O.to_variable (worker env)
+                            (fun s -> Lo.fresh_generic (Some s)) env body)))
+  in worker (extend_env O.TyVarMap.empty env) t
 
 (* -------------------------------------------------------------------------- *)
 

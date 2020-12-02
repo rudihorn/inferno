@@ -121,6 +121,12 @@ module O = struct
     | [] -> body
     | _  -> List.fold_right (fun q t -> F.TyForall (q, t)) qs body
 
+  let rec to_scheme = function
+    | F.TyForall (q, body) ->
+       let (qs, body) = to_scheme body in
+       (q :: qs, body)
+    | t                     -> ([], t)
+
   let structure t =
     match t with
     | S.TyArrow (t1, t2) ->
@@ -137,32 +143,25 @@ module O = struct
       | F.TyVar v              -> TyVarMap.find v env
       | F.TyArrow   (ty1, ty2) -> fresh (S.TyArrow   (go ty1, go ty2))
       | F.TyProduct (ty1, ty2) -> fresh (S.TyProduct (go ty1, go ty2))
-      | F.TyForall _           -> fresh (callback ty)
+      | F.TyForall _           -> callback ty
       | F.TyInt                -> fresh S.TyInt
       | F.TyBool               -> fresh S.TyBool
       | F.TyMu _               -> assert false
     in go body
-
+(*
   let to_structure callback fresh env body : 'a structure =
     let to_variable = to_variable callback fresh env in
     match body with
     | F.TyVar v              -> assert false (* Unbound variables not allowed *)
     | F.TyArrow   (ty1, ty2) -> S.TyArrow   (to_variable ty1, to_variable ty2)
     | F.TyProduct (ty1, ty2) -> S.TyProduct (to_variable ty1, to_variable ty2)
-    | F.TyForall _           -> callback body
+    | F.TyForall _           -> assert false (*callback body*)
     | F.TyInt                -> S.TyInt
     | F.TyBool               -> S.TyBool
     | F.TyMu _               -> assert false
-
+*)
   let mu x t =
     F.TyMu (x, t)
-
-  let rec to_scheme = function
-    | F.TyForall (q, body) ->
-       let (qs, body) = to_scheme body in
-       (q :: qs,  body)
-    | t                     -> ([], t)
-
 end
 
 module ML = struct
