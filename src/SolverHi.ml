@@ -109,8 +109,7 @@ let (^^) (rc1, k1) (rc2, k2) =
 
 (* This function converts a type signature to a structure of a unifier variable.
    It assumes every variable in the signature is generic. *)
-let annotation_to_structure (env : int list) (t : O.ty) :
-      Lo.variable S.structure =
+let annotation_to_variable (env : int list) (t : O.ty) : Lo.variable =
   let extend_env env qs =
     List.fold_left
       (fun env q -> O.TyVarMap.add q (Lo.fresh_generic None) env)
@@ -124,7 +123,7 @@ let annotation_to_structure (env : int list) (t : O.ty) :
               (fun s -> Lo.fresh (Some s)) env body
     | _  -> S.forall qs' (O.to_variable (worker env)
                             (fun s -> Lo.fresh_generic (Some s)) env body)
-  in worker (extend_env O.TyVarMap.empty env) t
+  in Lo.fresh (Some (worker (extend_env O.TyVarMap.empty env) t))
 
 (* -------------------------------------------------------------------------- *)
 
@@ -151,6 +150,13 @@ let exist f =
 
 let construct t f =
   let v = fresh (Some t) in
+  let rc, k = f v in
+  CExist (v, rc),
+  fun env ->
+    let decode = env in
+    (decode v, k env)
+
+let exists_sig v f =
   let rc, k = f v in
   CExist (v, rc),
   fun env ->
@@ -247,7 +253,10 @@ let letn xs f1 (rc2, k2) =
      [CExist]. Also, create an uninitialized scheme hook, which will receive
      the type scheme of [x] after the solver runs. *)
   let xvss = List.map (fun (x, ty) ->
-    x, fresh ty, WriteOnceRef.create()
+    let v = match ty with
+      | None   -> fresh None
+      | Some v -> v in
+    x, v, WriteOnceRef.create()
   ) xs in
   (* Pass the vector of type variables to the user-supplied function [f1], as in
      [CExist].  These are fresh variables that we can later check against

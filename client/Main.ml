@@ -3,7 +3,7 @@ open F
 open Result
 
 let verbose =
-  false
+  true
 
 (* -------------------------------------------------------------------------- *)
 
@@ -1369,6 +1369,7 @@ let fml_poly_binding_2 =
   }
 
 let () =
+(*
   test env_test;
   (* PLDI paper examples *)
   test a1;
@@ -1444,4 +1445,6 @@ let () =
   test fml_mixed_prefix_1;
   test fml_mixed_prefix_2;
   test fml_poly_binding_1;
+  test fml_poly_binding_2
+*)
   test fml_poly_binding_2

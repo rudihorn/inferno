@@ -147,7 +147,7 @@ module O = struct
     let to_variable = to_variable callback fresh env in
     match body with
     | F.TyVar v              -> assert false (* Unbound variables not allowed *)
-    | F.TyArrow (ty1, ty2)   -> S.TyArrow   (to_variable ty1, to_variable ty2)
+    | F.TyArrow   (ty1, ty2) -> S.TyArrow   (to_variable ty1, to_variable ty2)
     | F.TyProduct (ty1, ty2) -> S.TyProduct (to_variable ty1, to_variable ty2)
     | F.TyForall _           -> callback body
     | F.TyInt                -> S.TyInt
@@ -380,7 +380,7 @@ let rec hastype (env : int list) (t : ML.term) (w : variable) : F.nominal_term c
      (* Construct an existential variable with structure defined by the type
         annotation. *)
 
-      construct (annotation_to_structure env ty) (fun v1 ->
+      exists_sig (annotation_to_variable env ty) (fun v1 ->
 
         (* Here, we could use [exist_], because we do not need [ty2]. I refrain
            from using it, just to simplify the paper. *)
@@ -417,7 +417,7 @@ let rec hastype (env : int list) (t : ML.term) (w : variable) : F.nominal_term c
          | Some ann -> let (qs, _) = O.to_scheme ann in List.append qs env
          | _        -> env in
 
-     let ty = Inferno.Option.map (annotation_to_structure bound_env) ty in
+     let ty = Inferno.Option.map (annotation_to_variable bound_env) ty in
 
       (* Construct a ``let'' constraint. *)
       let1 x ty (hastype bound_env t)

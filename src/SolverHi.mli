@@ -84,7 +84,7 @@ module Make
 
   (* ---------------------------------------------------------------------- *)
 
-  val annotation_to_structure : int list -> ty -> variable structure
+  val annotation_to_variable : int list -> ty -> variable
 
   (* ---------------------------------------------------------------------- *)
 
@@ -102,6 +102,8 @@ module Make
      the type variable [v] to be equal to the type [t]. So, it is really a
      way of constructing a variable that stands for a shallow term. *)
   val construct:  variable structure -> (variable -> 'a co) -> (ty * 'a) co
+
+  val exists_sig: variable -> (variable -> 'a co) -> (ty * 'a) co
 
   (* ---------------------------------------------------------------------- *)
 
@@ -156,7 +158,7 @@ module Make
        [\Lambda vs.a1].
      - the value [a1] produced by the constraint [c1].
      - the value [a2] produced by the constraint [c2]. *)
-  val let1: tevar -> variable O.structure option -> (variable -> 'a co) -> 'b co ->
+  val let1: tevar -> variable option -> (variable -> 'a co) -> 'b co ->
             (ty * tyvar list * 'a * 'b) co
 
   (* END HI *)
@@ -170,7 +172,7 @@ module Make
      [vs] to a constraint. The [i]-th term variable, [x_i], ends up bound to the
      constraint abstraction of the [i]-th type variable in [c_1], which one could
      write [\lambda v_i.c_1]. *)
-  val letn: (tevar * variable O.structure option) list -> (variable list -> 'a co) -> 'b co ->
+  val letn: (tevar * variable option) list -> (variable list -> 'a co) -> 'b co ->
             (ty list * tyvar list * 'a * 'b) co
 
   (* BEGIN HI *)
