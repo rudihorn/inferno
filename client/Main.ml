@@ -1205,7 +1205,7 @@ let fml_mono_gen_test1 =
 *)
 let fml_mono_gen_test2 =
     { name = "fml_skolem_with_non_skolem"
-    ; term =  ML.let_asc ("id", (TyForall (1, TyArrow (TyVar 1, TyVar 1))),
+    ; term =  ML.let_asc ("id", forall_a_a_to_a,
                 (abs "x" x),
                 app (var "id") (frozen "id"))
     ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
