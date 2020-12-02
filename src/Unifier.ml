@@ -237,33 +237,38 @@ let rec unify (t : _ TRef.transaction) (v1 : variable) (v2 : variable) : unit =
 
 (* -------------------------------------------------------------------------- *)
 
-and monomorphize_variable visited v =
-  if VarMap.mem visited v then
-    () (* cyclic types considered not monomorphic *)
-  else
-    let desc = TUnionFind.find v in
-    if desc.skolem then
-      (* nothing to do, skolems are never monomorphic *)
-      ()
+and monos_tuple =
+  let rec mono_variable visited v =
+    if VarMap.mem visited v then
+      () (* cyclic types considered not monomorphic *)
     else
-      begin
-        if desc.skolem then
-          ()
-        else
-          desc.monomorphic <- true;
-        VarMap.add visited v ();
-        monomorphize_structure visited desc.structure
-      end
+      let desc = TUnionFind.find v in
+      if desc.skolem then
+        (* nothing to do, skolems are never monomorphic *)
+        ()
+      else
+        begin
+          if desc.skolem then
+            ()
+          else
+            desc.monomorphic <- true;
+          VarMap.add visited v ();
+          mono_structure visited desc.structure
+        end
+  and mono_structure visited s_opt =
+    match s_opt with
+    | None   -> ()
+    | Some s ->
+       if S.isForall s then
+         raise UnifyMono
+       else
+         S.iter (fun v ->  mono_variable visited v) s
+  in
+  (mono_variable (VarMap.create 128),
+   mono_structure (VarMap.create 128))
 
-and monomorphize_structure visited s_opt =
-  match s_opt with
-  | None   -> ()
-  | Some s ->
-     if S.isForall s then
-       raise UnifyMono
-     else
-       S.iter (fun v ->  monomorphize_variable visited v) s
-
+and monomorphize_variable x = (fst monos_tuple) x
+and monomorphize_structure x = (snd monos_tuple) x
 
 (* [unify_descriptors desc1 desc2] combines the descriptors [desc1] and
    [desc2], producing a descriptor for the merged equivalence class. *)
@@ -315,7 +320,7 @@ and unify_descriptors t desc1 desc2 =
        if new_desc.monomorphic then
          (* Propagate the monomorphism to all type vars used on the
           structure, if it exists. *)
-         monomorphize_structure (VarMap.create 128) new_desc.structure;
+         monomorphize_structure new_desc.structure;
        new_desc
 
 
@@ -348,7 +353,7 @@ let unify v1 v2 =
 (* -------------------------------------------------------------------------- *)
 
 let monomorphize v =
-  monomorphize_variable (VarMap.create 128) v
+  monomorphize_variable v
 
 (* -------------------------------------------------------------------------- *)
 
