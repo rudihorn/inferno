@@ -148,18 +148,7 @@ module O = struct
       | F.TyBool               -> fresh S.TyBool
       | F.TyMu _               -> assert false
     in go body
-(*
-  let to_structure callback fresh env body : 'a structure =
-    let to_variable = to_variable callback fresh env in
-    match body with
-    | F.TyVar v              -> assert false (* Unbound variables not allowed *)
-    | F.TyArrow   (ty1, ty2) -> S.TyArrow   (to_variable ty1, to_variable ty2)
-    | F.TyProduct (ty1, ty2) -> S.TyProduct (to_variable ty1, to_variable ty2)
-    | F.TyForall _           -> assert false (*callback body*)
-    | F.TyInt                -> S.TyInt
-    | F.TyBool               -> S.TyBool
-    | F.TyMu _               -> assert false
-*)
+
   let mu x t =
     F.TyMu (x, t)
 end
