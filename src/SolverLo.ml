@@ -247,7 +247,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
         let generalizable, ss = G.exit rectypes state vs print_vars in
         Debug.print (string "Generalizable vars from the generalization engine: "
                          ^^ print_vars generalizable);
-        Debug.print (string "Generalizable scheme from the generalization engine: "
+        Debug.print (string "Generalizable schemes from the generalization engine: "
                          ^^ print_schemes ss);
         if Debug.hard then G.show_state "State after exiting" state;
         (* Check the inferred type scheme against the type annotation or accept
