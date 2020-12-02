@@ -107,16 +107,22 @@ let (^^) (rc1, k1) (rc2, k2) =
 
 (* -------------------------------------------------------------------------- *)
 
-(* This function converts a type signature to a structure of a unifier variable.
-   It assumes every variable in the signature is generic. *)
-(* JSTOLAREK: document this, there's a lot of subtleties here
+(* This function converts a type signature to a unifier variable.  There are
+   several subtleties here:
 
-    * generic_qs differentiates between annotation on lets and lambdas.
-      Concretely, it ensures that in lambdas we use rank-0 variables
+    * Annotations can either be placed on let expressions or on lambda binders.
+      Annotation on a let expression brings its quantifiers into scope in the
+      bound term.  Variables in scope are tracked by the client and passed in
+      as initial env to the function.  The extra flag determines whether these
+      quantifiers should be generic (for let expressins) or not (for lambdas).
+      It is crucial that for lambda expressions we don't treat variables
+      introduced by quantifiers in a let signature as generic.
 
-    * it is also important that we switch fresh variable generator when
-      entering forall
- *)
+    * When traversing the body we must also carefully distinguish whether we
+      generate generic or unregistered variables.  Starting at the top level we
+      generate unregistered variables, but when we enter a forall we switch to
+      generating generic variables.  This is done by replacing `fresh` function
+      passed to worker. *)
 let annotation_to_variable (generic_qs : bool) (env : int list) (t : O.ty) :
       Lo.variable =
   let extend_env fresh env qs =

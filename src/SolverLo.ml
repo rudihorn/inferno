@@ -314,20 +314,19 @@ let solve (rectypes : bool) (c : rawco) : unit =
            quantifiers but the inferred type does.  In such case unification
            with the body of inferred type introduces unbound quantifiers.  For
            let bindings without a signature this can happen when the inferred
-           type contains only generic variables.  In this case the rank of the
-           variable itself will be set to -1, making it an unbound generic
-           variable.  These unbound generic variables need to be properly
-           registered now.  See #9.
+           type has no quantifiers but contains only generic variables.  In this
+           case the rank of the variable itself will be set to -1, making it an
+           unbound generic variable.  These unbound generic variables need to be
+           properly registered now.  See #9.
 
-           JSTOLAREK: UPDATE THIS
-           An alternative approach is to remove unbound generic variables from
-           the pool and instantiate them at every use site.  This is lest
-           efficient since removing variables from the pool has O(n^2)
-           complexity (assuming that mutable hash has constant access time) and
-           then instantiating at every use sites means unnecessary copying.
-           However, if a type has unused quantifiers only then this is necessary
-           - see #16.
-         *)
+           Moreover, we need to ensure that all generic variables in the
+           signature are removed from the pool.  This particularly happens for
+           variables representing type constructors.  See #16
+
+           Note that removing variables from the pool has O(n^2) complexity
+           (assuming that mutable hash has constant access time) but
+           `remove_from_pool` will actually do any work only of there are
+           variables to be removed.  *)
         List.iter (fun s ->
             if (not (G.has_quantifiers s)) then
               begin
@@ -336,10 +335,10 @@ let solve (rectypes : bool) (c : rawco) : unit =
                 (* ...and register them in the pool. *)
                 G.register_signatures state (G.body s);
               end;
-            (* JSTOLAREK: potential bug here.  We only remove top-level generic
-               variables from the pool but it might be the case that some nested
-               tyvars make it into the pool, in which case they also should be
-               removed.  For now I have not run into this in practice. *)
+            (* Potential bug here.  We only remove top-level generic variables
+               from the pool but it might be the case that some nested tyvars
+               make it into the pool, in which case they also should be removed.
+               For now I have not run into this in practice. *)
             G.remove_from_pool state (G.toplevel_generic_variables (G.body s));
             Debug.print (string "Unbound generic variables rank fix: " ^^
                            print_scheme s)
