@@ -601,8 +601,17 @@ let instantiate state { quantifiers; body } =
         assert (U.rank v = generic);
         U.VarMap.find visited v
       with Not_found ->
-        (* Don't instantiate nested quantifiers. *)
-        if not toplevel then v else begin
+        if not toplevel then begin
+            (* If we're inside a nested quantified type we copy its structure
+               maintaining all the ranks.  This ensures proper instantiation of
+               outer quantifiers nested inside quantified types.  *)
+            let v' = U.fresh None (U.rank v) in
+            U.VarMap.add visited v v';
+            (* We're no longer at the top level if we enter a forall variable *)
+            U.set_structure v' (Option.map (S.map (copy false)) (U.structure v));
+            v'
+          end
+        else begin
 
         (* The variable must be copied, and has not been copied yet. Create a
            new variable, register it, and update the mapping. Then, copy its
@@ -620,7 +629,10 @@ let instantiate state { quantifiers; body } =
       end
       end
   in
-  List.map (copy true) quantifiers, copy true body
+  (* Enforcing proper order of evaluation is crucial here *)
+  let quantifiers = List.map (copy true) quantifiers in
+  let body        = copy true body in
+  quantifiers, body
 
 (* Freshenes all nested quantifiers, leaving top-level quantifiers unchanged.
    Assumes there are no unbound quantifiers. *)

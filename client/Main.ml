@@ -989,6 +989,20 @@ let fml_nested_forall_inst_3 =
   ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
   }
 
+(*
+   term : let x : ∀ a. a → (∀ b. b → a) → Int = λx.λy. 1 in x true
+   type : (∀ b. b → Bool) → Int
+*)
+let fml_nested_forall_inst_4 =
+  { name = "nested_forall_inst_4"
+  ; term = ML.Let ( "x"
+                  , Some (TyForall (1, TyArrow (TyVar 1, TyArrow
+                         (TyForall (2, TyArrow (TyVar 2, TyVar 1)),TyInt))))
+                  , abs "x" (abs "y" one)
+                  , app x tru)
+  ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyBool)), TyInt))
+  }
+
 
 (* Correctness of type annotations on let binders *)
 (*
@@ -1301,38 +1315,39 @@ let fml_alpha_equiv_6 =
   }
 
 (*
-  let (x : ∀ a.((∀ b.  a → a) → int)) = λ(y:∀ b.  a → a). 42 in
-  let (z : ∀ b.  b → b) =  λw. w in
-  x (~z)
-    *)
+   term: let (x : ∀ a.(∀ b. a → a) → Int) = λ(y:∀ b. a → a). 1 in
+         let (z : ∀ b. b → b) = λw. w in
+         x (~z)
+   type: X
+*)
 let fml_mixed_prefix_1 =
   { name = "mixed_prefix_1"
-      ; term = ML.Let ( "x"
-                          ,  Some (TyForall(1, TyArrow (TyForall(2,TyArrow(TyVar 1, TyVar 1)), TyInt)))
-                          , ML.Abs ("z", Some(TyForall(2,TyArrow(TyVar 1, TyVar 1))), ML.Int 42)
-                          , ML.Let ("y"
-                                      , Some (TyForall(1, TyArrow (TyVar 1, TyVar 1)))
-                                      , ML.Abs( "w", None, ML.Var("y"))
-                                      , ML.App (ML.Var "x", ML.FrozenVar "y")))
-      ; typ = None
+  ; term = ML.Let ( "x"
+                  , Some (TyForall (1, TyArrow (TyForall (2, TyArrow (TyVar 1, TyVar 1)), TyInt)))
+                  , ML.Abs ( "y", Some( TyForall (2, TyArrow (TyVar 1, TyVar 1))), one)
+                  , ML.Let ( "z"
+                           , Some (TyForall (1, TyArrow (TyVar 1, TyVar 1)))
+                           , abs "w" w
+                           , app x (frozen "z")))
+  ; typ = None
   }
 
 (*
-  let (x : (∀ a.((∀ b.  b → a) → int)) = λ(y:∀ b.  b → a). 42 in
-  let (z : ∀ b.  b → Int) =  λw. 42 in
-  x (~z)
- *)
-
+   term: let (x : ∀ a.(∀ b. b → a) → Int) = λ(y:∀ b. b → a). 1 in
+         let (z : ∀ b. b → Int) =  λw. 1 in
+         x (~z)
+   type: [∀ a.] Int
+*)
 let fml_mixed_prefix_2 =
   { name = "mixed_prefix_2"
-      ; term = ML.Let ( "x"
-                          ,  Some (TyForall(1, TyArrow(TyForall(2,TyArrow(TyVar 2, TyVar 1)), TyInt)))
-                          , ML.Abs ("z", Some(TyForall(2,TyArrow(TyVar 2, TyVar 1))), ML.Int 42)
-                          , ML.Let ("y"
-                                      , Some (TyForall(1, TyArrow (TyVar 1, TyInt)))
-                                      , ML.Abs( "w", None,ML.Int 42)
-                                      , ML.App (ML.Var "x", ML.FrozenVar "y")))
-      ; typ = Some TyInt
+  ; term = ML.Let ( "x"
+                  , Some (TyForall (1, TyArrow (TyForall (2, TyArrow (TyVar 2, TyVar 1)), TyInt)))
+                  , ML.Abs ( "y", Some( TyForall(2, TyArrow (TyVar 2, TyVar 1))), one)
+                  , ML.Let ( "z"
+                           , Some (TyForall (1, TyArrow (TyVar 1, TyInt)))
+                           , abs "w" one
+                           , app x (frozen "z")))
+  ; typ = Some (TyForall ((), TyInt))
   }
 
 (*
@@ -1444,6 +1459,7 @@ let () =
   test fml_nested_forall_inst_1;
   test fml_nested_forall_inst_2;
   test fml_nested_forall_inst_3;
+  test fml_nested_forall_inst_4;
   test fml_id_annot_1;
   test fml_id_annot_2;
   test fml_id_annot_3;
