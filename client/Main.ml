@@ -394,6 +394,13 @@ let fml_pairprim k = ML.Let ("pair'",
                                   TyProduct (TyVar 1, TyVar 2)))))),
   abs "x" (abs "y" (ML.Pair (x, y))), k)
 
+(* more definitions *)
+
+(* id_int : Int → Int *)
+let fml_id_int k =
+  ML.Let ( "id_int", Some (TyArrow (TyInt, TyInt)), abs "x" x, k )
+
+
 let env k = (
     fml_id       <<
     fml_choose   <<
@@ -1409,6 +1416,27 @@ let fml_poly_binding_4 =
   }
 
 
+(*
+   term: let x : ∀ a. (a → a) → (a → a) = let y : a → a = λw.w
+                                          in λz.y
+         in x id_int
+   type: Int → Int
+*)
+let fml_scoped_tyvars_1 =
+  { name = "scoped_tyvars_1"
+  ; term = (fml_id_int)
+           (ML.Let ( "x"
+                  , Some (TyForall (1, TyArrow(TyArrow(TyVar 1, TyVar 1),TyArrow(TyVar 1, TyVar 1))))
+                  , ML.Let ( "y"
+                           , Some (TyArrow (TyVar 1, TyVar 1))
+                           , abs "w" w
+                           , abs "z" y)
+                  , app x (var "id_int")
+             ))
+  ; typ  = Some (TyArrow (TyInt, TyInt))
+  }
+
+
 let () =
   test env_test;
   (* PLDI paper examples *)
@@ -1488,4 +1516,6 @@ let () =
   test fml_poly_binding_1;
   test fml_poly_binding_2;
   test fml_poly_binding_3;
-  test fml_poly_binding_4
+  test fml_poly_binding_4;
+
+  test fml_scoped_tyvars_1
