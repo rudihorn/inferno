@@ -398,6 +398,7 @@ let fml_pairprim k = ML.Let ("pair'",
                                   TyProduct (TyVar 1, TyVar 2)))))),
   abs "x" (abs "y" (ML.Pair (x, y))), k)
 
+(* only used in E3 *)
 let fml_e3_r k =
   ML.Let
     ("r",
@@ -409,6 +410,13 @@ let fml_e3_r k =
                 TyForall (2, TyArrow (TyVar 2, TyVar 2))))),
         one),
      k)
+
+(* more definitions *)
+
+(* id_int : Int → Int *)
+let fml_id_int k =
+  ML.Let ( "id_int", Some (TyArrow (TyInt, TyInt)), abs "x" x, k )
+
 
 let env k = (
     fml_id       <<
@@ -695,7 +703,8 @@ let d2_star =
                           λx.1
                         in
                         r (λx.λy.y)
-   type               : X
+   inferred type      : X
+   type in PLDI paper : X
  *)
 let e3 =
   { name = "E3"
@@ -707,7 +716,8 @@ let e3 =
    term               : let r : (∀ a. a → (∀ b. b → b)) → Int =
                           λ(x : (∀ a. a → (∀ b. b → b))).1
                         in $(λx.$(λy.y))
-   type               : Int
+   inferred type      : Int
+   type in PLDI paper : Int
  *)
 let e3_dot =
   { name = "E3∘"
@@ -998,6 +1008,20 @@ let fml_nested_forall_inst_3 =
           , ML.let_ ( "g", app (var "f") (app id auto')
                     , app (var "g") (frozen "id"))))
   ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
+  }
+
+(*
+   term : let x : ∀ a. a → (∀ b. b → a) → Int = λx.λy. 1 in x true
+   type : (∀ b. b → Bool) → Int
+*)
+let fml_nested_forall_inst_4 =
+  { name = "nested_forall_inst_4"
+  ; term = ML.Let ( "x"
+                  , Some (TyForall (1, TyArrow (TyVar 1, TyArrow
+                         (TyForall (2, TyArrow (TyVar 2, TyVar 1)),TyInt))))
+                  , abs "x" (abs "y" one)
+                  , app x tru)
+  ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyBool)), TyInt))
   }
 
 
@@ -1312,44 +1336,45 @@ let fml_alpha_equiv_6 =
   }
 
 (*
-  let (x : ∀ a.((∀ b.  a → a) → int)) = λ(y:∀ b.  a → a). 42 in
-  let (z : ∀ b.  b → b) =  λw. w in
-  x (~z)
-    *)
+   term: let (x : ∀ a.(∀ b. a → a) → Int) = λ(y:∀ b. a → a). 1 in
+         let (z : ∀ b. b → b) = λw. w in
+         x (~z)
+   type: X
+*)
 let fml_mixed_prefix_1 =
   { name = "mixed_prefix_1"
-      ; term = ML.Let ( "x"
-                          ,  Some (TyForall(1, TyArrow (TyForall(2,TyArrow(TyVar 1, TyVar 1)), TyInt)))
-                          , ML.Abs ("z", Some(TyForall(2,TyArrow(TyVar 1, TyVar 1))), ML.Int 42)
-                          , ML.Let ("y"
-                                      , Some (TyForall(1, TyArrow (TyVar 1, TyVar 1)))
-                                      , ML.Abs( "w", None, ML.Var("y"))
-                                      , ML.App (ML.Var "x", ML.FrozenVar "y")))
-      ; typ = None
+  ; term = ML.Let ( "x"
+                  , Some (TyForall (1, TyArrow (TyForall (2, TyArrow (TyVar 1, TyVar 1)), TyInt)))
+                  , ML.Abs ( "y", Some( TyForall (2, TyArrow (TyVar 1, TyVar 1))), one)
+                  , ML.Let ( "z"
+                           , Some (TyForall (1, TyArrow (TyVar 1, TyVar 1)))
+                           , abs "w" w
+                           , app x (frozen "z")))
+  ; typ = None
   }
 
 (*
-  let (x : (∀ a.((∀ b.  b → a) → int)) = λ(y:∀ b.  b → a). 42 in
-  let (z : ∀ b.  b → Int) =  λw. 42 in
-  x (~z)
- *)
-
+   term: let (x : ∀ a.(∀ b. b → a) → Int) = λ(y:∀ b. b → a). 1 in
+         let (z : ∀ b. b → Int) =  λw. 1 in
+         x (~z)
+   type: [∀ a.] Int
+*)
 let fml_mixed_prefix_2 =
   { name = "mixed_prefix_2"
-      ; term = ML.Let ( "x"
-                          ,  Some (TyForall(1, TyArrow(TyForall(2,TyArrow(TyVar 2, TyVar 1)), TyInt)))
-                          , ML.Abs ("z", Some(TyForall(2,TyArrow(TyVar 2, TyVar 1))), ML.Int 42)
-                          , ML.Let ("y"
-                                      , Some (TyForall(1, TyArrow (TyVar 1, TyInt)))
-                                      , ML.Abs( "w", None,ML.Int 42)
-                                      , ML.App (ML.Var "x", ML.FrozenVar "y")))
-      ; typ = Some TyInt
+  ; term = ML.Let ( "x"
+                  , Some (TyForall (1, TyArrow (TyForall (2, TyArrow (TyVar 2, TyVar 1)), TyInt)))
+                  , ML.Abs ( "y", Some( TyForall(2, TyArrow (TyVar 2, TyVar 1))), one)
+                  , ML.Let ( "z"
+                           , Some (TyForall (1, TyArrow (TyVar 1, TyInt)))
+                           , abs "w" one
+                           , app x (frozen "z")))
+  ; typ = Some (TyForall ((), TyInt))
   }
 
 (*
-   term: let (x : ∀ a.(∀ b. b → b) → Int) = λ(y:∀ b. b → b). 1 in
-         let (z : ∀ a. a → a) = λw. w in
-         x (~z)
+   term: let (x : ∀ a.(∀ b. b → b) → Int) = λ(z:∀ b. b → b). 1 in
+         let (y : ∀ a. a → a) = λw. w in
+         x (~y)
    type: [∀ a.] Int
 *)
 
@@ -1366,10 +1391,9 @@ let fml_poly_binding_1 =
   }
 
 (*
-   term: let (x : ∀ a. a → a) = λ(y : a). y in x 1
+   term: let (x : ∀ a. a → a) = λ(z : a). z in x 1
    type: Int
 *)
-
 let fml_poly_binding_2 =
   { name = "poly_binding_2"
   ; term = ML.Let ( "x"
@@ -1379,6 +1403,52 @@ let fml_poly_binding_2 =
   ; typ = Some TyInt
   }
 
+(*
+   term: let (x : ∀ a. (∀ b. a → b) → Int) = λ(z : (∀ b. a → b)). 1 in 1
+   type: Int
+*)
+let fml_poly_binding_3 =
+  { name = "poly_binding_3"
+  ; term = ML.Let ( "x"
+                  , Some (TyForall (1, (TyArrow (TyForall (2, TyArrow (TyVar 1, TyVar 2)), TyInt))))
+                  , ML.Abs ("z", Some (TyForall (2, TyArrow (TyVar 1, TyVar 2))), one)
+                  , one)
+  ; typ = Some TyInt
+  }
+
+(*
+   term: let (x : ∀ a. (∀ b. a → b → Int) → Int) = λ(z : (∀ b. a → b → Int)). 1 in 1
+   type: Int
+*)
+let fml_poly_binding_4 =
+  { name = "poly_binding_4"
+  ; term = ML.Let ( "x"
+                  , Some (TyForall (1, (TyArrow (TyForall (2, TyArrow (TyVar 1, TyArrow (TyVar 2, TyInt))), TyInt))))
+                  , ML.Abs ("z", Some (TyForall (2, TyArrow (TyVar 1, TyArrow (TyVar 2, TyInt)))), one)
+                  , one)
+  ; typ = Some TyInt
+  }
+
+
+(*
+   term: let x : ∀ a. (a → a) → (a → a) = let y : a → a = λw.w
+                                          in λz.y
+         in x id_int
+   type: Int → Int
+*)
+let fml_scoped_tyvars_1 =
+  { name = "scoped_tyvars_1"
+  ; term = (fml_id_int)
+           (ML.Let ( "x"
+                  , Some (TyForall (1, TyArrow(TyArrow(TyVar 1, TyVar 1),TyArrow(TyVar 1, TyVar 1))))
+                  , ML.Let ( "y"
+                           , Some (TyArrow (TyVar 1, TyVar 1))
+                           , abs "w" w
+                           , abs "z" y)
+                  , app x (var "id_int")
+             ))
+  ; typ  = Some (TyArrow (TyInt, TyInt))
+  }
 
 (*
    term : let id = (λx.x) in id ~id
@@ -1395,11 +1465,11 @@ let fml_mono_gen_test1 =
    type : (∀ a. a → a → a)
 *)
 let fml_mono_gen_test2 =
-    { name = "fml_skolem_with_non_skolem"
-    ; term =  ML.Let ("id", forall_a_a_to_a,
-                (abs "x" x),
-                app (var "id") (frozen "id"))
-    ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
+  { name = "fml_skolem_with_non_skolem"
+  ; term =  ML.Let ("id", forall_a_a_to_a,
+              (abs "x" x),
+              app (var "id") (frozen "id"))
+  ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
   }
 
 (*
@@ -1418,8 +1488,7 @@ let fml_e3_dot_no_lambda_sig =
                         abs "x" one,
                    app (var "r") (ML.gen (abs "x" (ML.gen (abs "y" y)))))
   ; typ  = None
-   }
-
+  }
 
 let () =
   test env_test;
@@ -1471,6 +1540,7 @@ let () =
   test fml_nested_forall_inst_1;
   test fml_nested_forall_inst_2;
   test fml_nested_forall_inst_3;
+  test fml_nested_forall_inst_4;
   test fml_id_annot_1;
   test fml_id_annot_2;
   test fml_id_annot_3;
@@ -1498,6 +1568,10 @@ let () =
   test fml_mixed_prefix_2;
   test fml_poly_binding_1;
   test fml_poly_binding_2;
+  test fml_poly_binding_3;
+  test fml_poly_binding_4;
+
+  test fml_scoped_tyvars_1;
 
   test fml_mono_gen_test1;
   test fml_mono_gen_test2;
