@@ -143,6 +143,19 @@ let translate log t =
 
 let failing_test_count = ref 0
 
+let print_summary_and_exit () =
+  if !failing_test_count > 0 then
+    begin
+      Printf.printf "\n\027[31mSummary: There were %d problem(s)\027[0m\n"
+        !failing_test_count;
+      exit 1
+    end
+  else
+    begin
+      Printf.printf "\n\027[32mSummary: All tests behave as expected\027[0m\n";
+      exit 0
+    end
+
 (* -------------------------------------------------------------------------- *)
 
 
@@ -1549,5 +1562,4 @@ let () =
 ;;
 
 
-if !failing_test_count > 0 then
-  exit 1
+let () = print_summary_and_exit ()
