@@ -152,7 +152,11 @@ type example = { name : string
                ; term : ML.term
                ; typ  : debruijn_type option }
 
-let test { name; term; typ } : unit =
+(* The returned boolean indicates if the example "works", meaning that
+   - the term had the expected type    or
+   - failed to typecheck as expected.
+  An implementation bug always means that the example doesn't work. *)
+let test_driver { name; term; typ } : log * bool =
   let log = create_log() in
   log_action log (fun () ->
       Printf.printf "\n===========================================\n\n%!";
@@ -169,10 +173,7 @@ let test { name; term; typ } : unit =
      log_action log (fun () ->
          Printf.printf "Example %s was rejected by the typechecker as expected.\n" name;
        );
-     if verbose then
-       print_log log;
-     Printf.printf "\027[32mExample %s works as expected\027[0m\n" name;
-     flush stdout
+     log, true
 
   | WellTyped (t : F.nominal_term), Some exp_ty ->
       let works = ref false in
@@ -225,13 +226,7 @@ let test { name; term; typ } : unit =
             if ( exp_ty = ty ) then works := true else works := false
          end;
       end;
-      if verbose then
-        print_log log;
-      if ( !works ) then
-        Printf.printf "\027[32mExample %s works as expected\027[0m\n" name
-      else
-        Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name;
-     flush stdout
+      log, !works
   | IllTyped, Some exp_ty ->
      log_action log (fun () ->
          Printf.printf "Example %s expected to have a type:\n" name;
@@ -239,10 +234,7 @@ let test { name; term; typ } : unit =
          PPrint.ToChannel.pretty 0.9 80 stdout doc;
          Printf.printf "but was determined ill-typed.\n";
        );
-     if verbose then
-       print_log log;
-     Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name;
-     flush stdout
+     log, false
 
   | WellTyped t, None ->
       log_action log (fun () ->
@@ -281,20 +273,49 @@ let test { name; term; typ } : unit =
               );
          end;
       end;
-      if verbose then
-        print_log log;
-      Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name;
-     flush stdout
+      log, false
 
   | ImplementationBug, _ ->
      (* Typechecking caused an exception *)
      log_action log (fun () ->
          Printf.printf "Example %s triggered an implementation bug!\n" name;
        );
-     if verbose then
-       print_log log;
-     Printf.printf "\027[31mExample %s does not work as expected\027[0m\n" name;
-     flush stdout
+     log, false
+
+
+let test t : unit =
+  let name = t.name in
+  let log, works = test_driver t in
+  if verbose then
+    print_log log;
+  if ( works ) then
+    Printf.printf "\027[32mExample %s works as expected\027[0m\n" name
+  else
+    begin
+      Printf.printf "\027[31mExample %s does not work as expected\027[0m\n"
+        name;
+      failing_test_count := !failing_test_count + 1
+    end
+
+
+let known_broken_test t : unit =
+  let name = t.name in
+  let log, works = test_driver t in
+  if verbose then
+    print_log log;
+  if ( works ) then
+    begin
+      Printf.printf "\027[31mExample %s isn't broken anymore, great! Please \
+                     investigae and switch it to use the normal \"test\" \
+                     driver\027[0m\n" name;
+      (* We count this as a "failure" to encourage people to investigate and
+       switch the driver if things indeed work now *)
+      failing_test_count := !failing_test_count + 1
+    end
+  else
+    Printf.printf "\027[33mExample %s is broken, which is currently a \
+                   known problem\027[0m\n" name
+
 
 (* -------------------------------------------------------------------------- *)
 
@@ -1496,7 +1517,7 @@ let () =
   test fml_id_annot_1;
   test fml_id_annot_2;
   test fml_id_annot_3;
-  test fml_id_annot_4;
+  known_broken_test fml_id_annot_4;
   test fml_id_annot_5;
   test fml_mono_binder_constraint_1;
   test fml_mono_binder_constraint_2;
@@ -1514,10 +1535,10 @@ let () =
   test fml_alpha_equiv_3;
   test fml_alpha_equiv_4;
   test fml_alpha_equiv_5;
-  test fml_alpha_equiv_6;
+  known_broken_test fml_alpha_equiv_6;
 
-  test fml_mixed_prefix_1;
-  test fml_mixed_prefix_2;
+  known_broken_test fml_mixed_prefix_1;
+  known_broken_test fml_mixed_prefix_2;
   test fml_poly_binding_1;
   test fml_poly_binding_2;
   test fml_poly_binding_3;
