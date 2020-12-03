@@ -141,6 +141,11 @@ let translate log t =
 
 (* -------------------------------------------------------------------------- *)
 
+let failing_test_count = ref 0
+
+(* -------------------------------------------------------------------------- *)
+
+
 (* Running all passes over a single ML term. *)
 
 type example = { name : string
@@ -1519,3 +1524,9 @@ let () =
   test fml_poly_binding_4;
 
   test fml_scoped_tyvars_1
+
+;;
+
+
+if !failing_test_count > 0 then
+  exit 1
