@@ -80,6 +80,7 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
   val generic: int
   val register: state -> variable -> unit
   val register_signatures: state -> variable -> unit
+  val remove_from_pool : state -> variable list -> unit
 
   (* A variable can be turned into a trivial scheme, with no quantifiers and
      no generic part: in other words, a monomorphic type scheme. Non-trivial
@@ -89,10 +90,12 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
   val scheme                        : variable -> scheme
   val bound_quantifiers             : scheme -> variable list
   val unbound_quantifiers           : scheme -> variable list
+  val flatten_outer_foralls         : scheme -> scheme
   val toplevel_generic_variables    : variable -> variable list
   val all_generic_vars_bound        : scheme -> bool
   val set_unbound_generic_vars_rank : scheme -> int -> unit
   val freshen_nested_quantifiers    : state -> scheme -> scheme
+  val drop_unused_quantifiers       : scheme -> scheme
 
   (* [enter] updates the current state by pushing a new [CLet] construct. The
      the hole is replaced with [let exists vs. hole in ...], where the list
@@ -131,9 +134,7 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
      was last called) plus the length of the list [roots] plus the current
      nesting depth of [CLet] constructs (usually considered a constant). *)
 
-  val exit: bool -> state -> variable list ->
-            (* JSTOLAREK: debug only, remove *) (variable list -> PPrint.document) ->
-            variable list * scheme list
+  val exit: bool -> state -> variable list -> variable list * scheme list
 
   (* [instantiate] takes a fresh copy of a type scheme. The generic variables
      of the type scheme are replaced with freshly created variables, which are

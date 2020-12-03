@@ -107,21 +107,39 @@ let (^^) (rc1, k1) (rc2, k2) =
 
 (* -------------------------------------------------------------------------- *)
 
-(* This function converts a type signature to a structure of a unifier variable.
-   It assumes every variable in the signature is generic. *)
-let annotation_to_structure (t : O.ty) : Lo.variable S.structure =
-  let rec worker init_env t =
+(* This function converts a type signature to a unifier variable.  There are
+   several subtleties here:
+
+    * Annotations can either be placed on let expressions or on lambda binders.
+      Annotation on a let expression brings its quantifiers into scope in the
+      bound term.  Variables in scope are tracked by the client and passed in
+      as initial env to the function.  The extra flag determines whether these
+      quantifiers should be generic (for let expressins) or not (for lambdas).
+      It is crucial that for lambda expressions we don't treat variables
+      introduced by quantifiers in a let signature as generic.
+
+    * When traversing the body we must also carefully distinguish whether we
+      generate generic or unregistered variables.  Starting at the top level we
+      generate unregistered variables, but when we enter a forall we switch to
+      generating generic variables.  This is done by replacing `fresh` function
+      passed to worker. *)
+let annotation_to_variable (generic_qs : bool) (env : int list) (t : O.ty) :
+      Lo.variable =
+  let extend_env fresh env qs =
+    List.fold_left
+      (fun env q -> O.TyVarMap.add q (fresh None) env)
+      env qs in
+  let rec worker fresh init_env t : Lo.variable =
     let (qs, body) = O.to_scheme t in
-    let env = List.fold_left
-                (fun env q -> O.TyVarMap.add q (Lo.fresh_generic None) env)
-                init_env qs in
+    let env = extend_env Lo.fresh_generic init_env qs in
     let qs' = List.map (fun q -> O.TyVarMap.find q env) qs in
     match qs' with
-    | [] -> O.to_structure (worker env)
+    | [] -> O.to_variable (worker fresh env)
               (fun s -> Lo.fresh (Some s)) env body
-    | _  -> S.forall qs' (O.to_variable (worker env)
-                            (fun s -> Lo.fresh_generic (Some s)) env body)
-  in worker O.TyVarMap.empty t
+    | _  -> fresh (Some (S.forall qs' (O.to_variable (worker Lo.fresh_generic env)
+                            (fun s -> Lo.fresh_generic (Some s)) env body))) in
+  let fresh = if generic_qs then Lo.fresh_generic else Lo.fresh in
+  worker Lo.fresh (extend_env fresh O.TyVarMap.empty env) t
 
 (* -------------------------------------------------------------------------- *)
 
@@ -148,6 +166,13 @@ let exist f =
 
 let construct t f =
   let v = fresh (Some t) in
+  let rc, k = f v in
+  CExist (v, rc),
+  fun env ->
+    let decode = env in
+    (decode v, k env)
+
+let exists_sig v f =
   let rc, k = f v in
   CExist (v, rc),
   fun env ->
@@ -244,7 +269,10 @@ let letn xs f1 (rc2, k2) =
      [CExist]. Also, create an uninitialized scheme hook, which will receive
      the type scheme of [x] after the solver runs. *)
   let xvss = List.map (fun (x, ty) ->
-    x, fresh ty, WriteOnceRef.create()
+    let v = match ty with
+      | None   -> fresh None
+      | Some v -> v in
+    x, v, WriteOnceRef.create()
   ) xs in
   (* Pass the vector of type variables to the user-supplied function [f1], as in
      [CExist].  These are fresh variables that we can later check against

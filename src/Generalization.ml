@@ -275,6 +275,10 @@ let set_unbound_generic_vars_rank { quantifiers; body } rank =
                        (toplevel_generic_variables body) in
   List.iter (fun v -> U.set_rank v rank) vs
 
+(* Remove unused quantifiers from a scheme *)
+let drop_unused_quantifiers { body; _ } =
+  { quantifiers = unbound_quantifiers (degenerate_scheme body); body }
+
 (* -------------------------------------------------------------------------- *)
 
 (* Debugging utilities. *)
@@ -326,6 +330,16 @@ let register_signatures state v =
       register state v;
     Option.iter (S.iter go) (U.structure v)
   in go v
+
+let remove_from_pool ({ pool; _ } as state) vs =
+  if vs != [] then
+    let vs : unit U.VarMap.t = List.fold_left (fun acc v ->
+      U.VarMap.add acc v (); acc) (U.VarMap.create 128) vs in
+    for k = base_rank to state.young do
+      InfiniteArray.set pool k (List.filter (fun v -> not (U.VarMap.mem vs v))
+                                            (InfiniteArray.get pool k))
+    done
+
 
 (* -------------------------------------------------------------------------- *)
 
@@ -391,16 +405,10 @@ let make_scheme (is_generic : U.variable -> bool) (body : U.variable) : scheme =
 
 (* [exit] is where the moderately subtle generalization work takes place. *)
 
-let exit rectypes state roots print_vars =
-  let open PPrint in
-  Debug.print_str "Beginning generalize.exit";
-
-  Debug.print (string "Generalization roots: " ^^ print_vars roots);
+let exit rectypes state roots =
 
   (* Get the list [vs] of all variables in the young generation. *)
   let vs = InfiniteArray.get state.pool state.young in
-
-  Debug.print (string "Young variables: " ^^ print_vars vs);
 
   (* This hash table stores all of these variables, so that we may check
      membership in the young generation in constant time. *)
@@ -425,11 +433,6 @@ let exit rectypes state roots print_vars =
     assert (0 < rank && rank <= state.young);
     sorted.(rank) <- v :: sorted.(rank)
   ) vs;
-
-  Debug.print_str "Displaying sorted array";
-  for k = base_rank to state.young do
-    Debug.print PPrint.(string "k = " ^^ string (string_of_int k) ^^ string " : " ^^ print_vars sorted.(k));
-  done;
 
   (* Define a membership test for the young generation. *)
   let is_young v =
@@ -497,7 +500,6 @@ let exit rectypes state roots print_vars =
              at or above [k], and since we have just adjusted it, it must
              now be [k]. *)
           assert (U.rank v = k);
-          Debug.print (string "Found young : " ^^ print_vars [v]);
           Option.iter (fun t ->
             (* Upward propagation *)
             U.adjust_rank v (
@@ -507,32 +509,18 @@ let exit rectypes state roots print_vars =
                 then max (U.rank v    ) accu
                 else max (U.rank child) accu
               ) t base_rank (* the base rank is neutral for [max] *)
-            );
-          Debug.print (string "Young rank adjusted : " ^^ print_vars [v]);
-(*
-            Debug.print (string "Max child rank = " ^^ string (string_of_int max_child_rank));
-            if max_child_rank != generic then U.adjust_rank v max_child_rank
-*)
+            )
           ) (U.structure v)
         end
         (* If [v] is old, stop. *)
         else
-          begin
-          Debug.print (string "Found old : " ^^ print_vars [v]);
-          assert (U.rank v <= state.young) (* JSTOLAREK: should be < *)
-          end
+          assert (U.rank v < state.young)
       end
 
     in
     List.iter traverse sorted.(k)
 
   done;
-
-  Debug.print_str "Displaying sorted array after traverse";
-  for k = base_rank to state.young do
-    Debug.print PPrint.(string "k = " ^^ string (string_of_int k) ^^ string " : " ^^ print_vars sorted.(k));
-  done;
-
 
   (* The rank of every variable in the young generation has now been
      determined as precisely as possible.
@@ -613,8 +601,17 @@ let instantiate state { quantifiers; body } =
         assert (U.rank v = generic);
         U.VarMap.find visited v
       with Not_found ->
-        (* Don't instantiate nested quantifiers. *)
-        if not toplevel then v else begin
+        if not toplevel then begin
+            (* If we're inside a nested quantified type we copy its structure
+               maintaining all the ranks.  This ensures proper instantiation of
+               outer quantifiers nested inside quantified types.  *)
+            let v' = U.fresh None (U.rank v) in
+            U.VarMap.add visited v v';
+            (* We're no longer at the top level if we enter a forall variable *)
+            U.set_structure v' (Option.map (S.map (copy false)) (U.structure v));
+            v'
+          end
+        else begin
 
         (* The variable must be copied, and has not been copied yet. Create a
            new variable, register it, and update the mapping. Then, copy its
@@ -632,7 +629,10 @@ let instantiate state { quantifiers; body } =
       end
       end
   in
-  List.map (copy true) quantifiers, copy true body
+  (* Enforcing proper order of evaluation is crucial here *)
+  let quantifiers = List.map (copy true) quantifiers in
+  let body        = copy true body in
+  quantifiers, body
 
 (* Freshenes all nested quantifiers, leaving top-level quantifiers unchanged.
    Assumes there are no unbound quantifiers. *)

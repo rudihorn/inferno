@@ -195,17 +195,18 @@ let solve (rectypes : bool) (c : rawco) : unit =
     | CFrozen (x, w) ->
         let s = try XMap.find x env with Not_found -> raise (Unbound x) in
         let qs, body = G.freeze state s in
+        List.iter U.skolemize qs;
         let v = fresh (Some (S.forall qs body)) in
         G.register state v;
         debug_unify_before (string "Freezing variable " ^^
           print_tevar x ^^ space ^^ colon ^^ space ^^ print_scheme s ^^ dot ^^
           hardline) v w;
         U.unify v w;
+        List.iter U.unskolemize qs;
         debug_unify_after v
     | CDef (x, v, c) ->
        G.register_signatures state v;
        let scheme = G.scheme v in
-       List.iter U.skolemize (G.quantifiers scheme);
        Debug.print (
            string "Adding binder " ^^ dquote ^^ (print_tevar x) ^^
            dquote ^^ string " with type scheme " ^^ print_scheme scheme);
@@ -234,7 +235,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
           else
             Debug.print_str "Entering top-level binding"
         end;
-        if Debug.hard then G.show_state "State before solving:" state;
+        if Debug.hard then G.show_state "State before solving" state;
         (* Solve the constraint [c1]. *)
         solve env c1;
         (* Ask the generalization engine to perform an occurs check, to adjust the
@@ -243,8 +244,8 @@ let solve (rectypes : bool) (c : rawco) : unit =
            and to construct a list [ss] of type schemes for our entry points. The
            generalization engine also produces a list [generalizable] of the young
            variables that should be universally quantified here. *)
-        if Debug.hard then G.show_state "State after solving, before exiting:" state;
-        let generalizable, ss = G.exit rectypes state vs print_vars in
+        if Debug.hard then G.show_state "State after solving, before exiting" state;
+        let generalizable, ss = G.exit rectypes state vs in
         Debug.print (string "Generalizable vars from the generalization engine: "
                          ^^ print_vars generalizable);
         Debug.print (string "Generalizable schemes from the generalization engine: "
@@ -282,27 +283,16 @@ let solve (rectypes : bool) (c : rawco) : unit =
                 U.unify (G.body annotation_scheme) (G.body s); (* See #2 *)
                 debug_unify_after (G.body annotation_scheme);
                 List.iter U.unskolemize (G.quantifiers annotation_scheme);
-                (* Unification with signature might introduce unbound
-                   quantifiers that need to be generalized.  See #10 *)
-                let qs = G.unbound_quantifiers s in
-                annotation_scheme :: ss, List.append qs generalizable
+                (* When a type annotation is present we discard generalizable
+                   variables from the generalization engine and use quantifiers
+                   from the provided type signature. *)
+                annotation_scheme :: ss, G.quantifiers annotation_scheme
               end
             else
                 s :: ss, generalizable
           ) ss xvss ([], generalizable) in
-        (* Remove duplicate generalizable variables.  These can be introduced
-           when unifying the inferred type with signature *)
-        let generalizable = unduplicate U.equivalent generalizable in
-        (* Remove generalizable variables that were eliminated after unification
-           with a provided signature.  We recognize these variables by the fact
-           they have a structure. *)
-        Debug.print (string "Generalizable vars before removing unified: "
-                         ^^ print_vars generalizable);
-        let generalizable = List.filter (fun g -> not (U.has_structure g))
-                              generalizable in
 
-        (* FIXME FEMRICH:
-           Technically, this step isn't necessary: We may as well leave quantified
+        (* Technically, this step isn't necessary: We may as well leave quantified
            type variables monomorphic, because we make them polymorphic when
            instantiating them. This would be closer to what FreezeML does: In
            FreezeML, quantifed type vars are collected in a type var env \Delta,
@@ -316,18 +306,28 @@ let solve (rectypes : bool) (c : rawco) : unit =
            un-monomorphize type variables that aren't generalized. *)
         List.iter U.unmonomorphize generalizable;
 
-        Debug.print (string "Generalizable vars after all signature checks: "
+        Debug.print (string "Generalizable vars after signature check: "
                          ^^ print_vars generalizable);
+        if Debug.hard then G.show_state "State after signature check" state;
 
         (* At this point some types may have unbound generic variables.  For let
            bindings with signatures this happens when the signature has no
            quantifiers but the inferred type does.  In such case unification
            with the body of inferred type introduces unbound quantifiers.  For
            let bindings without a signature this can happen when the inferred
-           type contains only generic variables.  In this case the rank of the
-           variable itself will be set to -1, making it an unbound generic
-           variable.  These unbound generic variables need to be properly
-           registered now.  See #9. *)
+           type has no quantifiers but contains only generic variables.  In this
+           case the rank of the variable itself will be set to -1, making it an
+           unbound generic variable.  These unbound generic variables need to be
+           properly registered now.  See #9.
+
+           Moreover, we need to ensure that all generic variables in the
+           signature are removed from the pool.  This particularly happens for
+           variables representing type constructors.  See #16
+
+           Note that removing variables from the pool has O(n^2) complexity
+           (assuming that mutable hash has constant access time) but
+           `remove_from_pool` will actually do any work only of there are
+           variables to be removed.  *)
         List.iter (fun s ->
             if (not (G.has_quantifiers s)) then
               begin
@@ -335,10 +335,17 @@ let solve (rectypes : bool) (c : rawco) : unit =
                 G.set_unbound_generic_vars_rank s 0;
                 (* ...and register them in the pool. *)
                 G.register_signatures state (G.body s);
-                Debug.print (string "Unbound generic variables rank fix: " ^^
-                             print_scheme s)
-              end
+              end;
+            (* Potential bug here.  We only remove top-level generic variables
+               from the pool but it might be the case that some nested tyvars
+               make it into the pool, in which case they also should be removed.
+               For now I have not run into this in practice. *)
+            G.remove_from_pool state (G.toplevel_generic_variables (G.body s));
+            Debug.print (string "Unbound generic variables rank fix: " ^^
+                           print_scheme s)
           ) ss;
+
+        if Debug.hard then G.show_state "State after unbound vars fix" state;
 
         (* Fill the write-once reference [generalizable_hook]. *)
         WriteOnceRef.set generalizable_hook generalizable;
@@ -358,6 +365,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
             XMap.add x s env
           ) env xvss ss
         in
+        if Debug.hard then G.show_state "State before proceeding with body" state;
         if ( List.length( xvss ) > 0 ) then
           Debug.print_str "Proceeding with let body now"
         else
@@ -441,4 +449,3 @@ let decode_scheme decode (s : ischeme) : O.ty =
     (decode (G.body s))
 
 end
-
