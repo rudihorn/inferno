@@ -1019,7 +1019,7 @@ let fml_nested_forall_inst_4 =
   ; term = ML.Let ( "x"
                   , Some (TyForall (1, TyArrow (TyVar 1, TyArrow
                          (TyForall (2, TyArrow (TyVar 2, TyVar 1)),TyInt))))
-                  , abs "x" (abs "y" one)
+                  , abs "x" (ML.Abs ("y", Some (TyForall (2, TyArrow (TyVar 2, TyVar 1))), one))
                   , app x tru)
   ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyBool)), TyInt))
   }
@@ -1194,30 +1194,24 @@ let fml_choose_choose_let =
 (*
    term : (λx.x) ~auto
    type : (∀ a. a → a) → (∀ a. a → a)
-   note : differs from FreezeML specification, assigns polymorphic type to
-          unannotated binder
 *)
 let fml_id_auto_1 =
   { name = "id_auto_1"
   ; term = (fml_auto)
            (app (abs "x" x) (frozen "auto"))
-  ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
-                          TyForall ((), TyArrow (TyVar 0, TyVar 0))))
+  ; typ  = None
   }
 
 
 (*
    term : (id (λx.x)) ~auto
    type : ∀ a. a → a
-   note : differs from FreezeML specification, assigns polymorphic type to
-          unannotated binder
 *)
 let fml_id_auto_2 =
   { name = "id_auto_2"
   ; term = (fml_auto << fml_id)
            (app (app id (abs "x" x)) (frozen "auto"))
-  ; typ  = Some (TyArrow (TyForall ((), TyArrow (TyVar 0, TyVar 0)),
-                          TyForall ((), TyArrow (TyVar 0, TyVar 0))))
+  ; typ  = None
   }
 
 (*
