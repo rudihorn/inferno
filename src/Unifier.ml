@@ -297,6 +297,11 @@ and unify_descriptors t desc1 desc2 =
      raise UnifySkolemInternal
 
   | _, _ ->
+     (* Mixed-preifx unification: don't unify quantified type variables with
+        out-of-scope existentials. *)
+     if (desc2.skolem && desc1.rank != -1) || (desc1.skolem && desc2.rank != -1)
+     then raise UnifySkolemInternal;
+
       (* skolemize *)
      let skolem = desc1.skolem || desc2.skolem in
      let new_desc =

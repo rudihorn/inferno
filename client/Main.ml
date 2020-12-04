@@ -1390,7 +1390,7 @@ let fml_mixed_prefix_1 =
    term: let (x : ∀ a.(∀ b. b → a) → Int) = λ(y:∀ b. b → a). 1 in
          let (z : ∀ b. b → Int) =  λw. 1 in
          x (~z)
-   type: [∀ a.] Int
+   type: Int
 *)
 let fml_mixed_prefix_2 =
   { name = "mixed_prefix_2"
@@ -1401,7 +1401,7 @@ let fml_mixed_prefix_2 =
                            , Some (TyForall (1, TyArrow (TyVar 1, TyInt)))
                            , abs "w" one
                            , app x (frozen "z")))
-  ; typ = Some (TyForall ((), TyInt))
+  ; typ = Some TyInt
   }
 
 (*
@@ -1606,9 +1606,9 @@ let () =
   test fml_alpha_equiv_5;
   known_broken_test fml_alpha_equiv_6;
 
-  known_broken_test fml_mixed_prefix_1;
+  test fml_mixed_prefix_1;
   known_broken_test fml_mixed_prefix_2;
-  known_broken_test fml_mixed_prefix_3;
+  test fml_mixed_prefix_3;
 
   test fml_poly_binding_1;
   test fml_poly_binding_2;
