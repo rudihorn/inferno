@@ -323,7 +323,7 @@ let known_broken_test t : unit =
   if ( works ) then
     begin
       Printf.printf "\027[31mExample %s isn't broken anymore, great! Please \
-                     investigae and switch it to use the normal \"test\" \
+                     investigate and switch it to use the normal \"test\" \
                      driver\027[0m\n" name;
       (* We count this as a "failure" to encourage people to investigate and
        switch the driver if things indeed work now *)
