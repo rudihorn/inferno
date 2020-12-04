@@ -1388,7 +1388,7 @@ let fml_mixed_prefix_1 =
 
 (*
    term: let (x : ∀ a.(∀ b. b → a) → Int) = λ(y:∀ b. b → a). 1 in
-         let (z : ∀ b. b → Int) =  λw. 1 in
+         let (z : ∀ b. b → Int) = λw. 1 in
          x (~z)
    type: Int
 *)
@@ -1399,6 +1399,24 @@ let fml_mixed_prefix_2 =
                   , ML.Abs ( "y", Some( TyForall(2, TyArrow (TyVar 2, TyVar 1))), one)
                   , ML.Let ( "z"
                            , Some (TyForall (1, TyArrow (TyVar 1, TyInt)))
+                           , abs "w" one
+                           , app x (frozen "z")))
+  ; typ = Some TyInt
+  }
+
+(*
+   term: let (x : ∀ a.(∀ b. b → a) → Int) = λ(y:∀ b. b → a). 1 in
+         let z = λw. 1 in
+         x (~z)
+   type: Int
+*)
+let fml_mixed_prefix_2_no_sig =
+  { name = "mixed_prefix_2"
+  ; term = ML.Let ( "x"
+                  , Some (TyForall (1, TyArrow (TyForall (2, TyArrow (TyVar 2, TyVar 1)), TyInt)))
+                  , ML.Abs ( "y", Some( TyForall(2, TyArrow (TyVar 2, TyVar 1))), one)
+                  , ML.Let ( "z"
+                           , None
                            , abs "w" one
                            , app x (frozen "z")))
   ; typ = Some TyInt
@@ -1608,6 +1626,7 @@ let () =
 
   test fml_mixed_prefix_1;
   known_broken_test fml_mixed_prefix_2;
+  test fml_mixed_prefix_2_no_sig;
   test fml_mixed_prefix_3;
 
   test fml_poly_binding_1;
