@@ -70,7 +70,7 @@ module type OUTPUT = sig
      of the functor [\X. tyvar + t X]. *)
   val structure: ty structure -> ty
 
-  val to_variable : (ty -> 'a) -> ('a structure -> 'a)
+  val to_variable : ('a structure -> 'a) -> ('a structure -> 'a) -> (ty -> 'a)
                  -> 'a TyVarMap.t -> ty -> 'a
 
   (* If [v] is a type variable and [t] is a type, then [mu v t] is a

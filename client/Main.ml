@@ -1625,7 +1625,7 @@ let () =
   known_broken_test fml_alpha_equiv_6;
 
   test fml_mixed_prefix_1;
-  known_broken_test fml_mixed_prefix_2;
+  test fml_mixed_prefix_2;
   test fml_mixed_prefix_2_no_sig;
   test fml_mixed_prefix_3;
 

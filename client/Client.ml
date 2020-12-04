@@ -138,14 +138,15 @@ module O = struct
     | S.TyInt -> F.TyInt
     | S.TyBool -> F.TyBool
 
-  let to_variable callback fresh (env : 'a TyVarMap.t) (body : ty) : 'a =
+  let to_variable fresh_tycon fresh callback (env : 'a TyVarMap.t) (body : ty) :
+        'a =
     let rec go ty = match ty with
       | F.TyVar v              -> TyVarMap.find v env
       | F.TyArrow   (ty1, ty2) -> fresh (S.TyArrow   (go ty1, go ty2))
       | F.TyProduct (ty1, ty2) -> fresh (S.TyProduct (go ty1, go ty2))
       | F.TyForall _           -> callback ty
-      | F.TyInt                -> fresh S.TyInt
-      | F.TyBool               -> fresh S.TyBool
+      | F.TyInt                -> fresh_tycon S.TyInt
+      | F.TyBool               -> fresh_tycon S.TyBool
       | F.TyMu _               -> assert false
     in go body
 

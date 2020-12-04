@@ -122,22 +122,32 @@ let (^^) (rc1, k1) (rc2, k2) =
       generate generic or unregistered variables.  Starting at the top level we
       generate unregistered variables, but when we enter a forall we switch to
       generating generic variables.  This is done by replacing `fresh` function
-      passed to worker. *)
+      passed to worker.
+
+    * Type constructors for fixed types (Int, Bool) must always be created as
+      unregistered variables, not as generic variables.  For this reason
+      O.to_variable needs two fresh functions: one that always creates an
+      unregistered variable, and one that changes depending whether we are in a
+      quantified type.
+ *)
 let annotation_to_variable (generic_qs : bool) (env : int list) (t : O.ty) :
       Lo.variable =
   let extend_env fresh env qs =
     List.fold_left
       (fun env q -> O.TyVarMap.add q (fresh None) env)
       env qs in
+  (* An alias that always passes the same function for creating fresh type
+     constructors. *)
+  let to_variable = O.to_variable (fun s -> Lo.fresh (Some s)) in
   let rec worker fresh init_env t : Lo.variable =
     let (qs, body) = O.to_scheme t in
     let env = extend_env Lo.fresh_generic init_env qs in
     let qs' = List.map (fun q -> O.TyVarMap.find q env) qs in
     match qs' with
-    | [] -> O.to_variable (worker fresh env)
-              (fun s -> Lo.fresh (Some s)) env body
-    | _  -> fresh (Some (S.forall qs' (O.to_variable (worker Lo.fresh_generic env)
-                            (fun s -> Lo.fresh_generic (Some s)) env body))) in
+    | [] -> to_variable (fun s -> Lo.fresh (Some s)) (worker fresh env) env body
+    | _  -> fresh (Some (S.forall qs' (to_variable
+                                    (fun s -> Lo.fresh_generic (Some s))
+                                    (worker Lo.fresh_generic env) env body))) in
   let fresh = if generic_qs then Lo.fresh_generic else Lo.fresh in
   worker Lo.fresh (extend_env fresh O.TyVarMap.empty env) t
 
