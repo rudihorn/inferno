@@ -699,29 +699,29 @@ let d2_star =
  *)
 
 (* example            : E3
-   term               : let r : (∀ a. a → (∀ b. b → b)) → Int =
-                          λx.1
-                        in
-                        r (λx.λy.y)
+   term               : let r : (∀ a. a → (∀ b. b → b)) → Int = λx.1
+                        in r (λx.λy.y)
    inferred type      : X
    type in PLDI paper : X
  *)
 let e3 =
   { name = "E3"
-  ; term = fml_e3_r (app (var "r") (abs "x" (abs "y" y)))
+  ; term = (fml_e3_r)
+           (app (var "r") (abs "x" (abs "y" y)))
   ; typ  = None
   }
 
 (* example            : E3∘
    term               : let r : (∀ a. a → (∀ b. b → b)) → Int =
                           λ(x : (∀ a. a → (∀ b. b → b))).1
-                        in $(λx.$(λy.y))
+                        in r $(λx.$(λy.y))
    inferred type      : Int
    type in PLDI paper : Int
  *)
 let e3_dot =
   { name = "E3∘"
-  ; term = fml_e3_r (app (var "r") (ML.gen (abs "x" (ML.gen (abs "y" y)))))
+  ; term = (fml_e3_r)
+           (app (var "r") (ML.gen (abs "x" (ML.gen (abs "y" y)))))
   ; typ  = Some TyInt
   }
 
@@ -1456,30 +1456,28 @@ let fml_scoped_tyvars_1 =
 *)
 let fml_mono_gen_test1 =
   { name = "mono_test"
-  ; term = ML.Let ("id", None, abs "x" x, app (var "id") (frozen "id"))
+  ; term = ML.Let ("id", None, abs "x" x, app id (frozen "id"))
   ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
   }
 
 (*
    term : let (id : ∀ a. a → a) = (λx.x) in id ~id
-   type : (∀ a. a → a → a)
+   type : ∀ a. a → a
 *)
 let fml_mono_gen_test2 =
   { name = "fml_skolem_with_non_skolem"
   ; term =  ML.Let ("id", forall_a_a_to_a,
               (abs "x" x),
-              app (var "id") (frozen "id"))
+              app id (frozen "id"))
   ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
   }
 
 (*
    Like e3, but no type annotation on the lambda defining r
 
-   term      : let r : (∀ a. a → (∀ b. b → b)) → Int =
-                 λx.1
-               in
-               r $(λx.$(λy.y))
-   type      : X
+   term : let r : (∀ a. a → (∀ b. b → b)) → Int = λx.1 in
+          r $(λx.$(λy.y))
+   type : X
  *)
 let fml_e3_dot_no_lambda_sig =
   { name = "no_lambda_sig_E3∘"
