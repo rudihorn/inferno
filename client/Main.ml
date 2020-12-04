@@ -1405,6 +1405,17 @@ let fml_mixed_prefix_2 =
   }
 
 (*
+   term: (λx. let y : ∀ a. a → a = λz.x in y) 1 true
+   type: X
+*)
+let fml_mixed_prefix_3 =
+  { name = "mixed_prefix_3"
+  ; term = app (app (abs "x" (ML.Let ("y", forall_a_a_to_a, abs "z" x, y))) one)
+               tru
+  ; typ = None
+  }
+
+(*
    term: let (x : ∀ a.(∀ b. b → b) → Int) = λ(z:∀ b. b → b). 1 in
          let (y : ∀ a. a → a) = λw. w in
          x (~y)
@@ -1597,6 +1608,8 @@ let () =
 
   known_broken_test fml_mixed_prefix_1;
   known_broken_test fml_mixed_prefix_2;
+  known_broken_test fml_mixed_prefix_3;
+
   test fml_poly_binding_1;
   test fml_poly_binding_2;
   test fml_poly_binding_3;
