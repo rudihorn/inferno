@@ -1080,8 +1080,8 @@ let fml_nested_forall_inst_4 =
    term : let (id : ∀ a. a → a) = λx.x in id
    type : ∀ a. a → a
 *)
-let fml_id_annot_1 =
-  { name = "id_annot_1"
+let fml_let_annot_1 =
+  { name = "let_annot_1"
   ; term = ML.Let ("id", Some (TyForall (1, TyArrow (TyVar 1, TyVar 1)))
                        , abs "x" x, id)
   ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
@@ -1091,8 +1091,8 @@ let fml_id_annot_1 =
    term : let (id : ∀ a b. a → b) = λx.x in id
    type : X
 *)
-let fml_id_annot_2 =
-  { name = "id_annot_2"
+let fml_let_annot_2 =
+  { name = "let_annot_2"
   ; term = ML.Let ("id", Some (TyForall (1, TyForall (2,
                                 TyArrow (TyVar 1, TyVar 2))))
                        , abs "x" x, id)
@@ -1103,8 +1103,8 @@ let fml_id_annot_2 =
    term : let (id : ∀ a. a → a) = λ(x : Int).x in id
    type : X
 *)
-let fml_id_annot_3 =
-  { name = "id_annot_3"
+let fml_let_annot_3 =
+  { name = "let_annot_3"
   ; term = ML.Let ("id", Some (TyForall( 1, TyArrow (TyVar 1, TyVar 1))),
                    ML.Abs ("x", Some TyInt , x), id)
   ; typ  = None
@@ -1114,8 +1114,8 @@ let fml_id_annot_3 =
    term : let (y : ∀ a. a → a) = ~id in y
    type : ∀ a. a → a
 *)
-let fml_id_annot_4 =
-  { name = "id_annot_4"
+let fml_let_annot_4 =
+  { name = "let_annot_4"
   ; term = (fml_id)
            (ML.Let ("y", forall_a_a_to_a, frozen "id", y))
   ; typ  = Some (TyForall ((), TyArrow (TyVar 0, TyVar 0)))
@@ -1125,14 +1125,61 @@ let fml_id_annot_4 =
    term : let id = λx.x in let (choose : ∀a b. a → b → b) = λx.λy.x in choose id
    type : X
 *)
-let fml_id_annot_5 =
-  { name = "id_annot_5"
+let fml_let_annot_5 =
+  { name = "let_annot_5"
   ; term = ML.let_ ("id", abs "x" x,
       ML.Let ("choose", Some (TyForall (1, TyForall (2, TyArrow (TyVar 1,
                                              TyArrow (TyVar 2, TyVar 2))))),
                    abs "x" (abs "y" x), app choose id))
   ; typ  = None
   }
+
+(*
+   term: let (f : ∀ a. ∀ b. b → b) = λx.x in 1
+   type: Int
+*)
+let fml_let_annot_6 =
+  { name = "let_annot_6"
+  ; term = ML.Let ( "f"
+                  , Some (TyForall(1, TyForall (2, TyArrow (TyVar 2, TyVar 2))))
+                  , abs "x" x
+                  , one)
+  ; typ = Some TyInt
+  }
+
+(*
+   term: let (f : ∀ a. ∀ b. b → b) = id in 1
+   type: Int
+*)
+let fml_let_annot_7 =
+  { name = "let_annot_7"
+  ; term = (fml_id)
+           (ML.Let ( "f"
+                   , Some (TyForall(1, TyForall (2, TyArrow (TyVar 2, TyVar 2))))
+                   , id
+                   , one))
+  ; typ = Some TyInt
+  }
+
+(*
+   term: let (f : ∀ a. ∀ b. b → b) = ~id in 1
+   type: X
+*)
+let fml_let_annot_8 =
+  { name = "let_annot_8"
+  ; term = (fml_id)
+           (ML.Let ( "f"
+                   , Some (TyForall(1, TyForall (2, TyArrow (TyVar 2, TyVar 2))))
+                   , frozen "id"
+                   , one))
+  ; typ = None
+  }
+
+(* JSTOLAREK: once let_annot_6 - let_annot_8 work as expected I need to add
+   three more tests that are identical except for annotation on `f`, which
+   should be `∀ a. ∀ a. a → a` instead of currently used `∀ a. ∀ b. b → b`.
+   This will test shadowing and ensure that duplicate identifiers are not
+   removed. *)
 
 (*
    term : λx. choose ~id x
@@ -1205,7 +1252,7 @@ let fml_type_annotations_1 =
    type : ∀ a. a → a
 *)
 let fml_id_appl =
-  { name = "id_annot_1"
+  { name = "let_annot_1"
   ; term = ML.let_ ("id", abs "x" x, app (frozen "id") one)
   ; typ  = None
   }
@@ -1341,43 +1388,24 @@ let fml_alpha_equiv_4 =
   }
 
 (*
-  let (x : (∀ a.∀ a.  a → a) → int) = λ(y:∀ a.∀ a.  a → a). 42 in
-  let (z : ∀ a.∀ b.  a → a) =  λw. w in
-  x (~z)
+   term: let (x : (∀ a. ∀ a. a → a) → Int) = λ(y:∀ a.∀ a. a → a). 1 in
+         let (z : ∀ a. ∀ b. a → a) = λw. w in
+         x (~z)
+   type: X
 *)
 
 let fml_alpha_equiv_5 =
   { name = "alpha_equiv_5"
-      ; term = ML.Let ( "x"
-                          ,  Some (TyArrow (TyForall(1, TyForall (1, TyArrow (TyVar 1, TyVar 1))), TyInt))
-                          , ML.Abs ("y", Some(TyForall(1, TyForall (1, TyArrow (TyVar 1, TyVar 1)))), ML.Int 42)
-                          , ML.Let ("z"
-                                      , Some (TyForall(1, TyForall (2, TyArrow (TyVar 1, TyVar 1))))
-                                      , ML.Abs( "w", None, ML.Var("w"))
-                                      , ML.App (ML.Var "x", ML.FrozenVar "z")))
-      ; typ = None
+  ; term = ML.Let ( "x"
+                  , Some (TyArrow (TyForall(1, TyForall (1, TyArrow (TyVar 1, TyVar 1))), TyInt))
+                  , ML.Abs ( "y", Some (TyForall (1, TyForall (1, TyArrow (TyVar 1, TyVar 1)))), one)
+                  , ML.Let ( "z"
+                           , Some (TyForall (1, TyForall (2, TyArrow (TyVar 1, TyVar 1))))
+                           , abs "w" w
+                           , app x (frozen "z")))
+  ; typ = None
   }
 
-
-(*
-   term: let (x : (∀ a.∀ b. b → b) → Int) = λ(y:∀ a. ∀ b. b → b). 1 in
-         let (z : ∀ c.∀ d. d → d) = ~id in
-         x (~z)
-   type: Int
-*)
-
-let fml_alpha_equiv_6 =
-  { name = "alpha_equiv_6"
-  ; term = (fml_id)
-           (ML.Let ( "x"
-                   , Some (TyArrow (TyForall(1, TyForall (2, TyArrow (TyVar 2, TyVar 2))), TyInt))
-                   , ML.Abs ( "y", Some (TyForall (1, TyForall (2, TyArrow (TyVar 2, TyVar 2)))), one)
-                   , ML.Let ( "z"
-                            , Some (TyForall(3, TyForall (4, TyArrow (TyVar 4, TyVar 4))))
-                            , frozen "id"
-                            , app x (frozen "z"))))
-  ; typ = Some TyInt
-  }
 
 (*
    term: let (x : ∀ a.(∀ b. a → a) → Int) = λ(y:∀ b. a → a). 1 in
@@ -1623,21 +1651,30 @@ let () =
   test fml_inst_sig_1;
   test fml_inst_sig_2;
   test fml_id_app;
+
   test fml_quantifier_placement_1;
   test fml_quantifier_placement_2;
+
   test fml_nested_forall_inst_1;
   test fml_nested_forall_inst_2;
   test fml_nested_forall_inst_3;
   test fml_nested_forall_inst_4;
-  test fml_id_annot_1;
-  test fml_id_annot_2;
-  test fml_id_annot_3;
-  known_broken_test fml_id_annot_4;
-  test fml_id_annot_5;
+
+  test fml_let_annot_1;
+  test fml_let_annot_2;
+  test fml_let_annot_3;
+  known_broken_test fml_let_annot_4;
+  test fml_let_annot_5;
+  test fml_let_annot_6;
+  test fml_let_annot_7;
+  known_broken_test fml_let_annot_8;
+
   test fml_mono_binder_constraint_1;
   test fml_mono_binder_constraint_2;
+
   test fml_quantifier_ordering_1;
   test fml_quantifier_ordering_2;
+
   test fml_type_annotations_1;
   test fml_id_appl;
   test fml_choose_choose;
@@ -1650,7 +1687,6 @@ let () =
   test fml_alpha_equiv_3;
   test fml_alpha_equiv_4;
   test fml_alpha_equiv_5;
-  known_broken_test fml_alpha_equiv_6;
 
   test fml_mixed_prefix_1;
   test fml_mixed_prefix_2;
