@@ -387,6 +387,10 @@ let tru =
 let fals =
   ML.Bool false
 
+(* Application of equality operator *)
+let eq x y =
+  app (app (var "==") x) y
+
 let forall_a_a_to_a = Some (TyForall (1, TyArrow (TyVar 1, TyVar 1)))
 
 (* FreezeML examples from PLDI paper*)
@@ -449,6 +453,13 @@ let fml_e3_r k =
                 TyForall (2, TyArrow (TyVar 2, TyVar 2))))),
         one),
      k)
+
+(* (==) : ∀ a. a → a → Bool *)
+let fml_eq k =
+   ML.Let ("=="
+          , Some (TyForall (1, TyArrow (TyVar 1, TyArrow (TyVar 1, TyBool))))
+          , abs "x" (abs "y" tru)
+          , k )
 
 (* more definitions *)
 
@@ -1434,6 +1445,23 @@ let fml_mixed_prefix_3 =
   }
 
 (*
+   term: (λw. let y : ∀ a. a → a → Bool × Bool = λz:a.λx. (x = z, w = z)) in y)
+         true 1 1
+   type: X
+*)
+let fml_mixed_prefix_4 =
+  { name = "mixed_prefix_4"
+  ; term = (fml_eq)
+           (app (app (app (abs "w"
+             (ML.Let ("y"
+                     , Some (TyForall (1, TyArrow (TyVar 1, TyArrow (TyVar 1,
+                                 TyProduct (TyBool, TyBool)))))
+                     , abs "z" (abs "x" (ML.Pair (eq x z, eq w z))), y))
+           ) tru) one) one)
+  ; typ = None
+  }
+
+(*
    term: let (x : ∀ a.(∀ b. b → b) → Int) = λ(z:∀ b. b → b). 1 in
          let (y : ∀ a. a → a) = λw. w in
          x (~y)
@@ -1628,6 +1656,7 @@ let () =
   test fml_mixed_prefix_2;
   test fml_mixed_prefix_2_no_sig;
   test fml_mixed_prefix_3;
+  test fml_mixed_prefix_4
 
   test fml_poly_binding_1;
   test fml_poly_binding_2;
