@@ -1182,6 +1182,20 @@ let fml_let_annot_8 =
    removed. *)
 
 (*
+   term: let (f : ∀ a. a → Bool) = λ(x:Int).x = x in 1
+   type: X
+*)
+let fml_let_annot_9 =
+  { name = "let_annot_9"
+  ; term = (fml_eq)
+           (ML.Let ( "f"
+                   , Some (TyForall(1, TyArrow (TyVar 1, TyBool)))
+                   , ML.Abs ("x", Some TyInt, eq x x)
+                   , one))
+  ; typ = None
+  }
+
+(*
    term : λx. choose ~id x
    type : X
 *)
@@ -1668,6 +1682,7 @@ let () =
   test fml_let_annot_6;
   test fml_let_annot_7;
   known_broken_test fml_let_annot_8;
+  test fml_let_annot_9;
 
   test fml_mono_binder_constraint_1;
   test fml_mono_binder_constraint_2;
