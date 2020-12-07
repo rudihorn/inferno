@@ -279,6 +279,43 @@ let set_unbound_generic_vars_rank { quantifiers; body } rank =
 let drop_unused_quantifiers { body; _ } =
   { quantifiers = unbound_quantifiers (degenerate_scheme body); body }
 
+(* Freshen all nested quantifiers, leaving top-level quantifiers unchanged.
+   Assumes there are no unbound quantifiers. *)
+let freshen_nested_quantifiers state { quantifiers; body } =
+  let freshen_quantifiers env qs = List.fold_left (fun acc q ->
+      assert (U.structure q = None);
+      assert (U.rank q = generic);
+      U.PureVarMap.add q (U.fresh None generic) acc
+    ) env qs in
+
+  let rec copy visited v =
+    if U.PureVarMap.mem v visited then
+      (* If this is an already visited variable return it *)
+      U.PureVarMap.find v visited
+    else
+      begin
+        let v' = U.fresh None (U.rank v) in
+        let visited = U.PureVarMap.add v v' visited in
+        let visited =
+          if isForall v
+          then let { quantifiers; _ } = scheme v in
+               freshen_quantifiers visited quantifiers
+          else visited in
+        U.set_structure v' (Option.map (S.map (copy visited)) (U.structure v));
+        v'
+      end in
+
+  (* Identity map for top-level quantifiers.  We don't freshen those *)
+  let toplevel_qs = List.fold_left (fun acc q ->
+      assert (U.structure q = None);
+      assert (U.rank q = generic);
+      U.PureVarMap.add q q acc
+    ) U.PureVarMap.empty quantifiers in
+
+  { quantifiers = List.map (copy toplevel_qs) quantifiers
+  ; body        = copy toplevel_qs body }
+
+
 (* -------------------------------------------------------------------------- *)
 
 (* Debugging utilities. *)
@@ -633,42 +670,6 @@ let instantiate state { quantifiers; body } =
   let quantifiers = List.map (copy true) quantifiers in
   let body        = copy true body in
   quantifiers, body
-
-(* Freshenes all nested quantifiers, leaving top-level quantifiers unchanged.
-   Assumes there are no unbound quantifiers. *)
-let freshen_nested_quantifiers state { quantifiers; body } =
-  let freshen_quantifiers env qs = List.fold_left (fun acc q ->
-      assert (U.structure q = None);
-      assert (U.rank q = generic);
-      U.PureVarMap.add q (U.fresh None generic) acc
-    ) env qs in
-
-  let rec copy visited v =
-    if U.PureVarMap.mem v visited then
-      (* If this is an already visited variable return it *)
-      U.PureVarMap.find v visited
-    else
-      begin
-        let v' = U.fresh None (U.rank v) in
-        let visited = U.PureVarMap.add v v' visited in
-        let visited =
-          if isForall v
-          then let { quantifiers; _ } = scheme v in
-               freshen_quantifiers visited quantifiers
-          else visited in
-        U.set_structure v' (Option.map (S.map (copy visited)) (U.structure v));
-        v'
-      end in
-
-  (* Identity map for top-level quantifiers.  We don't freshen those *)
-  let toplevel_qs = List.fold_left (fun acc q ->
-      assert (U.structure q = None);
-      assert (U.rank q = generic);
-      U.PureVarMap.add q q acc
-    ) U.PureVarMap.empty quantifiers in
-
-  { quantifiers = List.map (copy toplevel_qs) quantifiers
-  ; body        = copy toplevel_qs body }
 
 
 let freeze state { quantifiers; body } =
