@@ -816,7 +816,9 @@ let f9_annot =
   { name = "F9_annot"
   ; term = (fml_revapp << fml_id << fml_poly)
            (ML.Let ( "f"
-                   , Some (TyForall (2, TyArrow (TyForall (1, TyArrow (TyVar 1, TyVar 1)) , TyVar 2) ))
+                   , Some (TyForall (2, TyArrow (TyArrow
+                             (TyForall (1, TyArrow (TyVar 1, TyVar 1)),
+                           TyVar 2), TyVar 2) ))
                    , app (var "revapp") (frozen "id")
                    , app (var "f") poly))
   ; typ  = Some (TyProduct (TyInt, TyBool))
