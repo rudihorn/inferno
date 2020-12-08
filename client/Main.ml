@@ -3,7 +3,7 @@ open F
 open Result
 
 let verbose =
-  false
+  true
 
 (* -------------------------------------------------------------------------- *)
 
@@ -1647,6 +1647,7 @@ let fml_e3_dot_no_lambda_sig =
   }
 
 let () =
+(*
   test env_test;
   (* PLDI paper examples *)
   test a1;
@@ -1746,5 +1747,7 @@ let () =
   test fml_mono_gen_test1;
   test fml_mono_gen_test2;
   test fml_e3_dot_no_lambda_sig
+*)
+  test fml_let_annot_8
 
 let () = print_summary_and_exit ()
