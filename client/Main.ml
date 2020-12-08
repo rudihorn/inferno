@@ -1700,7 +1700,7 @@ let () =
   test fml_let_annot_1;
   test fml_let_annot_2;
   test fml_let_annot_3;
-  known_broken_test fml_let_annot_4;
+  test fml_let_annot_4;
   test fml_let_annot_5;
   test fml_let_annot_6;
   test fml_let_annot_7;

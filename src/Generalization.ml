@@ -318,11 +318,16 @@ let freshen_nested_quantifiers state { quantifiers; body } =
 
 exception MismatchedQuantifiers of U.variable list * U.variable list
 
-let assert_variables_equal (xs : U.variable list) (ys : U.variable list) :
+let rec variable_mem (v : U.variable) (xs : U.variable list) : bool =
+  match xs with
+  | [] -> false
+  | x :: xs -> U.id v == U.id x || variable_mem v xs
+
+let assert_variables_subset (xs : U.variable list) (ys : U.variable list) :
       U.variable list =
-  if (List.length xs != List.length ys) then
+  let is_subset = List.for_all (fun x -> variable_mem x ys) xs in
+  if (not is_subset) then
     raise (MismatchedQuantifiers (xs, ys));
-     (* JSTOLAREK: TODO test equality element by element *)
   xs
 
 (* -------------------------------------------------------------------------- *)
