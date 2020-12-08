@@ -806,8 +806,7 @@ let f9 =
   ; typ  = Some (TyProduct (TyInt, TyBool))
   }
 
-(* example            : F9
-   term               : let f : ∀ b. ((∀ a. a → a) → b) → b = revapp ~id in f poly
+(* term               : let f : ∀ b. ((∀ a. a → a) → b) → b = revapp ~id in f poly
    inferred type      : Int × Bool
    type in PLDI paper : Int × Bool
    Note               : this one is absert from PLDI paper
