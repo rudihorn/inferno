@@ -273,7 +273,10 @@ let solve (rectypes : bool) (c : rawco) : unit =
               begin
                 G.register_signatures state annotation;
                 Debug.print (nest 2
-                  (string "Let-binder with type annotation:" ^^ hardline ^^
+                  ((if is_gval
+                    then string "Generalizable let-binder "
+                    else string "Let-binder ") ^^
+                   string "with type annotation:" ^^ hardline ^^
                    string "Annotation: " ^^ print_var annotation ^^ hardline ^^
                    string "Inferred  : " ^^ print_scheme s) );
                 let annotation_scheme = G.scheme annotation in
