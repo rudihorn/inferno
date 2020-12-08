@@ -226,6 +226,10 @@ let product_i i x y =
   else
     product y x
 
+let is_gval = function
+  | ML.App _ | ML.FrozenVar _ -> false
+  | _                         -> true
+
 (* Ensures that all elements of xs appearing in ys appear at the front and in
    the same order *)
 let rec align_order equal xs ys = match xs, ys with
@@ -277,10 +281,6 @@ let ftyabs1 v t =
       t
   | t ->
       F.TyAbs (v, t)
-
-let is_gval = function
-  | ML.App _ | ML.FrozenVar _ -> false
-  | _                         -> true
 
 (* TEMPORARY find a better name for [coerce] *)
 
