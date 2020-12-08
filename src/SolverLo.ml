@@ -290,7 +290,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
                   else begin
                       G.assert_variables_equal (G.quantifiers s)
                         (G.quantifiers annotation_scheme);
-                      [] end in
+                      generalizable end in
 
                 (* When a type annotation is present we discard generalizable
                    variables from the generalization engine and use quantifiers
