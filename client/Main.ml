@@ -3,7 +3,7 @@ open F
 open Result
 
 let verbose =
-  true
+  false
 
 (* -------------------------------------------------------------------------- *)
 
@@ -89,7 +89,9 @@ let print_ml_term m =
   PPrint.(ToChannel.pretty 0.9 80 stdout (MLPrinter.print_term m ^^ hardline))
 
 let print_types tys =
-  PPrint.(ToChannel.pretty 0.9 80 stdout (separate comma (List.map FPrinter.print_type tys) ^^ hardline))
+  PPrint.(ToChannel.pretty 0.9 80 stdout
+     (lbracket ^^ separate comma (List.map FPrinter.print_type tys) ^^ rbracket
+      ^^ hardline))
 
 let translate log t =
   try
@@ -137,9 +139,9 @@ let translate log t =
      log_action log (fun () ->
          Printf.fprintf stdout "Type error: Quantifiers in let annotation don't matched inferred ones.\n";
          Printf.fprintf stdout "Expected:\n";
-         print_types xs;
+         print_types ys;
          Printf.fprintf stdout "Inferred:\n";
-         print_types ys
+         print_types xs
        );
      IllTyped
   (* JSTOLAREK: other exceptions are thrown due to bugs in the implementation.
@@ -1647,7 +1649,6 @@ let fml_e3_dot_no_lambda_sig =
   }
 
 let () =
-(*
   test env_test;
   (* PLDI paper examples *)
   test a1;
@@ -1704,7 +1705,7 @@ let () =
   test fml_let_annot_1;
   test fml_let_annot_2;
   test fml_let_annot_3;
-  known_broken_test fml_let_annot_4;
+  test fml_let_annot_4;
   test fml_let_annot_5;
   test fml_let_annot_6;
   test fml_let_annot_7;
@@ -1747,7 +1748,5 @@ let () =
   test fml_mono_gen_test1;
   test fml_mono_gen_test2;
   test fml_e3_dot_no_lambda_sig
-*)
-  test fml_let_annot_8
 
 let () = print_summary_and_exit ()

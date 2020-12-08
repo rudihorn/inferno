@@ -98,7 +98,7 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
   val drop_unused_quantifiers       : scheme -> scheme
 
   exception MismatchedQuantifiers of variable list * variable list
-  val assert_variables_equal : variable list -> variable list -> variable list
+  val assert_variables_equal : variable list -> variable list -> unit
 
   (* [enter] updates the current state by pushing a new [CLet] construct. The
      the hole is replaced with [let exists vs. hole in ...], where the list
