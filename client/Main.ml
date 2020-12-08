@@ -806,6 +806,22 @@ let f9 =
   ; typ  = Some (TyProduct (TyInt, TyBool))
   }
 
+(* example            : F9
+   term               : let f : ∀ b. ((∀ a. a → a) → b) → b = revapp ~id in f poly
+   inferred type      : Int × Bool
+   type in PLDI paper : Int × Bool
+   Note               : this one is absert from PLDI paper
+ *)
+let f9_annot =
+  { name = "F9_annot"
+  ; term = (fml_revapp << fml_id << fml_poly)
+           (ML.Let ( "f"
+                   , Some (TyForall (2, TyArrow (TyForall (1, TyArrow (TyVar 1, TyVar 1)) , TyVar 2) ))
+                   , app (var "revapp") (frozen "id")
+                   , app (var "f") poly))
+  ; typ  = Some (TyProduct (TyInt, TyBool))
+  }
+
 (* example            : F10†
    term               : choose id (λ(x : ∀ a. a → a). $(auto' ~x))
    inferred type      : (∀ a. a → a) → (∀ a. a → a)
@@ -1675,6 +1691,7 @@ let () =
   test e3_dot;
 
   test f9;
+  test f9_annot;
   test f10_dagger;
 
   test bad1;
