@@ -278,6 +278,10 @@ let ftyabs1 v t =
   | t ->
       F.TyAbs (v, t)
 
+let is_gval = function
+  | ML.App _ | ML.FrozenVar _ -> false
+  | _                         -> true
+
 (* TEMPORARY find a better name for [coerce] *)
 
 let coerce (vs1 : O.tyvar list) (vs2 : O.tyvar list) : coercion =
@@ -407,7 +411,7 @@ let rec hastype (env : int list) (t : ML.term) (w : variable) : F.nominal_term c
      let ty = Inferno.Option.map (annotation_to_variable true bound_env) ty in
 
       (* Construct a ``let'' constraint. *)
-      let1 x ty (hastype bound_env t)
+      let1 x ty (is_gval t) (hastype bound_env t)
         (hastype env u w)
       <$$> fun (t, a, t', u') ->
       (* [a] are the type variables that we must introduce (via Lambda-abstractions)

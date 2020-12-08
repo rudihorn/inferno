@@ -94,7 +94,7 @@ module Make
        [vs?] is filled with a list of type variables that must be universally
        quantified in the left-hand side of the [let] construct so as to be in
        scope when [C1] is decoded. *)
-  | CLet of (tevar * variable * ischeme WriteOnceRef.t) list
+  | CLet of (tevar * variable * bool * ischeme WriteOnceRef.t) list
         * variable list
         * rawco
         * rawco

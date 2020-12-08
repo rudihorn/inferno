@@ -100,10 +100,10 @@ type rawco =
   | CInstance of tevar * variable * variable list WriteOnceRef.t
   | CFrozen   of tevar * variable
   | CDef of tevar * variable * rawco
-  | CLet of (tevar * variable * ischeme WriteOnceRef.t) list
-        * variable list
-        * rawco
-        * rawco
+  | CLet of (tevar * variable * bool * ischeme WriteOnceRef.t) list
+        * variable list (* Proxy variables *)
+        * rawco         (* Bound term *)
+        * rawco         (* Let body *)
         * variable list WriteOnceRef.t
   (* Predicates *)
   | PMono of tevar * variable
@@ -230,7 +230,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
           if ( List.length( xvss ) > 0 ) then
             Debug.print (nest 2
               (string "Entering let binding LHS.  Defined bindings:" ^^
-               hardline ^^ separate hardline (List.map (fun (x, v, _) ->
+               hardline ^^ separate hardline (List.map (fun (x, v, _, _) ->
                print_tevar x ^^ space ^^ colon ^^ space ^^ print_var v) xvss)))
           else
             Debug.print_str "Entering top-level binding"
@@ -267,7 +267,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
            - unskolemize variables in the type signature
          *)
         let ss, generalizable = List.fold_right2
-         (fun s (_, annotation, _) (ss, generalizable) ->
+         (fun s (_, annotation, is_gval, _) (ss, generalizable) ->
             if ( U.has_structure annotation ) then
               begin
                 G.register_signatures state annotation;
@@ -354,7 +354,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
         if ( List.length( xvss ) > 0 ) then
           Debug.print_str "Typechecking of let bindings finished.  Adding bindings to environment:";
         let env =
-          List.fold_left2 (fun env (x, _, scheme_hook) s ->
+          List.fold_left2 (fun env (x, _, _, scheme_hook) s ->
             WriteOnceRef.set scheme_hook s;
             Debug.print (string "  " ^^ print_tevar x ^^ space ^^ colon ^^
                                space ^^ print_scheme s);
