@@ -287,7 +287,7 @@ let solve (rectypes : bool) (c : rawco) : unit =
                 let generalizable =
                   if is_gval
                   then G.quantifiers annotation_scheme
-                  else G.assert_variables_subset generalizable
+                  else G.assert_variables_equal generalizable
                            (G.quantifiers annotation_scheme) in
 
                 (* When a type annotation is present we discard generalizable
