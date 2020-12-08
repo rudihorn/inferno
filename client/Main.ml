@@ -1180,6 +1180,19 @@ let fml_let_annot_6 =
   }
 
 (*
+   term: let (f : ∀ a. ∀ a. a → a) = λx.x in 1
+   type: Int
+*)
+let fml_let_annot_6_quantifier_shadowing =
+  { name = "let_annot_6_quantifier_shadowing"
+  ; term = ML.Let ( "f"
+                  , Some (TyForall(1, TyForall (1, TyArrow (TyVar 1, TyVar 1))))
+                  , abs "x" x
+                  , one)
+  ; typ = Some TyInt
+  }
+
+(*
    term: let (f : ∀ a. ∀ b. b → b) = id in 1
    type: Int
 *)
@@ -1188,6 +1201,20 @@ let fml_let_annot_7 =
   ; term = (fml_id)
            (ML.Let ( "f"
                    , Some (TyForall(1, TyForall (2, TyArrow (TyVar 2, TyVar 2))))
+                   , id
+                   , one))
+  ; typ = Some TyInt
+  }
+
+(*
+   term: let (f : ∀ a. ∀ a. a → a) = id in 1
+   type: Int
+*)
+let fml_let_annot_7_quantifier_shadowing =
+  { name = "let_annot_7_quantifier_shadowing"
+  ; term = (fml_id)
+           (ML.Let ( "f"
+                   , Some (TyForall(1, TyForall (1, TyArrow (TyVar 1, TyVar 1))))
                    , id
                    , one))
   ; typ = Some TyInt
@@ -1207,11 +1234,19 @@ let fml_let_annot_8 =
   ; typ = None
   }
 
-(* JSTOLAREK: once let_annot_6 - let_annot_8 work as expected I need to add
-   three more tests that are identical except for annotation on `f`, which
-   should be `∀ a. ∀ a. a → a` instead of currently used `∀ a. ∀ b. b → b`.
-   This will test shadowing and ensure that duplicate identifiers are not
-   removed. *)
+(*
+   term: let (f : ∀ a. ∀ a. a → a) = ~id in 1
+   type: X
+*)
+let fml_let_annot_8_quantifier_shadowing =
+  { name = "let_annot_8_quantifier_shadowing"
+  ; term = (fml_id)
+           (ML.Let ( "f"
+                   , Some (TyForall(1, TyForall (1, TyArrow (TyVar 1, TyVar 1))))
+                   , frozen "id"
+                   , one))
+  ; typ = None
+  }
 
 (*
    term: let (f : ∀ a. a → Bool) = λ(x:Int).x = x in 1
@@ -1727,8 +1762,11 @@ let () =
   test fml_let_annot_4;
   test fml_let_annot_5;
   test fml_let_annot_6;
+  test fml_let_annot_6_quantifier_shadowing;
   test fml_let_annot_7;
+  test fml_let_annot_7_quantifier_shadowing;
   test fml_let_annot_8;
+  test fml_let_annot_8_quantifier_shadowing;
   test fml_let_annot_9;
   test fml_let_annot_9_no_annot;
 
