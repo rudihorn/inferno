@@ -88,6 +88,9 @@ let print_type ty =
 let print_ml_term m =
   PPrint.(ToChannel.pretty 0.9 80 stdout (MLPrinter.print_term m ^^ hardline))
 
+let print_types tys =
+  PPrint.(ToChannel.pretty 0.9 80 stdout (separate comma (List.map FPrinter.print_type tys) ^^ hardline))
+
 let translate log t =
   try
     Result.WellTyped (Client.translate t)
@@ -134,9 +137,9 @@ let translate log t =
      log_action log (fun () ->
          Printf.fprintf stdout "Type error: Quantifiers in let annotation don't matched inferred ones.\n";
          Printf.fprintf stdout "Expected:\n";
-                     (* JSTOLAREK: TODO print quantifiers *)
-         Printf.fprintf stdout "Inferred:\n"
-                     (* JSTOLAREK: TODO print quantifiers *)
+         print_types xs;
+         Printf.fprintf stdout "Inferred:\n";
+         print_types ys
        );
      IllTyped
   (* JSTOLAREK: other exceptions are thrown due to bugs in the implementation.
