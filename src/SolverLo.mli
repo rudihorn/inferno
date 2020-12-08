@@ -116,6 +116,7 @@ module Make
   exception UnifySkolem of variable * variable
   exception UnifyMono
   exception Cycle of variable
+  exception MismatchedQuantifiers of variable list * variable list
   val solve: bool -> rawco -> unit
 
   (* ---------------------------------------------------------------------- *)

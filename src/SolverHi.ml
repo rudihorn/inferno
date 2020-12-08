@@ -364,6 +364,7 @@ exception Unify of O.ty * O.ty
 exception UnifySkolem of O.ty * O.ty
 exception Cycle of O.ty
 exception UnifyMono
+exception MismatchedQuantifiers of O.ty list * O.ty list
 (* END EXC *)
 
 (* BEGIN SOLVE *)
@@ -395,6 +396,9 @@ let solve rectypes (rc, k) =
       raise (Cycle (decode v))
   | Lo.UnifyMono ->
      raise (UnifyMono)
+  | Lo.MismatchedQuantifiers (xs, ys) ->
+     let decode = new_decoder true (* cyclic decoder *) in
+     raise (MismatchedQuantifiers (List.map decode xs, List.map decode ys))
   end;
   (* Create a suitable decoder. *)
   let decode = new_decoder rectypes in

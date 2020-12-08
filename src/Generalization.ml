@@ -316,6 +316,15 @@ let freshen_nested_quantifiers state { quantifiers; body } =
   ; body        = copy toplevel_qs body }
 
 
+exception MismatchedQuantifiers of U.variable list * U.variable list
+
+let assert_variables_equal (xs : U.variable list) (ys : U.variable list) :
+      U.variable list =
+  if (List.length xs != List.length ys) then
+    raise (MismatchedQuantifiers (xs, ys));
+     (* JSTOLAREK: TODO test equality element by element *)
+  xs
+
 (* -------------------------------------------------------------------------- *)
 
 (* Debugging utilities. *)

@@ -130,6 +130,15 @@ let translate log t =
      log_action log (fun () ->
          Printf.fprintf stdout  "Type error: Violated monomorphism constraint\n" );
      IllTyped
+  | Client.MismatchedQuantifiers (xs, ys) ->
+     log_action log (fun () ->
+         Printf.fprintf stdout "Type error: Quantifiers in let annotation don't matched inferred ones.\n";
+         Printf.fprintf stdout "Expected:\n";
+                     (* JSTOLAREK: TODO print quantifiers *)
+         Printf.fprintf stdout "Inferred:\n"
+                     (* JSTOLAREK: TODO print quantifiers *)
+       );
+     IllTyped
   (* JSTOLAREK: other exceptions are thrown due to bugs in the implementation.
      I'm catching them here to simplify testing by not having to comment out
      failing test cases.  No exceptions should ever happen in a correct
@@ -1695,7 +1704,7 @@ let () =
   test fml_let_annot_5;
   test fml_let_annot_6;
   test fml_let_annot_7;
-  known_broken_test fml_let_annot_8;
+  test fml_let_annot_8;
   test fml_let_annot_9;
   test fml_let_annot_9_no_annot;
 

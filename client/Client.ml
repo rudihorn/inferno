@@ -466,6 +466,7 @@ exception Unify = Solver.Unify
 exception UnifySkolem = Solver.UnifySkolem
 exception UnifyMono = Solver.UnifyMono
 exception Cycle = Solver.Cycle
+exception MismatchedQuantifiers = Solver.MismatchedQuantifiers
 
 let translate (t : ML.term) : F.nominal_term =
   solve false (

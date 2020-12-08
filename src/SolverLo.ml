@@ -122,6 +122,7 @@ exception Unify = U.Unify
 exception UnifySkolem = U.UnifySkolem
 exception UnifyMono = U.UnifyMono
 exception Cycle = U.Cycle
+exception MismatchedQuantifiers = G.MismatchedQuantifiers
 
 let solve (rectypes : bool) (c : rawco) : unit =
 
@@ -283,10 +284,16 @@ let solve (rectypes : bool) (c : rawco) : unit =
                 U.unify (G.body annotation_scheme) (G.body s); (* See #2 *)
                 debug_unify_after (G.body annotation_scheme);
                 List.iter U.unskolemize (G.quantifiers annotation_scheme);
+                let generalizable =
+                  if is_gval
+                  then G.quantifiers annotation_scheme
+                  else G.assert_variables_equal generalizable
+                           (G.quantifiers annotation_scheme) in
+
                 (* When a type annotation is present we discard generalizable
                    variables from the generalization engine and use quantifiers
                    from the provided type signature. *)
-                annotation_scheme :: ss, G.quantifiers annotation_scheme
+                annotation_scheme :: ss, generalizable
               end
             else
                 s :: ss, generalizable

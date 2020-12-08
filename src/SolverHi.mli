@@ -201,6 +201,7 @@ module Make
   exception UnifySkolem of ty * ty
   exception Cycle of ty
   exception UnifyMono
+  exception MismatchedQuantifiers of ty list * ty list
   val solve: bool -> 'a co -> 'a
 
 (* END *)

@@ -97,6 +97,9 @@ module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure
   val freshen_nested_quantifiers    : state -> scheme -> scheme
   val drop_unused_quantifiers       : scheme -> scheme
 
+  exception MismatchedQuantifiers of variable list * variable list
+  val assert_variables_equal : variable list -> variable list -> variable list
+
   (* [enter] updates the current state by pushing a new [CLet] construct. The
      the hole is replaced with [let exists vs. hole in ...], where the list
      [vs] of young variables is empty. This function is used when entering the
