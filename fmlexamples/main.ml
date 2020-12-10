@@ -2,6 +2,8 @@ open Client
 open F
 open Result
 
+module ML = Lang.ML
+
 let verbose =
   false
 
@@ -90,21 +92,21 @@ let print_ml_term m =
 
 let translate log t =
   try
-    Result.WellTyped (Client.translate t)
+    Result.WellTyped (Lang.translate t)
   with
-  | Client.Cycle ty ->
+  | Lang.Cycle ty ->
      log_action log (fun () ->
         Printf.fprintf stdout "Type error: a cyclic type arose.\n";
         print_type ty
        );
      IllTyped
-  | Client.NotMono (x, ty) ->
+  | Lang.NotMono (x, ty) ->
      log_action log (fun () ->
         Printf.fprintf stdout "Type error: unannotated lambda binder %s inferred with polymorphic type:\n" x;
         print_type ty
        );
      IllTyped
-  | Client.Unify (ty1, ty2) ->
+  | Lang.Unify (ty1, ty2) ->
      log_action log (fun () ->
         Printf.fprintf stdout "Type error: type mismatch.\n";
         Printf.fprintf stdout "Type error: mismatch between the type:\n";
@@ -115,7 +117,7 @@ let translate log t =
         print_ml_term t
        );
      IllTyped
-  | Client.UnifySkolem (ty1, ty2) ->
+  | Lang.UnifySkolem (ty1, ty2) ->
      log_action log (fun () ->
         Printf.fprintf stdout "Type error: type mismatch.\n";
         Printf.fprintf stdout "Type error: skolem unification error between types:\n";
@@ -126,14 +128,14 @@ let translate log t =
         print_ml_term t
        );
      IllTyped
-  | Client.UnifyMono ->
+  | Lang.UnifyMono ->
      log_action log (fun () ->
          Printf.fprintf stdout  "Type error: Violated monomorphism constraint\n" );
      IllTyped
   (* JSTOLAREK: other exceptions are thrown due to bugs in the implementation.
      I'm catching them here to simplify testing by not having to comment out
      failing test cases.  No exceptions should ever happen in a correct
-     implementation other than Client exceptions, which are used to communicate
+     implementation other than Lang exceptions, which are used to communicate
      typechecking errors. *)
   | exn ->
      log_action log (fun () ->

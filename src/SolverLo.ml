@@ -11,7 +11,6 @@
 
 open UnifierSig
 open SolverSig
-open Utility
 
 module Make
   (X : TEVAR)

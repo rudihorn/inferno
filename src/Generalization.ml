@@ -10,7 +10,6 @@
 (******************************************************************************)
 
 open UnifierSig
-open Utility
 
 module Make (S : STRUCTURE) (U : UNIFIER with type 'a structure = 'a S.structure) = struct
 
@@ -233,7 +232,7 @@ let toplevel_generic_variables body =
     let acc = if (U.rank v == generic) then v :: acc else acc in
     if not (isForall v) then (* Don't descend into foralls. *)
       begin
-        let { quantifiers; body } = scheme v in
+        let { quantifiers = _; body } = scheme v in
         match U.structure body with
         | None   -> acc
         | Some s -> S.fold go s acc
@@ -281,7 +280,7 @@ let drop_unused_quantifiers { body; _ } =
 
 (* Freshen all nested quantifiers, leaving top-level quantifiers unchanged.
    Assumes there are no unbound quantifiers. *)
-let freshen_nested_quantifiers state { quantifiers; body } =
+let freshen_nested_quantifiers _state { quantifiers; body } =
   let freshen_quantifiers env qs = List.fold_left (fun acc q ->
       assert (U.structure q = None);
       assert (U.rank q = generic);
@@ -399,7 +398,7 @@ let enter state =
    manner. *)
 
 (* JSTOLAREK: unused, remove *)
-let make_scheme (is_generic : U.variable -> bool) (body : U.variable) : scheme =
+let _make_scheme (is_generic : U.variable -> bool) (body : U.variable) : scheme =
 
   (* Prepare to mark which variables have been visited. *)
   let { quantifiers; body } = scheme body in
@@ -672,7 +671,7 @@ let instantiate state { quantifiers; body } =
   quantifiers, body
 
 
-let freeze state { quantifiers; body } =
+let freeze _state { quantifiers; body } =
   let inScope : U.variable U.VarMap.t = List.fold_left (fun acc q ->
       assert (U.structure q == None);
       assert (U.rank q = generic);

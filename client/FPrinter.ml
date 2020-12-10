@@ -83,7 +83,7 @@ let rec print_debruijn_type_aux level ty =
         print_debruijn_type_aux 3 ty1
       else
         parens (print_debruijn_type ty)
-  | TyMu (x, ty1) ->
+  | TyMu (_x, ty1) ->
       if level >= 3 then
         string "μ"  ^^
         string "()" ^^
