@@ -31,6 +31,8 @@ type tyvar =
 type nominal_type =
     (tyvar, tyvar) typ
 
+val string_of_typ : nominal_type -> string
+
 type debruijn_type =
     (DeBruijn.index, unit) typ
 

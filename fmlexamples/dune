@@ -1,0 +1,6 @@
+(executable
+ (name main)
+ (public_name fmlExamples)
+ (package inferno)
+ (libraries unix pprint client)
+)

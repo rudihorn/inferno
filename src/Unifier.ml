@@ -170,7 +170,7 @@ module VarMap =
 module PureVarMap =
   Map.Make(struct
     type t      = variable
-    let equal   = TUnionFind.equivalent
+    (* let equal   = TUnionFind.equivalent *)
     let compare = TUnionFind.compare
   end)
 
@@ -200,7 +200,9 @@ let fresh =
 
 (* -------------------------------------------------------------------------- *)
 
+(*
 exception UnifyInternal (* JSTOLAREK: might be unused - see #8 *)
+   *)
 exception Unify of variable * variable
 
 exception UnifySkolemInternal
@@ -233,8 +235,8 @@ let rec unify (t : _ TRef.transaction) (v1 : variable) (v2 : variable) : unit =
   with
   | UnifySkolemInternal ->
      raise (UnifySkolem (v1, v2))
-  | UnifyInternal ->
-     raise (Unify (v1, v2))
+  (* | UnifyInternal ->
+     raise (Unify (v1, v2)) *)
 
 (* -------------------------------------------------------------------------- *)
 
@@ -291,8 +293,8 @@ and unify_descriptors t desc1 desc2 =
       monomorphic = false
      }
 
-  | { id = id1; skolem = true; _ }, { structure = Some _; _ }
-  | { structure = Some _; _ }, { id = id1; skolem = true; _ } ->
+  | { id = _id1; skolem = true; _ }, { structure = Some _; _ }
+  | { structure = Some _; _ }, { id = _id1; skolem = true; _ } ->
      (* Skolems don't unify with variables that have a structure *)
      raise UnifySkolemInternal
 

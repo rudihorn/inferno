@@ -1,8 +1,8 @@
 (* A pretty-printer for FreezeML. *)
 
 open PPrint
-open Client.ML
-open Client
+open Lang.ML
+open Lang
 
 (* -------------------------------------------------------------------------- *)
 
