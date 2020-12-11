@@ -1,0 +1,6 @@
+(library
+  (name FreezeMLTests)
+  (inline_tests)
+  (preprocess (pps ppx_expect))
+  (libraries unix pprint inferno client)
+)

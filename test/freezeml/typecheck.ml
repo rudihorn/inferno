@@ -62,13 +62,13 @@ let%expect_test "choose" =
 
 let%expect_test "poly" =
   let term =
-    let@ poly = abs (fun f -> app (app f f) (i 5)) in
+    let@ poly = abs ~typ:(forall (fun a -> a --> a))
+        (fun f -> app (app f f) (i 5)) in
     let@ id = abs (fun x -> x) in
     app poly (~% id) in
-   print_ml_term term;
-   (* typecheck term; SEGFAULTS *)
+   typecheck term;
    [%expect {|
-     let v1 = fun v0 -> v0 v0 5 in
-     let v3 = fun v2 -> v2 in
-     v1 ~v3 |}]
+     let v1 = λ(v0 : ∀ [113]. 113 → 113). v0 [Int → Int] (v0 [Int]) 5 in
+     let v3 = Λ94. λ(v2 : 94). v2 in
+     v1 v3 |}]
 

@@ -1,6 +1,6 @@
-(library
+(test
   (name TestUnionFind)
-  (libraries unix pprint client ppx_expect core)
-  (inline_tests)
-  (preprocess (pps ppx_expect))
+  (modules TestUnionFind)
+  (libraries unix pprint inferno)
+  (flags "-w" "@1..66")
 )
