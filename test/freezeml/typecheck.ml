@@ -1,4 +1,4 @@
-open Client.Sugar
+open Client.Syntax
 
 module Lang = Client.Lang
 module FPrinter = Client.FPrinter

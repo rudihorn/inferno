@@ -1,21 +1,32 @@
+open F
+
 module ML = Lang.ML
 
-let nextFresh = ref 0
+type t = ML.term
+type typ = ML.ty
 
-let reset () = nextFresh := 0
+let nextFresh = ref 0
+let nextFreshTvar = ref 0
+
+let reset () = nextFresh := 0; nextFreshTvar := 0
 
 let fresh () =
   let v = !nextFresh in
   nextFresh := v + 1;
   "v" ^ (string_of_int v)
 
+let freshTvar () =
+  let v = !nextFreshTvar in
+  nextFreshTvar := v + 1;
+  v
+
 let var x = ML.Var x
 
 let frozen x = ML.FrozenVar x
 
-let abs e =
+let abs ?typ e =
   let v = fresh () in
-  ML.abs (v, e (var v))
+  ML.Abs (v, typ, e (var v))
 
 let abs2 e =
   let v1 = fresh() in
@@ -33,6 +44,13 @@ let app x y = ML.App (x, y)
 let app2 x y z = ML.App (ML.App (x, y), z)
 
 let app3 f x y z = ML.App (ML.App (ML.App (f, x), y), z)
+
+let forall e =
+  let v = freshTvar () in
+  TyForall (v, e (TyVar v))
+
+let (-->) t1 t2 =
+  TyArrow (t1, t2)
 
 let (let@) x y =
   let v = fresh () in
